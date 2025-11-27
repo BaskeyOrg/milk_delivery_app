@@ -81,10 +81,7 @@ export default function SignUpScreen() {
       <Link href="/sign-in" style={styles.textButton}>
         Already have an account?
       </Link>
-      <Button onPress={() => supabase.auth.signOut()} text="Sign Out" />
-        <Link href="/" style={styles.textButton}>
-          home screen
-        </Link>
+      
     </View>
   );
 }

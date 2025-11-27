@@ -6,6 +6,7 @@ import { useClientOnlyValue } from "@/components/useClientOnlyValue";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
 import { useAuth } from "@/providers/AuthProvider";
+import { ActivityIndicator } from "react-native";
 
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>["name"];
@@ -17,10 +18,8 @@ function TabBarIcon(props: {
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const { profile, loading, session } = useAuth();
-  // Wait until auth loads -> prevents infinite renders
-  // if (loading) return null;
 
-  console.log("profile", profile);
+  if (loading) return <ActivityIndicator />;
 
   if (!session) return <Redirect href="/(auth)/sign-in" />;
 
@@ -64,7 +63,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Profile",
+          title: "Admin",
           // headerShown: false,
           tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
         }}
