@@ -1,58 +1,35 @@
 import { Tables } from "@/assets/data/types";
-import Colors from "@/constants/Colors";
 import { Link, useSegments } from "expo-router";
-import { Pressable, StyleSheet, Text } from "react-native";
+import { Pressable, Text } from "react-native";
 import RemoteImage from "./RemoteImage";
 
 export const defaultPizzaImage =
   "https://notjustdev-dummy.s3.us-east-2.amazonaws.com/food/default.png";
 
 type ProductListItemProps = {
-  product: Tables<'products'>;
+  product: Tables<"products">;
 };
+
 export default function ProductListItem({ product }: ProductListItemProps) {
   const segments = useSegments();
 
   return (
     <Link href={`/${segments[0]}/menu/${product.id}`} asChild>
-      <Pressable style={styles.container}>
-        {/* <Image
-          style={styles.image}
-          source={{ uri: product.image || defaultPizzaImage }}
-          resizeMode="contain"
-        /> */}
+      <Pressable className="bg-white p-2 rounded-2xl flex-1 max-w-[50%] m-1">
         <RemoteImage
-          path={product?.image}
+          path={product?.image ?? undefined}
           fallback={defaultPizzaImage}
-          style={styles.image}
-          resizeMode='contain'
+          resizeMode="contain"
+          className="w-full aspect-square rounded-xl"
         />
-        <Text style={styles.title}>{product.name}</Text>
-        <Text style={styles.price}>₹ {product.price}</Text>
+
+        <Text className="text-lg font-bold my-2 text-black">
+          {product.name}
+        </Text>
+        <Text className="text-primary font-bold">
+          ₹ {product.price}
+        </Text>
       </Pressable>
     </Link>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: Colors.light.background,
-    padding: 10,
-    borderRadius: 20,
-    flex: 1,
-    maxWidth: "50%",
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "700",
-    marginVertical: 10,
-  },
-  price: {
-    color: Colors.light.tint,
-    fontWeight: "bold",
-  },
-  image: {
-    width: "100%",
-    aspectRatio: 1,
-  },
-});

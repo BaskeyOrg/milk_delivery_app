@@ -5,9 +5,9 @@ import React from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
 const index = () => {
-  const { isLoading, session, profile } = useAuth();
+  const { loading, session, profile } = useAuth();
 
-  if (isLoading) {
+  if (loading) {
     return <ActivityIndicator />;
   }
 

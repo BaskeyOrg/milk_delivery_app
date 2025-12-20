@@ -1,8 +1,7 @@
-import { ActivityIndicator, FlatList, StyleSheet, Text } from 'react-native';
+import { ActivityIndicator, FlatList, Text } from 'react-native';
 
 import { useProductList } from '@/api/products';
 import ProductListItem from '@/components/ProductListItem';
-import Colors from '@/constants/Colors';
 
 export default function MenuScreen() {
   const { data: products, error, isLoading } = useProductList();
@@ -28,24 +27,3 @@ export default function MenuScreen() {
     />
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: Colors.light.background,
-    padding: 10,
-    borderRadius: 20,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginVertical: 10,
-  },
-  price: {
-    color: Colors.light.tint,
-    fontWeight: 'bold'
-  },
-  image: {
-    width: '100%',
-    aspectRatio: 1,
-  },
-});

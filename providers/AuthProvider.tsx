@@ -9,7 +9,13 @@ import {
   useState,
 } from "react";
 
-const AuthContext = createContext(null);
+type AuthContextType = {
+  session: Session | null;
+  loading: boolean;
+  profile: any | null;
+};
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export default function AuthProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<Session | null>(null);
@@ -81,4 +87,12 @@ export default function AuthProvider({ children }: PropsWithChildren) {
   );
 }
 
-export const useAuth = () => useContext(AuthContext);
+export function useAuth() {
+  const context = useContext(AuthContext);
+
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+
+  return context;
+}

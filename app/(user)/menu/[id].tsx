@@ -6,23 +6,16 @@ import RemoteImage from "@/components/RemoteImage";
 import { useCart } from "@/providers/CartProvider";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View
-} from "react-native";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 
 const sizes: PizzaSize[] = ["S", "M", "L", "XL"];
+
 export default function ProductDetailsScreen() {
   const { id: isString } = useLocalSearchParams();
   const id = parseFloat(typeof isString === "string" ? isString : isString?.[0]);
   const { data: product, error, isLoading } = useProduct(id);
-
   const { addItem } = useCart();
   const router = useRouter();
-
   const [selectedSize, setSelectedSize] = useState<PizzaSize>("M");
 
   const addToCart = () => {
@@ -31,91 +24,44 @@ export default function ProductDetailsScreen() {
     router.push("/(user)/cart");
   };
 
-  if (isLoading) {
-    return <ActivityIndicator />;
-  }
-  if (error) {
-    return <Text>{error.message}</Text>;
-  }
+  if (isLoading) return <ActivityIndicator className="mt-10" />;
+  if (error) return <Text className="text-red-500">{error.message}</Text>;
+  if (!product) return <Text className="text-center mt-10">Product not found</Text>;
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-white px-4 py-4">
       <Stack.Screen options={{ title: product?.name, headerShown: true }} />
 
-      {/* <Image
-        source={{ uri: product.image || defaultPizzaImage }}
-        style={styles.image}
-      /> */}
       <RemoteImage
-          path={product?.image}
-          fallback={defaultPizzaImage}
-          style={styles.image}
-          resizeMode='contain'
-        />
+        path={product?.image ?? undefined}
+        fallback={defaultPizzaImage}
+        resizeMode="contain"
+        className="w-full aspect-square mb-4 rounded-lg"
+      />
 
-      <Text>Select size</Text>
-      <View style={styles.sizes}>
-        {sizes.map((size) => (
-          <Pressable
-            key={size}
-            onPress={() => setSelectedSize(size)}
-            style={[
-              styles.size,
-              {
-                backgroundColor: selectedSize === size ? "gainsboro" : "",
-              },
-            ]}
-          >
-            <Text
-              style={[
-                styles.sizeText,
-                {
-                  color: selectedSize === size ? "black" : "gray",
-                },
-              ]}
+      <Text className="text-gray-700 font-semibold mb-2">Select size</Text>
+      <View className="flex-row justify-between mb-4">
+        {sizes.map((size) => {
+          const isSelected = selectedSize === size;
+          return (
+            <Pressable
               key={size}
+              onPress={() => setSelectedSize(size)}
+              className={`w-12 aspect-square rounded-full items-center justify-center ${
+                isSelected ? "bg-gray-300" : "bg-gray-50"
+              }`}
             >
-              {size}
-            </Text>
-          </Pressable>
-        ))}
+              <Text className={`text-lg font-medium ${isSelected ? "text-black" : "text-gray-500"}`}>
+                {size}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
-      <Text style={styles.price}>Price: ₹ {product.price}</Text>
-      <Button onPress={addToCart} text="Add to cart" />
+
+      <Text className="text-lg font-bold mb-4">Price: ₹ {product.price}</Text>
+
+      <Button text="Add to cart" onPress={addToCart} />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "#fff",
-    flex: 1,
-    padding: 10,
-  },
-  image: {
-    width: "100%",
-    aspectRatio: 1,
-  },
-  price: {
-    fontWeight: "bold",
-    fontSize: 18,
-    marginTop: "auto",
-  },
-  sizes: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginVertical: 10,
-  },
-  size: {
-    borderRadius: 25,
-    backgroundColor: "gainsboro",
-    width: 50,
-    aspectRatio: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  sizeText: {
-    fontSize: 20,
-    fontWeight: "500",
-  },
-});

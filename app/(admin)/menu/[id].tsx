@@ -3,49 +3,59 @@ import { PizzaSize } from "@/assets/data/types";
 import { defaultPizzaImage } from "@/components/ProductListItem";
 import RemoteImage from "@/components/RemoteImage";
 import Colors from "@/constants/Colors";
-import { useCart } from "@/providers/CartProvider";
 import { FontAwesome } from "@expo/vector-icons";
-import { Link, Stack, useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { Link, Stack, useLocalSearchParams } from "expo-router";
+import React from "react";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 
 const sizes: PizzaSize[] = ["S", "M", "L", "XL"];
+
 export default function ProductDetailsScreen() {
   const { id: isString } = useLocalSearchParams();
-  const id = parseFloat(typeof isString === "string" ? isString : isString?.[0]);
+  const id = parseFloat(
+    typeof isString === "string" ? isString : isString?.[0]
+  );
+
   const { data: product, error, isLoading } = useProduct(id);
-  const { addItem } = useCart();
-  const router = useRouter();
-
-  const [selectedSize, setSelectedSize] = useState<PizzaSize>("M");
-
-  // const addToCart = () => {
-  //   if (!product) return;
-  //   addItem(product, selectedSize);
-  //   router.push("/cart");
-  // };
 
   if (isLoading) {
-    return <ActivityIndicator />;
+    return (
+      <View className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator />
+      </View>
+    );
   }
 
   if (error) {
-    return <Text>{error.message}</Text>;
+    return (
+      <View className="flex-1 items-center justify-center">
+        <Text className="text-red-500">{error.message}</Text>
+      </View>
+    );
   }
+
+  if (!product) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <Text className="text-gray-500">Product not found</Text>
+      </View>
+    );
+  }
+
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-white p-3">
       <Stack.Screen
         options={{
           title: "Menu",
           headerRight: () => (
             <Link href={`/(admin)/menu/create?id=${id}`} asChild>
-              <Pressable>
+              <Pressable className="mr-4">
                 {({ pressed }) => (
                   <FontAwesome
                     name="pencil"
-                    size={25}
+                    size={24}
                     color={Colors.light.tint}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+                    style={{ opacity: pressed ? 0.5 : 1 }}
                   />
                 )}
               </Pressable>
@@ -53,42 +63,20 @@ export default function ProductDetailsScreen() {
           ),
         }}
       />
-      <Stack.Screen options={{ title: product?.name, headerShown: true }} />
 
-      {/* <Image
-        source={{ uri: product?.image || defaultPizzaImage }}
-        style={styles.image}
-      /> */}
       <RemoteImage
-          path={product?.image}
-          fallback={defaultPizzaImage}
-          style={styles.image}
-          // resizeMode='contain'
-        />
-      
-      <Text style={styles.title}>{product.name}</Text>
+        path={product.image ?? undefined}
+        fallback={defaultPizzaImage}
+        className="w-full aspect-square rounded-lg"
+      />
 
-      <Text style={styles.price}>Price: ₹ {product.price}</Text>
-        
+      <Text className="mt-4 text-xl font-bold text-gray-900">
+        {product.name}
+      </Text>
+
+      <Text className="mt-2 text-lg text-gray-700">
+        Price: ₹ {product.price}
+      </Text>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "#fff",
-    flex: 1,
-    padding: 10,
-  },
-  image: {
-    width: "100%",
-    aspectRatio: 1,
-  },
-  price: {
-    fontSize: 18,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-});

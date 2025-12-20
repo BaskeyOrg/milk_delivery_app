@@ -1,82 +1,59 @@
-import { Tables } from '@/assets/data/types';
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import Colors from '../constants/Colors';
-import { defaultPizzaImage } from './ProductListItem';
-import RemoteImage from './RemoteImage';
+import { Tables } from "@/assets/data/types";
+import { Link, useSegments } from "expo-router";
+import React from "react";
+import { Pressable, Text, View } from "react-native";
+import { defaultPizzaImage } from "./ProductListItem";
+import RemoteImage from "./RemoteImage";
 
 type OrderItemListItemProps = {
-  item: { products: Tables<'products'> } & Tables<'order_items'>;
+  item: { products: Tables<"products"> } & Tables<"order_items">;
 };
 
 const OrderItemListItem = ({ item }: OrderItemListItemProps) => {
-  return (
-    <View style={styles.container}>
-      {/* <Image
-        source={{ uri: item.products.image || defaultPizzaImage }}
-        style={styles.image}
-        resizeMode="contain"
-      /> */}
+  const segments = useSegments();
 
-      <RemoteImage
-          path={item.products.image}
-          fallback={defaultPizzaImage}
-          style={styles.image}
-          resizeMode="contain"
-        />
-      
-      <View style={{ flex: 1 }}>
-        <Text style={styles.title}>{item.products.name}</Text>
-        <View style={styles.subtitleContainer}>
-          <Text style={styles.price}>${item.products.price.toFixed(2)}</Text>
-          <Text>Size: {item.size}</Text>
+  return (
+    <View className="bg-white dark:bg-neutral-900 rounded-xl p-2 flex-row items-center mb-2">
+      {/* Clickable Image */}
+      <Link href={`/${segments[0]}/menu/${item.products.id}`} asChild>
+        <Pressable>
+          <RemoteImage
+            path={item.products.image ?? undefined}
+            fallback={defaultPizzaImage}
+            resizeMode="contain"
+            className="w-[75px] aspect-square mr-3 rounded-lg"
+          />
+        </Pressable>
+      </Link>
+
+      <View className="flex-1">
+        {/* Clickable Title */}
+        <Link href={`/${segments[0]}/menu/${item.products.id}`} asChild>
+          <Pressable>
+            <Text className="font-medium text-base mb-1 text-black dark:text-white">
+              {item.products.name}
+            </Text>
+          </Pressable>
+        </Link>
+
+        <View className="flex-row items-center space-x-2">
+          <Text className="text-gray-100 font-bold">
+            ₹ {item.products.price.toFixed(2)}
+          </Text>
+
+          <Text className="text-gray-500 dark:text-gray-400 ml-3">
+            Size: {item.size}
+          </Text>
         </View>
       </View>
-      <View style={styles.quantitySelector}>
-        <Text style={styles.quantity}>{item.quantity}</Text>
+
+      <View className="flex-row items-center mx-2">
+        <Text className="font-medium text-lg text-black dark:text-white mr-3">
+          {item.quantity}
+        </Text>
       </View>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 5,
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  image: {
-    width: 75,
-    aspectRatio: 1,
-    alignSelf: 'center',
-    marginRight: 10,
-  },
-  title: {
-    fontWeight: '500',
-    fontSize: 16,
-    marginBottom: 5,
-  },
-  subtitleContainer: {
-    flexDirection: 'row',
-    gap: 5,
-  },
-  quantitySelector: {
-    flexDirection: 'row',
-    gap: 10,
-    alignItems: 'center',
-    marginVertical: 10,
-  },
-  quantity: {
-    fontWeight: '500',
-    fontSize: 18,
-  },
-  price: {
-    color: Colors.light.tint,
-    fontWeight: 'bold',
-  },
-});
 
 export default OrderItemListItem;
