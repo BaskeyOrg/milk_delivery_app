@@ -1,9 +1,8 @@
 import Button from "@/components/Button";
-import Colors from "@/constants/Colors";
 import { supabase } from "@/lib/supabase";
 import { Link, Stack } from "expo-router";
 import React, { useState } from "react";
-import { Alert, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Text, TextInput, View } from "react-native";
 
 export default function SignUpScreen() {
   const [email, setEmail] = useState("");
@@ -14,7 +13,7 @@ export default function SignUpScreen() {
 
   const validateInputs = () => {
     setErrors("");
-    
+
     if (!email) {
       setErrors("Email is required");
       return false;
@@ -35,83 +34,92 @@ export default function SignUpScreen() {
   };
 
   async function signUpWithEmail() {
+    if (!validateInputs()) return;
+
     setLoading(true);
-    const { error } = await supabase.auth.signUp({ email, password });
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
 
     if (error) Alert.alert(error.message);
     setLoading(false);
   }
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 justify-center p-5 bg-white dark:bg-black">
       <Stack.Screen options={{ title: "Sign Up" }} />
 
-      <Text style={styles.label}>Email</Text>
+      {/* Email */}
+      <Text className="text-gray-600 dark:text-gray-300 mb-1">
+        Email
+      </Text>
       <TextInput
         value={email}
         onChangeText={setEmail}
-        style={styles.input}
         placeholder="Enter your email"
         keyboardType="email-address"
         autoCapitalize="none"
+        placeholderTextColor="#9CA3AF"
+        className="border border-gray-400 dark:border-gray-600
+                   bg-white dark:bg-gray-900
+                   text-black dark:text-white
+                   rounded-md px-3 py-2 mb-4"
       />
 
-      <Text style={styles.label}>Password</Text>
+      {/* Password */}
+      <Text className="text-gray-600 dark:text-gray-300 mb-1">
+        Password
+      </Text>
       <TextInput
         value={password}
         onChangeText={setPassword}
-        style={styles.input}
         placeholder="Enter password"
         secureTextEntry
+        placeholderTextColor="#9CA3AF"
+        className="border border-gray-400 dark:border-gray-600
+                   bg-white dark:bg-gray-900
+                   text-black dark:text-white
+                   rounded-md px-3 py-2 mb-4"
       />
 
-      <Text style={styles.label}>Confirm Password</Text>
+      {/* Confirm Password */}
+      <Text className="text-gray-600 dark:text-gray-300 mb-1">
+        Confirm Password
+      </Text>
       <TextInput
         value={confirmPassword}
         onChangeText={setConfirmPassword}
-        style={styles.input}
         placeholder="Confirm password"
         secureTextEntry
+        placeholderTextColor="#9CA3AF"
+        className="border border-gray-400 dark:border-gray-600
+                   bg-white dark:bg-gray-900
+                   text-black dark:text-white
+                   rounded-md px-3 py-2 mb-2"
       />
 
-      <Text style={styles.error}>{errors}</Text>
+      {/* Error message */}
+      {!!errors && (
+        <Text className="text-red-500 text-xs mb-3">
+          {errors}
+        </Text>
+      )}
 
-      <Button text={loading ? "Creating account..." : "Create account"} onPress={signUpWithEmail} disabled={loading} />
+      {/* Button */}
+      <Button
+        text={loading ? "Creating account..." : "Create account"}
+        onPress={signUpWithEmail}
+        disabled={loading}
+      />
 
-      <Link href="/sign-in" style={styles.textButton}>
+      {/* Sign in link */}
+      <Link
+        href="/sign-in"
+        className="mt-4 text-center font-bold text-blue-600 dark:text-blue-400"
+      >
         Already have an account?
       </Link>
-      
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 10,
-  },
-  label: {
-    color: "gray",
-    fontSize: 16,
-  },
-  input: {
-    backgroundColor: "#fff",
-    borderRadius: 5,
-    padding: 10,
-    marginTop: 5,
-    marginBottom: 10,
-  },
-  textButton: {
-    alignSelf: "center",
-    fontWeight: "bold",
-    marginVertical: 10,
-    color: Colors.light.tint,
-  },
-  error: {
-    color: "red",
-    fontSize: 12,
-    marginTop: 5,
-  },
-});

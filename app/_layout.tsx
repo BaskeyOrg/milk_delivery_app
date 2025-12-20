@@ -2,7 +2,7 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import { useEffect } from "react";
-import "react-native-reanimated";
+import "../global.css";
 
 import { useColorScheme } from "@/components/useColorScheme";
 import AuthProvider from "@/providers/AuthProvider";
@@ -50,7 +50,7 @@ function RootLayoutNav() {
                 <Stack.Screen name="(auth)" options={{ headerShown: false }} />
                 <Stack.Screen name="(admin)" options={{ headerShown: false }} />
                 <Stack.Screen name="(user)" options={{ headerShown: false }} />
-                <Stack.Screen name="cart" options={{ presentation: "modal" }} />
+                <Stack.Screen name="cart" options={{ title: "Cart modal", presentation: "modal" }} />
               </Stack>
             </CartProvider>
           </NotificationProvider>

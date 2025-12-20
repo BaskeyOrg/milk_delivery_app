@@ -16,8 +16,8 @@ const CartScreen = () => {
         contentContainerStyle={{ gap: 10 }}
       />
 
-      <Text style={{ marginTop: 20, fontSize: 20, fontWeight: '500' }}>
-        Total: ${total}
+      <Text style={{ marginTop: 20, fontSize: 20, fontWeight: '500', color: 'white' }}>
+        Total: ₹ {total}
       </Text>
       <Button onPress={checkout} text="Checkout" />
 

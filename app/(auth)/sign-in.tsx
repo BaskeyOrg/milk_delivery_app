@@ -1,9 +1,8 @@
 import Button from "@/components/Button";
-import Colors from "@/constants/Colors";
 import { supabase } from "@/lib/supabase";
 import { Link, Stack } from "expo-router";
 import React, { useState } from "react";
-import { Alert, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Text, TextInput, View } from "react-native";
 
 export default function SignInScreen() {
   const [email, setEmail] = useState("");
@@ -20,58 +19,58 @@ export default function SignInScreen() {
     if (error) Alert.alert(error.message);
     setLoading(false);
   }
-  
+
   return (
-    <View style={styles.container}>
+    <View className="flex-1 justify-center p-5 bg-white dark:bg-black">
       <Stack.Screen options={{ title: "Sign in" }} />
 
-      <Text style={styles.label}>Email</Text>
+      {/* Email */}
+      <Text className="text-gray-600 dark:text-gray-300 mb-1">
+        Email
+      </Text>
       <TextInput
         value={email}
         onChangeText={setEmail}
         placeholder="jon@gmail.com"
-        style={styles.input}
+        placeholderTextColor="#9CA3AF"
+        className="border border-gray-400 dark:border-gray-600
+                   bg-white dark:bg-gray-900
+                   text-black dark:text-white
+                   rounded-md px-3 py-2 mb-5"
       />
 
-      <Text style={styles.label}>Password</Text>
+      {/* Password */}
+      <Text className="text-gray-600 dark:text-gray-300 mb-1">
+        Password
+      </Text>
       <TextInput
         value={password}
         onChangeText={setPassword}
-        placeholder=""
-        style={styles.input}
         secureTextEntry
+        placeholder="••••••••"
+        placeholderTextColor="#9CA3AF"
+        className="border border-gray-400 dark:border-gray-600
+                   bg-white dark:bg-gray-900
+                   text-black dark:text-white
+                   rounded-md px-3 py-2 mb-6"
       />
 
-      <Button onPress={signInWithEmail} text={loading ? "Signing in..." : "Sign in"} disabled={loading} />
-      <Link href="/sign-up" style={styles.textButton}>
+      {/* Button */}
+      <Button
+        onPress={signInWithEmail}
+        text={loading ? "Signing in..." : "Sign in"}
+        disabled={loading}
+      />
+
+      {/* Link */}
+      <Link
+        href="/sign-up"
+        className="mt-4 text-center font-bold text-blue-600 dark:text-blue-400"
+      >
         Create an account
       </Link>
+
+
     </View>
   );
-};
-
-const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    justifyContent: "center",
-    flex: 1,
-  },
-  label: {
-    color: "gray",
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "gray",
-    padding: 10,
-    marginTop: 5,
-    marginBottom: 20,
-    backgroundColor: "white",
-    borderRadius: 5,
-  },
-  textButton: {
-    alignSelf: "center",
-    fontWeight: "bold",
-    color: Colors.light.tint,
-    marginVertical: 10,
-  },
-});
+}
