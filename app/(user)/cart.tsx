@@ -1,15 +1,70 @@
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { FlatList, Platform, Text, View } from "react-native";
+import { useState } from "react";
+import { Alert, FlatList, Platform, Text, View } from "react-native";
 
 import Button from "@/components/Button";
 import CartListItem from "@/components/CartListItems";
 import OrderBillFooter from "@/components/OrderBillFooter";
+
+import { Tables } from "@/assets/data/types";
+import AddressSelectionModal from "@/components/Address/AddressSelectionModal";
+import { useAddresses } from "@/hooks/useAddresses";
+import { useAuth } from "@/providers/AuthProvider";
 import { useCart } from "@/providers/CartProvider";
 
 const CartScreen = () => {
   const { items, total, checkout } = useCart();
+  const { session } = useAuth();
+  const { addresses, reload } = useAddresses(session?.user.id ?? '');
+
+  const [addressModalVisible, setAddressModalVisible] = useState(false);
+
   const router = useRouter();
+  const params = useLocalSearchParams();
+
+  // If user was redirected here after creating an address, open the modal
+  // useEffect(() => {
+  //   if (params?.openAddressModal === '1') {
+  //     setAddressModalVisible(true);
+  //   }
+  // }, [params, router]);
+
+  // // refresh addresses each time this screen gains focus
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     if (reload) reload();
+  //   }, [reload])
+  // );
+
+  /** STEP 1: Checkout click */
+  const handleCheckout = () => {
+    if (items.length === 0) return;
+
+    if (!addresses || addresses.length === 0) {
+      Alert.alert(
+        "No address found",
+        "Please add an address before checkout",
+        [
+          {
+            text: "Go to Profile",
+            onPress: () => router.push("/(user)/profile"),
+          },
+        ]
+      );
+      return;
+    }
+
+    setAddressModalVisible(true);
+  };
+
+  /** STEP 2: Address selected */
+  const handleAddressProceed = (address: Tables<'addresses'>) => {
+    setAddressModalVisible(false);
+
+    // You can store selected address in context or pass to checkout
+    checkout(address); // ← optional: pass address
+  };
 
   if (items.length === 0) {
     return (
@@ -33,7 +88,15 @@ const CartScreen = () => {
 
       <OrderBillFooter itemsTotal={total} deliveryCharge={0} />
 
-      <Button onPress={checkout} text="Checkout" />
+      {/* Checkout */}
+      <Button onPress={handleCheckout} text="Checkout" />
+
+      {/* Address Modal */}
+      <AddressSelectionModal
+        visible={addressModalVisible}
+        onClose={() => setAddressModalVisible(false)}
+        onProceed={handleAddressProceed}
+      />
 
       <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
     </View>

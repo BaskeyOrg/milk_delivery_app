@@ -1,3 +1,4 @@
+npx supabase login
 npx supabase gen types typescript --project-id bwreaukzhkzplfrinlbi > lib/database.types.ts
 
 Expo push notifications:https://expo.dev/

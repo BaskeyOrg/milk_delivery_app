@@ -4,6 +4,7 @@ import { Stack } from "expo-router";
 import { useEffect } from "react";
 import "../global.css";
 
+import SafeScreen from "@/components/SafeScreen";
 import { useColorScheme } from "@/components/useColorScheme";
 import AuthProvider from "@/providers/AuthProvider";
 import CartProvider from "@/providers/CartProvider";
@@ -46,12 +47,14 @@ function RootLayoutNav() {
         <QueryProvider>
           <NotificationProvider>
             <CartProvider>
-              <Stack>
-                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                <Stack.Screen name="(admin)" options={{ headerShown: false }} />
-                <Stack.Screen name="(user)" options={{ headerShown: false }} />
-                <Stack.Screen name="(user)/cart" options={{ title: "Cart modal", presentation: "modal" }} />
-              </Stack>
+              <SafeScreen>
+                <Stack>
+                  <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                  <Stack.Screen name="(admin)" options={{ headerShown: false }} />
+                  <Stack.Screen name="(user)" options={{ headerShown: false }} />
+                  <Stack.Screen name="(user)/cart" options={{ title: "Cart modal", presentation: "modal" }} />
+                </Stack>
+              </SafeScreen>
             </CartProvider>
           </NotificationProvider>
         </QueryProvider>

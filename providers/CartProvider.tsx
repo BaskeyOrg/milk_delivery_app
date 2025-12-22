@@ -12,7 +12,7 @@ type CartType = {
   addItem: (product: Product, size: CartItem['size']) => void;
   updateQuantity: (itemId: string, amount: -1 | 1) => void;
   total: number;
-  checkout: () => void;
+  checkout: (address?: Tables<'addresses'>) => void;
 };
 
 const CartContext = createContext<CartType>({
@@ -82,8 +82,10 @@ const CartProvider = ({ children }: PropsWithChildren) => {
     setItems([]);
   };
 
-  const checkout = async () => {
+  const checkout = async (address?: Tables<'addresses'>) => {
 
+    // Currently orders table doesn't store address fields in the schema.
+    // We accept an optional address here for future use (e.g. add address_id to orders).
     insertOrder(
       { total },
       {
