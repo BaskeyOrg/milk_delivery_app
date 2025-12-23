@@ -1,5 +1,5 @@
 import { CartItem } from "@/assets/data/types";
-import { FontAwesome } from "@expo/vector-icons";
+import { AntDesign, FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { Modal, Pressable, Text, View } from "react-native";
 import { useCart } from "../providers/CartProvider";
@@ -25,98 +25,121 @@ const CartListItem = ({ cartItem }: CartListItemProps) => {
   };
 
   const handleRemove = () => {
-    updateQuantity(cartItem.id, -1); // remove the item
+    updateQuantity(cartItem.id, -1);
     setModalVisible(false);
   };
 
   return (
     <>
-      <View className="bg-white rounded-lg p-2 flex-row items-center mb-2">
+      {/* Cart Item */}
+      <View className="flex-row bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-neutral-700 mb-4 overflow-hidden h-40">
+        {/* Left Half - Image */}
         <RemoteImage
           path={cartItem.product.image ?? undefined}
           fallback={defaultPizzaImage}
-          resizeMode="contain"
-          className="w-20 aspect-square rounded-lg mr-3"
+          resizeMode="cover"
+          className="w-1/2 h-full"
         />
 
-        <View className="flex-1">
-          <Text className="text-black font-medium text-base mb-1">
+        {/* Right Half - Text + Buttons */}
+        <View className="w-1/2 p-3">
+          <Text className="text-black dark:text-white font-semibold text-base text-xl font-bold mb-1">
             {cartItem.product.name}
           </Text>
 
-          <View className="flex-row items-center space-x-2">
-            <Text className="text-primary font-bold">
-              ₹ {cartItem.product.price.toFixed(2)}
-            </Text>
-            <Text className="text-gray-500 ml-3">Size: {cartItem.size}</Text>
-          </View>
-        </View>
-
-        <View className="flex-row flex-col items-center justify-center space-y-1">
-          <View className="flex-row items-center space-x-3">
-            <FontAwesome
-              onPress={handleMinus}
-              name="minus"
-              color="gray"
-              style={{ padding: 5 }}
-            />
-
-            <Text className="text-black font-medium text-lg mx-3">
-              {cartItem.quantity}
-            </Text>
-
-            <FontAwesome
-              onPress={() => updateQuantity(cartItem.id, 1)}
-              name="plus"
-              color="gray"
-              style={{ padding: 5 }}
-            />
-          </View>
-
-          <Text className="text-black font-bold text-base">
-            ₹ {itemTotal.toFixed(2)}
+          <Text className="text-gray-600 dark:text-neutral-300 mt-1">
+            Size: {cartItem.size}
           </Text>
+
+          <Text className="text-primary font-bold mt-1">
+            ₹ {cartItem.product.price.toFixed(2)}
+          </Text>
+
+          {/* Quantity + Total */}
+          <View className="flex-row justify-between items-center mt-2">
+            <Text className="text-black dark:text-white font-bold text-lg">
+              ₹ {Math.ceil(itemTotal)}
+            </Text>
+            <View className="flex-row items-center border border-gray-300 dark:border-neutral-700 rounded-xl overflow-hidden">
+              <Pressable
+                onPress={handleMinus}
+                className="px-3 py-1 bg-gray-100 dark:bg-neutral-800"
+              >
+                <FontAwesome name="minus" size={20} color="#4B5563" />
+              </Pressable>
+
+              <Text className="px-4 py-1 text-black dark:text-white font-medium">
+                {cartItem.quantity}
+              </Text>
+
+              <Pressable
+                onPress={() => updateQuantity(cartItem.id, 1)}
+                className="px-3 py-1 bg-gray-100 dark:bg-neutral-800"
+              >
+                <FontAwesome name="plus" size={20} color="#4B5563" />
+              </Pressable>
+            </View>
+          </View>
         </View>
       </View>
 
-      {/* Modal */}
+      {/* Remove Confirmation Modal */}
       <Modal
         visible={modalVisible}
         transparent
         animationType="fade"
         onRequestClose={() => setModalVisible(false)}
       >
-        <View className="flex-1 justify-center items-center bg-black/50">
-          <View className="bg-white rounded-lg p-4 w-11/12 max-w-md">
-            <Text className="text-lg font-bold mb-4">Do you want to remove {cartItem.product.name} ?</Text>
+        <View className="flex-1 justify-center items-center bg-black/40 p-4">
+          <View className="bg-white dark:bg-neutral-900 rounded-2xl p-5 w-full max-w-md shadow-lg">
+            <Text className="text-lg font-bold text-black dark:text-white mb-4">
+              Remove Item
+            </Text>
+
+            <Text className="text-gray-700 dark:text-neutral-300 mb-4">
+              Are you sure you want to remove{" "}
+              <Text className="font-semibold">{cartItem.product.name}</Text>?
+            </Text>
 
             <View className="flex-row items-center mb-4">
               <RemoteImage
                 path={cartItem.product.image ?? undefined}
                 fallback={defaultPizzaImage}
-                className="w-20 h-20 rounded-lg mr-4"
+                className="w-20 h-full rounded-xl mr-4"
                 resizeMode="contain"
               />
               <View className="flex-1">
-                <Text className="font-medium text-base">{cartItem.product.name}</Text>
-                <Text className="text-gray-500">Size: {cartItem.size}</Text>
-                <Text className="text-primary font-bold">₹ {cartItem.product.price.toFixed(2)}</Text>
+                <Text className="font-semibold text-black dark:text-white">
+                  {cartItem.product.name}
+                </Text>
+                <Text className="text-gray-600 dark:text-neutral-300">
+                  Size: {cartItem.size}
+                </Text>
+                <Text className="text-primary font-bold">
+                  ₹ {cartItem.product.price.toFixed(2)}
+                </Text>
               </View>
             </View>
 
-            <View className="flex-row justify-end space-x-4">
+            <View className="flex-row justify-end space-x-3 gap-3">
+              {/* Remove Button */}
               <Pressable
-                className="px-4 py-2 rounded-lg border border-gray-300"
-                onPress={() => setModalVisible(false)}
+                onPress={handleRemove}
+                className="px-4 py-2 rounded-2xl bg-red-500 flex-row items-center"
               >
-                <Text className="text-gray-700 font-medium">Cancel</Text>
+                <AntDesign name="delete" size={18} color="#fff" />
+                <Text className="ml-2 text-white font-medium">Remove</Text>
               </Pressable>
 
+              {/* Cancel Button */}
               <Pressable
-                className="px-4 py-2 rounded-lg bg-red-500 ml-3"
-                onPress={handleRemove}
+                onPress={() => setModalVisible(false)}
+                className="px-4 py-2 rounded-2xl border border-gray-300 flex-row items-center"
               >
-                <Text className="text-white font-medium">Remove</Text>
+                <MaterialIcons name="cancel" size={18} color="#4B5563" />
+                <Text className="ml-2 text-gray-700 dark:text-neutral-300 font-medium">
+                  Cancel
+                </Text>
               </Pressable>
             </View>
           </View>

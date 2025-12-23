@@ -7,9 +7,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Switch,
   Text,
   TextInput,
   TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function CreateAddressScreen() {
@@ -23,6 +25,7 @@ export default function CreateAddressScreen() {
   const [zip_code, setZipCode] = useState("");
   const [phone, setPhone] = useState("");
   const [label, setLabel] = useState("");
+  const [isDefault, setIsDefault] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const resetForm = () => {
@@ -33,36 +36,46 @@ export default function CreateAddressScreen() {
     setZipCode("");
     setPhone("");
     setLabel("");
+    setIsDefault(false);
   };
 
   const handleSave = async () => {
     if (!session?.user?.id || saving) return;
-
     setSaving(true);
 
-    const { error } = await supabase.from("addresses").insert({
-      user_id: session.user.id,
-      full_name,
-      street,
-      city,
-      state: stateVal,
-      zip_code,
-      phone,
-      label,
-      is_default: false,
-    });
+    try {
+      /** 1️⃣ If new address is default → reset others */
+      if (isDefault) {
+        await supabase
+          .from("addresses")
+          .update({ is_default: false })
+          .eq("user_id", session.user.id);
+      }
 
-    setSaving(false);
+      /** 2️⃣ Insert new address */
+      const { error } = await supabase.from("addresses").insert({
+        user_id: session.user.id,
+        full_name,
+        street,
+        city,
+        state: stateVal,
+        zip_code,
+        phone,
+        label,
+        is_default: isDefault,
+      });
 
-    if (error) {
+      if (error) throw error;
+
+      resetForm();
+
+      /** 3️⃣ Go back to cart & reopen modal */
+      router.push("/(user)/cart?openAddressModal=1");
+    } catch (error) {
       console.log("Error adding address", error);
-      return;
+    } finally {
+      setSaving(false);
     }
-
-    resetForm();
-
-    // Navigate to cart and instruct it to reopen the address modal
-    router.push("/(user)/cart?openAddressModal=1");
   };
 
   return (
@@ -98,6 +111,18 @@ export default function CreateAddressScreen() {
           />
         ))}
 
+        {/* ✅ Default Address Toggle */}
+        <View className="flex-row justify-between items-center mt-4">
+          <Text className="text-gray-800 dark:text-white font-medium">
+            Set as default address
+          </Text>
+          <Switch
+            value={isDefault}
+            onValueChange={setIsDefault}
+          />
+        </View>
+
+        {/* Save Button */}
         <TouchableOpacity
           disabled={saving}
           onPress={handleSave}

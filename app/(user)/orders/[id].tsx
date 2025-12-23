@@ -7,8 +7,8 @@ import { ActivityIndicator, FlatList, Text, View } from "react-native";
 
 export default function OrderDetailsScreen() {
   const { id: idString } = useLocalSearchParams();
-  const id = parseFloat(typeof idString === "string" ? idString : idString[0]);
-  const deliveryCharge = 20.0;
+  const id = Number(typeof idString === "string" ? idString : idString[0]);
+  const deliveryCharge = 20;
 
   const { data: order, isLoading, error } = useOrderDetails(id);
   useUpdateOrderSubscription(id);
@@ -29,25 +29,17 @@ export default function OrderDetailsScreen() {
     );
   }
 
-  // Extract only the fields OrderListItem needs
-  const orderHeader = {
-    created_at: order.created_at,
-    id: order.id,
-    status: order.status,
-    status_updated_at: order.status_updated_at,
-    total: order.total,
-    user_id: order.user_id,
-  };
-
   return (
-    <View className="flex-1 p-4 space-y-5">
-      <Stack.Screen options={{ title: `Order #${id}` }} />
+    <View className="flex-1 p-4">
+      <Stack.Screen options={{ title: `Order #${order.id}` }} />
 
+    {/* Order Items */}
       <FlatList
         data={order.order_items}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => <OrderItemListItem item={item} />}
         contentContainerStyle={{ gap: 10 }}
+        ListHeaderComponent={<OrderBillFooter itemsTotal={order.total} />}
         ListFooterComponent={() => (
           <OrderBillFooter
             itemsTotal={order.total}
