@@ -1,18 +1,28 @@
-import { useInsertOrderItems } from '@/api/order-items';
-import { useInsertOrder } from '@/api/orders';
-import { CartItem, Tables } from '@/assets/data/types';
-import { randomUUID } from 'expo-crypto';
-import { useRouter } from 'expo-router';
-import { PropsWithChildren, createContext, useContext, useMemo, useState } from 'react';
+import { useInsertOrderItems } from "@/api/order-items";
+import { useInsertOrder } from "@/api/orders";
+import { CartItem, Tables } from "@/assets/data/types";
+import { randomUUID } from "expo-crypto";
+import { useRouter } from "expo-router";
+import {
+  PropsWithChildren,
+  createContext,
+  useContext,
+  useMemo,
+  useState,
+} from "react";
 
-type Product = Tables<'products'>;
+type Product = Tables<"products">;
 
 type CartType = {
   items: CartItem[];
-  addItem: (product: Product, size: CartItem['size']) => void;
+  addItem: (
+    product: Product,
+    size: CartItem["size"],
+    quantity?: number
+  ) => void;
   updateQuantity: (itemId: string, amount: -1 | 1) => void;
   total: number;
-  checkout: (address?: Tables<'addresses'>) => void;
+  checkout: (address?: Tables<"addresses">) => void;
 };
 
 const CartContext = createContext<CartType>({
@@ -31,23 +41,32 @@ const CartProvider = ({ children }: PropsWithChildren) => {
 
   const router = useRouter();
 
-  const addItem = (product: Product, size: CartItem['size']) => {
-    // if already in cart, increment quantity
+  const addItem = (
+    product: Product,
+    size: CartItem["size"],
+    quantity: number = 1
+  ) => {
     const existingItem = items.find(
       (item) => item.product_id === product.id && item.size === size
     );
 
     if (existingItem) {
-      updateQuantity(existingItem.id, 1);
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === existingItem.id
+            ? { ...item, quantity: item.quantity + quantity }
+            : item
+        )
+      );
       return;
     }
 
     const newCartItem: CartItem = {
-      id: randomUUID(), // generate
+      id: randomUUID(),
       product,
       product_id: product.id,
       size,
-      quantity: 1,
+      quantity,
     };
 
     setItems((prev) => [newCartItem, ...prev]);
@@ -66,35 +85,28 @@ const CartProvider = ({ children }: PropsWithChildren) => {
     );
   };
 
-  // const total = items.reduce(
-  //   (sum, item) => (sum += item.product.price * item.quantity),
-  //   0
-  // );
   const total = useMemo(() => {
-  return items.reduce(
-    (sum, item) => sum + item.product.price * item.quantity,
-    0
-  );
-}, [items]);
-
+    return items.reduce(
+      (sum, item) => sum + item.product.price * item.quantity,
+      0
+    );
+  }, [items]);
 
   const clearCart = () => {
     setItems([]);
   };
 
-  const checkout = async (address?: Tables<'addresses'>) => {
-
-    // Currently orders table doesn't store address fields in the schema.
-    // We accept an optional address here for future use (e.g. add address_id to orders).
+  const checkout = async (address?: Tables<"addresses">) => {
+    // Insert order and include address_id when provided
     insertOrder(
-      { total },
+      { total, address_id: address?.id ?? null },
       {
         onSuccess: saveOrderItems,
       }
     );
   };
 
-  const saveOrderItems = (order: Tables<'orders'>) => {
+  const saveOrderItems = (order: Tables<"orders">) => {
     const orderItems = items.map((cartItem) => ({
       order_id: order.id,
       product_id: cartItem.product_id,

@@ -108,6 +108,7 @@ export type Database = {
       }
       orders: {
         Row: {
+          address_id: number | null
           created_at: string
           id: number
           status: string
@@ -116,6 +117,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          address_id?: number | null
           created_at?: string
           id?: number
           status?: string
@@ -124,6 +126,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          address_id?: number | null
           created_at?: string
           id?: number
           status?: string
@@ -132,6 +135,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_address_id_fkey"
+            columns: ["address_id"]
+            isOneToOne: false
+            referencedRelation: "addresses"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_user_id_fkey"
             columns: ["user_id"]
@@ -167,7 +177,6 @@ export type Database = {
       }
       profiles: {
         Row: {
-          address: string | null
           avatar_url: string | null
           expo_push_token: string | null
           full_name: string | null
@@ -179,7 +188,6 @@ export type Database = {
           website: string | null
         }
         Insert: {
-          address?: string | null
           avatar_url?: string | null
           expo_push_token?: string | null
           full_name?: string | null
@@ -191,7 +199,6 @@ export type Database = {
           website?: string | null
         }
         Update: {
-          address?: string | null
           avatar_url?: string | null
           expo_push_token?: string | null
           full_name?: string | null

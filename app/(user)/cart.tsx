@@ -23,20 +23,6 @@ const CartScreen = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
 
-  // If user was redirected here after creating an address, open the modal
-  // useEffect(() => {
-  //   if (params?.openAddressModal === '1') {
-  //     setAddressModalVisible(true);
-  //   }
-  // }, [params, router]);
-
-  // // refresh addresses each time this screen gains focus
-  // useFocusEffect(
-  //   useCallback(() => {
-  //     if (reload) reload();
-  //   }, [reload])
-  // );
-
   /** STEP 1: Checkout click */
   const handleCheckout = () => {
     if (items.length === 0) return;

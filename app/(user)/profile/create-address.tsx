@@ -3,13 +3,13 @@ import { useAuth } from "@/providers/AuthProvider";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
 } from "react-native";
 
 export default function CreateAddressScreen() {
@@ -24,6 +24,16 @@ export default function CreateAddressScreen() {
   const [phone, setPhone] = useState("");
   const [label, setLabel] = useState("");
   const [saving, setSaving] = useState(false);
+
+  const resetForm = () => {
+    setFullName("");
+    setStreet("");
+    setCity("");
+    setStateVal("");
+    setZipCode("");
+    setPhone("");
+    setLabel("");
+  };
 
   const handleSave = async () => {
     if (!session?.user?.id || saving) return;
@@ -49,8 +59,10 @@ export default function CreateAddressScreen() {
       return;
     }
 
-  // Navigate to cart and instruct it to reopen the address modal
-  router.push("/(user)/cart?openAddressModal=1");
+    resetForm();
+
+    // Navigate to cart and instruct it to reopen the address modal
+    router.push("/(user)/cart?openAddressModal=1");
   };
 
   return (

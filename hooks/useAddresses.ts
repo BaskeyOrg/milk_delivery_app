@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { useEffect, useState } from "react";
 
 export const useAddresses = (userId: string) => {
-  const [addresses, setAddresses] = useState< Tables<'addresses'>[]>([]);
+  const [addresses, setAddresses] = useState<Tables<"addresses">[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
@@ -13,7 +13,8 @@ export const useAddresses = (userId: string) => {
       .from("addresses")
       .select("*")
       .eq("user_id", userId)
-      .order("is_default", { ascending: false });
+      .order("is_default", { ascending: false })
+      .order("created_at", { ascending: false });
 
     if (!error) setAddresses(data ?? []);
     setLoading(false);
@@ -21,7 +22,6 @@ export const useAddresses = (userId: string) => {
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   return { addresses, loading, reload: load } as const;

@@ -18,7 +18,7 @@ export const useMyProfile = () => {
 
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, username, full_name, phone, address, avatar_url, website, group, expo_push_token")
+        .select("id, username, full_name, phone, avatar_url, website, group, expo_push_token")
         .eq("id", userId)
         .single();
 
@@ -26,6 +26,32 @@ export const useMyProfile = () => {
         throw new Error(error.message);
       }
 
+      return data;
+    },
+  });
+};
+
+// NEW: Add this to your profile API file
+export const useMyAddresses = () => {
+  const { session } = useAuth();
+  const userId = session?.user.id;
+
+  return useQuery({
+    queryKey: ["addresses", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      // 1. Add a guard check to satisfy TypeScript
+      if (!userId) {
+        throw new Error("User ID is required to fetch addresses");
+      }
+
+      const { data, error } = await supabase
+        .from("addresses")
+        .select("*")
+        // Now userId is guaranteed to be a string here
+        .eq("user_id", userId);
+
+      if (error) throw new Error(error.message);
       return data;
     },
   });

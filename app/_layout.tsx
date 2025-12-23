@@ -52,7 +52,6 @@ function RootLayoutNav() {
                   <Stack.Screen name="(auth)" options={{ headerShown: false }} />
                   <Stack.Screen name="(admin)" options={{ headerShown: false }} />
                   <Stack.Screen name="(user)" options={{ headerShown: false }} />
-                  <Stack.Screen name="(user)/cart" options={{ title: "Cart modal", presentation: "modal" }} />
                 </Stack>
               </SafeScreen>
             </CartProvider>

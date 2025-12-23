@@ -1,16 +1,17 @@
-import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { Redirect, Tabs } from "expo-router";
-import React from "react";
-
 import { useColorScheme } from "@/components/useColorScheme";
 import { useAuth } from "@/providers/AuthProvider";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { BlurView } from "expo-blur";
+import { Redirect, Tabs } from "expo-router";
+import React from "react";
+import { StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>["name"];
   color: string;
 }) {
-  return <FontAwesome size={20} style={{ marginBottom: -3 }} {...props} />;
+  return <FontAwesome size={20} style={{ marginBottom: 0 }} {...props} />;
 }
 
 export default function TabLayout() {
@@ -40,9 +41,16 @@ export default function TabLayout() {
           overflow: "hidden",
 
         },
+        tabBarBackground: () => (
+          <BlurView
+            intensity={80}
+            tint="dark"
+            style={StyleSheet.absoluteFill}
+          />
+        ),
         tabBarLabelStyle:{
           fontSize: 10,
-          fontWeight: "bold",
+          fontWeight: 600,
         },
         headerShown: false,
       }}
