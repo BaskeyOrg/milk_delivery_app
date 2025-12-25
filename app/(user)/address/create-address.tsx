@@ -1,4 +1,8 @@
-import { supabase } from "@/lib/supabase";
+import {
+  useAddressById,
+  useCreateAddress,
+  useUpdateAddress,
+} from "@/api/addresses";
 import { useAuth } from "@/providers/AuthProvider";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -21,6 +25,12 @@ export default function CreateAddressScreen() {
   const returnTo = params?.returnTo as string | undefined;
   const { session } = useAuth();
 
+  const userId = session?.user.id ?? "";
+
+  const { data: editAddress } = useAddressById(editId);
+  const { mutateAsync: createAddress } = useCreateAddress(userId);
+  const { mutateAsync: updateAddress } = useUpdateAddress(userId);
+
   const [full_name, setFullName] = useState("");
   const [street, setStreet] = useState("");
   const [city, setCity] = useState("");
@@ -31,105 +41,57 @@ export default function CreateAddressScreen() {
   const [isDefault, setIsDefault] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const resetForm = () => {
-    setFullName("");
-    setStreet("");
-    setCity("");
-    setStateVal("");
-    setZipCode("");
-    setPhone("");
-    setLabel("");
-    setIsDefault(false);
-  };
+  // Load edit data
+  useEffect(() => {
+    if (!editAddress) return;
+
+    setFullName(editAddress.full_name);
+    setStreet(editAddress.street);
+    setCity(editAddress.city);
+    setStateVal(editAddress.state);
+    setZipCode(editAddress.zip_code);
+    setPhone(editAddress.phone);
+    setLabel(editAddress.label ?? "");
+    setIsDefault(Boolean(editAddress.is_default));
+  }, [editAddress]);
 
   const handleSave = async () => {
-    if (!session?.user?.id || saving) return;
+    if (!userId || saving) return;
     setSaving(true);
 
     try {
-      /** 1️⃣ If new address is default → reset others */
-      if (isDefault) {
-        await supabase
-          .from("addresses")
-          .update({ is_default: false })
-          .eq("user_id", session.user.id);
-      }
+      const payload = {
+        full_name,
+        street,
+        city,
+        state: stateVal,
+        zip_code,
+        phone,
+        label,
+        is_default: isDefault,
+        user_id: userId,
+      };
 
-      let error = null;
       if (editId) {
-        const res = await supabase
-          .from("addresses")
-          .update({
-            full_name,
-            street,
-            city,
-            state: stateVal,
-            zip_code,
-            phone,
-            label,
-            is_default: isDefault,
-          })
-          .eq("id", editId);
-        error = res.error;
-      } else {
-        const res = await supabase.from("addresses").insert({
-          user_id: session.user.id,
-          full_name,
-          street,
-          city,
-          state: stateVal,
-          zip_code,
-          phone,
-          label,
-          is_default: isDefault,
+        await updateAddress({
+          id: editId,
+          data: payload,
         });
-        error = res.error;
+      } else {
+        await createAddress(payload);
       }
 
-      if (error) throw error;
-
-      resetForm();
-
-      /** 3️⃣ Navigate back */
       if (returnTo === "cart") {
         router.push("/(user)/cart?openAddressModal=1");
       } else {
         router.push("/(user)/address");
       }
-    } catch (error) {
-      console.log("Error adding address", error);
+    } catch (e) {
+      console.log("Save address error", e);
     } finally {
       setSaving(false);
     }
   };
-
-  // Load address when editing
-  useEffect(() => {
-    if (!editId) return;
-
-    let mounted = true;
-    (async () => {
-      const { data, error } = await supabase
-        .from("addresses")
-        .select("*")
-        .eq("id", editId)
-        .single();
-      if (error) return;
-      if (!mounted) return;
-      setFullName(data.full_name);
-      setStreet(data.street);
-      setCity(data.city);
-      setStateVal(data.state);
-      setZipCode(data.zip_code);
-      setPhone(data.phone);
-      setLabel(data.label ?? "");
-      setIsDefault(Boolean(data.is_default));
-    })();
-
-    return () => {
-      mounted = false;
-    };
-  }, [editId]);
 
   return (
     <KeyboardAvoidingView
@@ -169,10 +131,7 @@ export default function CreateAddressScreen() {
           <Text className="text-gray-800 dark:text-white font-medium">
             Set as default address
           </Text>
-          <Switch
-            value={isDefault}
-            onValueChange={setIsDefault}
-          />
+          <Switch value={isDefault} onValueChange={setIsDefault} />
         </View>
 
         {/* Save Button */}

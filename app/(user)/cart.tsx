@@ -3,7 +3,6 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useMemo, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   FlatList,
   Platform,
@@ -17,18 +16,20 @@ import Button from "@/components/Button";
 import CartListItem from "@/components/CartListItems";
 import OrderSummeryFooter from "@/components/OrderSummeryFooter";
 
+import { useAddressList } from "@/api/addresses";
 import { Tables } from "@/assets/data/types";
-import { useAddresses } from "@/hooks/useAddresses";
 import { useAuth } from "@/providers/AuthProvider";
 import { useCart } from "@/providers/CartProvider";
 
 const CartScreen = () => {
   const { items, total, checkout } = useCart();
   const { session } = useAuth();
-  const { addresses } = useAddresses(session?.user.id ?? "");
+    const { data: addresses = [] } = useAddressList(
+    session?.user.id ?? ""
+  );
+
 
   const [addressModalVisible, setAddressModalVisible] = useState(false);
-  const [paymentLoading, setPaymentLoading] = useState(false);
 
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -45,16 +46,12 @@ const CartScreen = () => {
     if (items.length === 0) return;
 
     if (!addresses || addresses.length === 0) {
-      Alert.alert(
-        "No address found",
-        "Please add an address before checkout",
-        [
-          {
-            text: "Go to Profile",
-            onPress: () => router.push("/(user)/profile"),
-          },
-        ]
-      );
+      Alert.alert("No address found", "Please add an address before checkout", [
+        {
+          text: "Go to Profile",
+          onPress: () => router.push("/(user)/profile"),
+        },
+      ]);
       return;
     }
 
@@ -64,7 +61,6 @@ const CartScreen = () => {
   /** STEP 2: Address selected */
   const handleAddressProceed = (address: Tables<"addresses">) => {
     setAddressModalVisible(false);
-    setPaymentLoading(true);
     checkout(address);
   };
 
@@ -74,10 +70,7 @@ const CartScreen = () => {
         <Text className="text-2xl font-bold text-text-primary mb-4">
           Your cart is empty
         </Text>
-        <Button
-          text="Go to Menu"
-          onPress={() => router.push("/(user)/menu")}
-        />
+        <Button text="Go to Menu" onPress={() => router.push("/(user)/menu")} />
         <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
       </View>
     );
@@ -125,19 +118,12 @@ const CartScreen = () => {
           className="bg-primary rounded-2xl overflow-hidden"
           activeOpacity={0.9}
           onPress={handleCheckout}
-          disabled={paymentLoading}
         >
           <View className="py-5 flex-row items-center justify-center">
-            {paymentLoading ? (
-              <ActivityIndicator size="small" color="#121212" />
-            ) : (
-              <>
-                <Text className="text-background font-bold text-lg mr-2">
-                  Checkout
-                </Text>
-                <Ionicons name="arrow-forward" size={20} color="#121212" />
-              </>
-            )}
+            <Text className="text-background font-bold text-lg mr-2">
+              Checkout
+            </Text>
+            <Ionicons name="arrow-forward" size={20} color="#121212" />
           </View>
         </TouchableOpacity>
       </View>

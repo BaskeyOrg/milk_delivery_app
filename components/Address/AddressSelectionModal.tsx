@@ -1,6 +1,6 @@
+import { useAddressList } from "@/api/addresses";
 import { Tables } from "@/assets/data/types";
 import Colors from "@/constants/Colors";
-import { useAddresses } from "@/hooks/useAddresses";
 import { useAuth } from "@/providers/AuthProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -25,13 +25,18 @@ type Props = {
 
 const AddressSelectionModal = ({ visible, onClose, onProceed }: Props) => {
   const { session } = useAuth();
-  const { addresses, loading, reload } = useAddresses(session?.user.id ?? "");
-  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const router = useRouter();
 
+  const {
+    data: addresses = [],
+    isLoading,
+  } = useAddressList(session?.user.id ?? "");
+
+  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+
+  // Reset selection when modal opens
   useEffect(() => {
     if (visible) {
-      reload();
       setSelectedAddress(null);
     }
   }, [visible]);
@@ -84,7 +89,7 @@ const AddressSelectionModal = ({ visible, onClose, onProceed }: Props) => {
                 className="p-5"
                 contentContainerStyle={{ paddingBottom: 16 }}
               >
-                {loading ? (
+                {isLoading ? (
                   <Text className="text-center text-gray-500">
                     Loading...
                   </Text>

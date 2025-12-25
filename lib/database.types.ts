@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           city: string
           created_at: string | null
+          deleted: boolean | null
           full_name: string
           id: number
           is_default: boolean | null
@@ -31,6 +32,7 @@ export type Database = {
         Insert: {
           city: string
           created_at?: string | null
+          deleted?: boolean | null
           full_name: string
           id?: never
           is_default?: boolean | null
@@ -44,6 +46,7 @@ export type Database = {
         Update: {
           city?: string
           created_at?: string | null
+          deleted?: boolean | null
           full_name?: string
           id?: never
           is_default?: boolean | null
