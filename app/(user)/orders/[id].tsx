@@ -1,9 +1,10 @@
 import { useOrderDetails } from "@/api/orders";
 import { useUpdateOrderSubscription } from "@/api/orders/subscription";
+import OrderAddressCard from "@/components/Address/OrderAddressCard";
 import OrderBillFooter from "@/components/OrderBillFooter";
-import OrderItemListItem from "@/components/OrderItemListItem";
+import OrderItemList from "@/components/OrderItemListItem";
 import { Stack, useLocalSearchParams } from "expo-router";
-import { ActivityIndicator, FlatList, Text, View } from "react-native";
+import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 
 export default function OrderDetailsScreen() {
   const { id: idString } = useLocalSearchParams();
@@ -30,23 +31,21 @@ export default function OrderDetailsScreen() {
   }
 
   return (
-    <View className="flex-1 p-4">
+    <View className="flex-1 p-4 bg-gray-50 dark:bg-neutral-900">
       <Stack.Screen options={{ title: `Order #${order.id}` }} />
 
-    {/* Order Items */}
-      <FlatList
-        data={order.order_items}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => <OrderItemListItem item={item} />}
-        contentContainerStyle={{ gap: 10 }}
-        ListHeaderComponent={<OrderBillFooter itemsTotal={order.total} />}
-        ListFooterComponent={() => (
-          <OrderBillFooter
-            itemsTotal={order.total}
-            deliveryCharge={deliveryCharge}
-          />
+      <ScrollView contentContainerStyle={{ paddingBottom: 20, gap: 16 }}>
+        {/* Address Section */}
+        {order.addresses && (
+          <OrderAddressCard address={order.addresses} />
         )}
-      />
+
+        {/* Single Card for All Products */}
+        <OrderItemList items={order.order_items} />
+
+        {/* Footer */}
+        <OrderBillFooter itemsTotal={order.total} deliveryCharge={deliveryCharge} />
+      </ScrollView>
     </View>
   );
 }

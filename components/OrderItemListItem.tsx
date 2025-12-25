@@ -6,54 +6,68 @@ import { defaultPizzaImage } from "./ProductListItem";
 import RemoteImage from "./RemoteImage";
 
 type OrderItemListItemProps = {
-  item: { products: Tables<"products"> } & Tables<"order_items">;
+  items: ({ products: Tables<"products"> } & Tables<"order_items">)[];
 };
 
-const OrderItemListItem = ({ item }: OrderItemListItemProps) => {
+const OrderItemList = ({ items }: OrderItemListItemProps) => {
   const segments = useSegments();
+  
 
   return (
-    <View className="bg-white dark:bg-neutral-900 rounded-xl p-2 flex-row items-center mb-2">
-      {/* Clickable Image */}
-      <Link href={`/${segments[0]}/menu/${item.products.id}`} asChild>
-        <Pressable>
-          <RemoteImage
-            path={item.products.image ?? undefined}
-            fallback={defaultPizzaImage}
-            resizeMode="contain"
-            className="w-[75px] aspect-square mr-3 rounded-lg"
-          />
-        </Pressable>
-      </Link>
+    <View className="bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-neutral-700 p-4 mb-4">
+      {items.map((item, index) => (
+        <View key={item.id}>
+          <View className="flex-row items-center mb-3">
+            {/* Product Image */}
+            <Link href={`/${segments[0]}/menu/${item.products.id}`} asChild>
+              <Pressable>
+                <RemoteImage
+                  path={item.products.image ?? undefined}
+                  fallback={defaultPizzaImage}
+                  resizeMode="contain"
+                  className="w-20 h-20 rounded-2xl mr-4"
+                />
+              </Pressable>
+            </Link>
 
-      <View className="flex-1">
-        {/* Clickable Title */}
-        <Link href={`/${segments[0]}/menu/${item.products.id}`} asChild>
-          <Pressable>
-            <Text className="font-medium text-base mb-1 text-black dark:text-white">
-              {item.products.name}
-            </Text>
-          </Pressable>
-        </Link>
+            <View className="flex-1">
+              {/* Product Name */}
+              <Link href={`/${segments[0]}/menu/${item.products.id}`} asChild>
+                <Pressable>
+                  <Text className="font-semibold text-black dark:text-white text-base mb-1">
+                    {item.products.name}
+                  </Text>
+                </Pressable>
+              </Link>
 
-        <View className="flex-row items-center space-x-2">
-          <Text className="text-gray-100 font-bold">
-            ₹ {item.products.price.toFixed(2)}
-          </Text>
+              <View className="">
+                <Text className="text-primary font-bold text-sm">
+                  ₹ {item.products.price.toFixed(2)}
+                </Text>
+                <Text className="text-gray-500 dark:text-neutral-400 text-sm">
+                  Size: {item.size}
+                </Text>
+              </View>
+            </View>
 
-          <Text className="text-gray-500 dark:text-gray-400 ml-3">
-            Size: {item.size}
-          </Text>
+            <View className="mx-5">
+              <Text className="font-semibold text-black dark:text-white text-lg">
+                Qty: {item.quantity}
+              </Text>
+              <Text className="text-white font-bold text-sm">
+                 Total amt:  ₹ {item.products.price * item.quantity}
+                </Text>
+            </View>
+          </View>
+
+          {/* Divider except last item */}
+          {index !== items.length - 1 && (
+            <View className="border-t border-gray-200 dark:border-neutral-700 my-2" />
+          )}
         </View>
-      </View>
-
-      <View className="flex-row items-center mx-2">
-        <Text className="font-medium text-lg text-black dark:text-white mr-3">
-          {item.quantity}
-        </Text>
-      </View>
+      ))}
     </View>
   );
 };
 
-export default OrderItemListItem;
+export default OrderItemList;

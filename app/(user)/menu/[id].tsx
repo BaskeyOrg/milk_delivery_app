@@ -148,7 +148,7 @@ export default function ProductDetailsScreen() {
       <View className="absolute bottom-16 left-0 right-0 bg-background/95 backdrop-blur-xl border-t border-surface px-6 py-4 pb-8">
         <View className="flex-row items-center gap-3">
           <View className="flex-1">
-            <Text className="text-secondary text-sm mb-1">Total Price</Text>
+            <Text className="text-text-secondary text-base font-bold">Total Price</Text>
             <Text className="text-primary text-2xl font-bold">
               ₹ {(product.price * quantity).toFixed(2)}
             </Text>
