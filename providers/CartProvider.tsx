@@ -21,6 +21,7 @@ type CartType = {
     quantity?: number
   ) => void;
   updateQuantity: (itemId: string, amount: -1 | 1) => void;
+  removeItem: (itemId: string) => void; 
   total: number;
   checkout: (address?: Tables<"addresses">) => void;
 };
@@ -29,6 +30,7 @@ const CartContext = createContext<CartType>({
   items: [],
   addItem: () => {},
   updateQuantity: () => {},
+  removeItem: () => {},
   total: 0,
   checkout: () => {},
 });
@@ -85,6 +87,10 @@ const CartProvider = ({ children }: PropsWithChildren) => {
     );
   };
 
+  const removeItem = (itemId: string) => {
+  setItems((prev) => prev.filter((item) => item.id !== itemId));
+};
+
   const total = useMemo(() => {
     return items.reduce(
       (sum, item) => sum + item.product.price * item.quantity,
@@ -124,7 +130,7 @@ const CartProvider = ({ children }: PropsWithChildren) => {
 
   return (
     <CartContext.Provider
-      value={{ items, addItem, updateQuantity, total, checkout }}
+      value={{ items, addItem, updateQuantity, removeItem, total, checkout }}
     >
       {children}
     </CartContext.Provider>

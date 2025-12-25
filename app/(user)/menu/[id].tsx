@@ -62,7 +62,7 @@ export default function ProductDetailsScreen() {
             path={product?.image ?? undefined}
             fallback={defaultPizzaImage}
             resizeMode="cover"
-            className="w-full h-96"
+            className="w-full h-96 rounded-2xl"
           />
         </View>
 

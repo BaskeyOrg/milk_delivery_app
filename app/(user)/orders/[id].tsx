@@ -1,8 +1,8 @@
 import { useOrderDetails } from "@/api/orders";
 import { useUpdateOrderSubscription } from "@/api/orders/subscription";
 import OrderAddressCard from "@/components/Address/OrderAddressCard";
-import OrderBillFooter from "@/components/OrderBillFooter";
 import OrderItemList from "@/components/OrderItemListItem";
+import OrderBillFooter from "@/components/OrderSummeryFooter";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 
