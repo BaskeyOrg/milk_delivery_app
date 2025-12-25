@@ -31,10 +31,10 @@ export default function OrderDetailsScreen() {
   }
 
   return (
-    <View className="flex-1 p-4 bg-gray-50 dark:bg-neutral-900">
+    <View className="flex-1 p-4">
       <Stack.Screen options={{ title: `Order #${order.id}` }} />
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 20, gap: 16 }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 140, gap: 16 }}>
         {/* Address Section */}
         {order.addresses && (
           <OrderAddressCard address={order.addresses} />

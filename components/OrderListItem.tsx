@@ -1,46 +1,87 @@
-import { Tables } from "@/assets/data/types";
+import { OrderWithItems } from "@/api/orders";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { Link, useSegments } from "expo-router";
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
+import { defaultPizzaImage } from "./ProductListItem";
+import RemoteImage from "./RemoteImage";
 
 dayjs.extend(relativeTime);
 
 type OrderListItemProps = {
-  order: Tables<"orders">;
+  order: OrderWithItems;
 };
 
-const statusColors: Record<string, string> = {
-  pending: "bg-yellow-100 text-yellow-800",
-  completed: "bg-green-100 text-green-800",
-  cancelled: "bg-red-100 text-red-800",
-  processing: "bg-blue-100 text-blue-800",
+const statusColorMap: Record<string, { bg: string; text: string }> = {
+  new: { bg: "bg-yellow-500/20", text: "text-yellow-600" },
+  delivering: { bg: "bg-blue-500/20", text: "text-blue-600" },
+  delivered: { bg: "bg-green-500/20", text: "text-green-600" },
+  cancelled: { bg: "bg-red-500/20", text: "text-red-600" },
 };
 
 const OrderListItem = ({ order }: OrderListItemProps) => {
   const segments = useSegments();
-  const statusStyle = statusColors[order.status.toLowerCase()] ?? "bg-gray-100 text-gray-800";
+  const status =
+    statusColorMap[order.status.toLowerCase()] ?? statusColorMap.new;
+
+  const orderId = order.id.toString();
 
   return (
-    <Link href={`/${segments[0]}/orders/${order.id}`} asChild>
-      <Pressable className="bg-white dark:bg-neutral-900 rounded-2xl px-4 py-4 flex-row justify-between items-center shadow-md mb-3 ">
-        <View className="flex-1">
-          <Text className="font-bold text-lg mb-1 text-black dark:text-white">
-            Order #{order.id}
-          </Text>
-          <Text className="text-gray-500 dark:text-neutral-400 text-sm">
-            {dayjs(order.created_at).fromNow()}
-          </Text>
-        </View>
+    <View className="bg-surface rounded-3xl p-5">
+      {/* ✅ Header is clickable */}
+      <Link href={`/${segments[0]}/orders/${order.id}`} asChild>
+        <Pressable>
+          <View className="flex-row justify-between items-start mb-3">
+            <View className="flex-1 pr-4">
+              <Text className="text-text-primary font-bold text-base mb-1">
+                Order #{orderId.slice(-8)}
+              </Text>
 
-        <View className={`px-3 py-1 rounded-full ${statusStyle}`}>
-          <Text className="text-sm font-semibold capitalize">
-            {order.status}
-          </Text>
-        </View>
-      </Pressable>
-    </Link>
+              <Text className="text-text-secondary text-sm font-bold">
+                ₹ {Number(order.total ?? 0).toFixed(2)}{" "}
+                <Text className="opacity-60">•</Text>{" "}
+                {dayjs(order.created_at).fromNow()}
+              </Text>
+            </View>
+
+            <View className={`px-3 py-1.5 rounded-full ${status.bg}`}>
+              <Text className={`text-xs font-bold capitalize ${status.text}`}>
+                {order.status}
+              </Text>
+            </View>
+          </View>
+        </Pressable>
+      </Link>
+
+      {/* ✅ ScrollView is NOT clickable → smooth scroll */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ gap: 10 }}
+      >
+        {order.order_items.map((item) => {
+          const image = item.products?.image;
+          if (!image) return null;
+
+          return (
+            <View key={item.id} className="relative">
+              <RemoteImage
+                path={image}
+                fallback={defaultPizzaImage}
+                className="w-16 h-16 rounded-xl bg-gray-200"
+              />
+
+              <View className="absolute -top-0 -right-1 bg-primary rounded-full w-6 h-6 items-center justify-center">
+                <Text className="text-background text-xs font-bold">
+                  ×{item.quantity}
+                </Text>
+              </View>
+            </View>
+          );
+        })}
+      </ScrollView>
+    </View>
   );
 };
 

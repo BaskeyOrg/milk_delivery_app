@@ -1,4 +1,4 @@
-import { InsertTables, UpdateTables } from "@/assets/data/types";
+import { InsertTables, Tables, UpdateTables } from "@/assets/data/types";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/providers/AuthProvider";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -23,28 +23,42 @@ export const useAdminOrderList = ({ archived = false }) => {
   });
 };
 
+export type OrderWithItems = Tables<"orders"> & {
+  order_items: (Tables<"order_items"> & {
+    products: Tables<"products"> | null;
+  })[];
+};
+
 export const useMyOrderList = () => {
   const { session } = useAuth();
   const id = session?.user.id;
 
-  return useQuery({
+  return useQuery<OrderWithItems[]>({
     queryKey: ["orders", { user_id: id }],
     queryFn: async () => {
-      if (!id) return null;
+      if (!id) return [];
 
       const { data, error } = await supabase
         .from("orders")
-        .select("*")
+        .select(`
+          *,
+          order_items (
+            *,
+            products (*)
+          )
+        `)
         .eq("user_id", id)
         .order("created_at", { ascending: false });
+
       if (error) {
         throw new Error(error.message);
       }
 
-      return data;
+      return data ?? [];
     },
   });
 };
+
 
 export const useOrderDetails = (id: number) => {
   return useQuery({
