@@ -3,7 +3,11 @@ import React from "react";
 
 export default function Orderlayout() {
   return (
-    <Stack>
+    <Stack
+      screenOptions={{
+        headerShown: true,
+      }}
+    >
       <Stack.Screen name="index" options={{ title: 'Orders' }} />
     </Stack>
   );

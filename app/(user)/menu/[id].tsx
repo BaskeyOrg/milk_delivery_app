@@ -5,7 +5,7 @@ import RemoteImage from "@/components/RemoteImage";
 import SafeScreen from "@/components/SafeScreen";
 import { useCart } from "@/providers/CartProvider";
 import { Ionicons } from "@expo/vector-icons";
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
@@ -51,7 +51,7 @@ export default function ProductDetailsScreen() {
 
   return (
     <SafeScreen>
-      <Stack.Screen options={{ title: product.name, headerShown: false }} />
+      {/* <Stack.Screen options={{ title: product.name, headerShown: false }} /> */}
 
       <ScrollView
         className="flex-1"

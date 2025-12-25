@@ -9,7 +9,7 @@ export default function AddressLayout() {
     >
       <Stack.Screen
         name="index"
-        options={{ title: "Addresses" }}
+        options={{ title: "Your Addresses" }}
       />
       <Stack.Screen
         name="create-address"
