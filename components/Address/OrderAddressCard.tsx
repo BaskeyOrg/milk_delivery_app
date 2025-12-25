@@ -10,39 +10,54 @@ type Props = {
 
 export default function OrderAddressCard({ address }: Props) {
   return (
-    <View className="bg-white dark:bg-neutral-900 rounded-2xl p-4 border border-gray-200 dark:border-neutral-700">
-      <View className="flex-row items-center mb-2">
-        <Ionicons name="location-outline" size={18} color="#4F46E5" />
-        <Text className="ml-2 font-bold text-gray-900 dark:text-white">
-          Delivery Address
-        </Text>
-      </View>
+    <View className="bg-white dark:bg-neutral-900 rounded-2xl p-5">
+      {/* Header */}
+      <View className="flex-row items-center justify-between mb-4">
+        <View className="flex-row items-center">
+          <View className="bg-primary/20 rounded-full w-12 h-12 items-center justify-center mr-3">
+            <Ionicons name="location" size={24} color="#1DB954" />
+          </View>
 
-      <Text className="font-semibold text-gray-800 dark:text-white">
-        {address.full_name}
-      </Text>
-
-      <Text className="text-gray-600 dark:text-neutral-300 mt-1">
-        {address.street}
-      </Text>
-
-      <Text className="text-gray-600 dark:text-neutral-300">
-        {address.city}, {address.state} - {address.zip_code}
-      </Text>
-      <View className="flex-row items-center mb-2">
-        <Ionicons name="call" size={18} color="#4F46E5" />
-        <Text className="ml-2 font-bold text-gray-900 dark:text-white">
-          {address.phone}
-        </Text>
-      </View>
-
-      {address.label && (
-        <View className="mt-2 self-start bg-gray-100 dark:bg-neutral-800 px-3 py-1 rounded-full">
-          <Text className="text-xs font-medium text-gray-700 dark:text-neutral-300">
-            {address.label}
+          <Text className="text-text-primary font-bold text-lg">
+            Delivery Address
           </Text>
         </View>
-      )}
+
+        {address.label && (
+          <View className="bg-primary px-3 py-1 rounded-full">
+            <Text className="text-background text-xs font-bold">
+              {address.label}
+            </Text>
+          </View>
+        )}
+      </View>
+
+      {/* Address Details */}
+      <View className="ml-15">
+        <Text className="text-text-primary font-semibold mb-1">
+          {address.full_name}
+        </Text>
+
+        <Text className="text-text-secondary text-sm mb-1">
+          {address.street}
+        </Text>
+
+        <Text className="text-text-secondary text-sm mb-2">
+          {address.city}, {address.state} {address.zip_code}
+        </Text>
+
+        <View className="flex-row items-center">
+          <Ionicons
+            name="call"
+            size={16}
+            color="#6B7280"
+            style={{ marginRight: 6 }}
+          />
+          <Text className="text-text-secondary text-sm">
+            {address.phone}
+          </Text>
+        </View>
+      </View>
     </View>
   );
 }
