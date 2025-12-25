@@ -68,7 +68,7 @@ const AddressSelectionModal = ({ visible, onClose, onProceed }: Props) => {
                 <TouchableOpacity
                   onPress={() => {
                     onClose();
-                    router.push("/(user)/profile/create-address");
+                    router.push("/(user)/address/create-address");
                   }}
                   className="flex-row items-center"
                 >

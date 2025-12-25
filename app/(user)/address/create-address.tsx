@@ -1,7 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/providers/AuthProvider";
-import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -16,6 +16,9 @@ import {
 
 export default function CreateAddressScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const editId = params?.editId ? Number(params.editId) : undefined;
+  const returnTo = params?.returnTo as string | undefined;
   const { session } = useAuth();
 
   const [full_name, setFullName] = useState("");
@@ -52,31 +55,81 @@ export default function CreateAddressScreen() {
           .eq("user_id", session.user.id);
       }
 
-      /** 2️⃣ Insert new address */
-      const { error } = await supabase.from("addresses").insert({
-        user_id: session.user.id,
-        full_name,
-        street,
-        city,
-        state: stateVal,
-        zip_code,
-        phone,
-        label,
-        is_default: isDefault,
-      });
+      let error = null;
+      if (editId) {
+        const res = await supabase
+          .from("addresses")
+          .update({
+            full_name,
+            street,
+            city,
+            state: stateVal,
+            zip_code,
+            phone,
+            label,
+            is_default: isDefault,
+          })
+          .eq("id", editId);
+        error = res.error;
+      } else {
+        const res = await supabase.from("addresses").insert({
+          user_id: session.user.id,
+          full_name,
+          street,
+          city,
+          state: stateVal,
+          zip_code,
+          phone,
+          label,
+          is_default: isDefault,
+        });
+        error = res.error;
+      }
 
       if (error) throw error;
 
       resetForm();
 
-      /** 3️⃣ Go back to cart & reopen modal */
-      router.push("/(user)/cart?openAddressModal=1");
+      /** 3️⃣ Navigate back */
+      if (returnTo === "cart") {
+        router.push("/(user)/cart?openAddressModal=1");
+      } else {
+        router.push("/(user)/address");
+      }
     } catch (error) {
       console.log("Error adding address", error);
     } finally {
       setSaving(false);
     }
   };
+
+  // Load address when editing
+  useEffect(() => {
+    if (!editId) return;
+
+    let mounted = true;
+    (async () => {
+      const { data, error } = await supabase
+        .from("addresses")
+        .select("*")
+        .eq("id", editId)
+        .single();
+      if (error) return;
+      if (!mounted) return;
+      setFullName(data.full_name);
+      setStreet(data.street);
+      setCity(data.city);
+      setStateVal(data.state);
+      setZipCode(data.zip_code);
+      setPhone(data.phone);
+      setLabel(data.label ?? "");
+      setIsDefault(Boolean(data.is_default));
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [editId]);
 
   return (
     <KeyboardAvoidingView

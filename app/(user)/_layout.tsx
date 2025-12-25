@@ -56,7 +56,14 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen name="index" options={{ href: null }} />
-      <Tabs.Screen name="profile/create-address" options={{href: null }} />
+      <Tabs.Screen name="address" options={{href: null }} />
+      <Tabs.Screen 
+        name="address/create-address" 
+        options={{ 
+          href: null,
+        }} 
+      />
+
       <Tabs.Screen
         name="menu"
         options={{

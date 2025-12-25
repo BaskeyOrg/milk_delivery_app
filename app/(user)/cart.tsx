@@ -93,7 +93,7 @@ const CartScreen = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           padding: 16,
-          paddingBottom: 340, // 👈 space for summary + sticky bar
+          paddingBottom: 340,
           gap: 12,
         }}
         ListFooterComponent={
