@@ -103,17 +103,14 @@ export default function CreateAddressScreen() {
         contentContainerStyle={{ paddingBottom: 40 }}
         keyboardShouldPersistTaps="handled"
       >
-        <Text className="text-2xl font-bold text-gray-900 dark:text-white my-4">
-          Add Address
-        </Text>
 
         {[
           ["Full name", full_name, setFullName],
-          ["Street", street, setStreet],
-          ["City", city, setCity],
-          ["State", stateVal, setStateVal],
-          ["Zip code", zip_code, setZipCode],
           ["Phone", phone, setPhone],
+          ["Flate, House No., Building, Company, Appartment", city, setCity],
+          ["Landmark", zip_code, setZipCode],
+          ["Area, Street, Sector, Village", street, setStreet],
+          ["State", stateVal, setStateVal],
           ["Label (Home / Work)", label, setLabel],
         ].map(([placeholder, value, setter]: any, index) => (
           <TextInput

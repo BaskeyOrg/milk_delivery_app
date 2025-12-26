@@ -1,76 +1,174 @@
-import Button from "@/components/Button";
 import { supabase } from "@/lib/supabase";
 import { Link, Stack } from "expo-router";
 import React, { useState } from "react";
-import { Alert, Text, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+
+/* ---------------- REGEX ---------------- */
+
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function SignInScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  /* ---------------- TOUCH STATE ---------------- */
+
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [passwordTouched, setPasswordTouched] = useState(false);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+
+  /* ---------------- VALIDATION ---------------- */
+
+  const isEmailValid = emailRegex.test(email);
+  const isPasswordValid = password.length > 0;
+
+  const showEmailError = (emailTouched || submitAttempted) && !isEmailValid;
+
+  const showPasswordError =
+    (passwordTouched || submitAttempted) && !isPasswordValid;
+
+  const isFormValid = isEmailValid && isPasswordValid;
+
+  /* ---------------- SIGN IN ---------------- */
 
   async function signInWithEmail() {
+    setSubmitAttempted(true);
+
+    if (!isFormValid) {
+      setError("Please fix the errors above");
+      return;
+    }
+
+    setError("");
     setLoading(true);
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error) Alert.alert(error.message);
+    if (error) setError(error.message);
     setLoading(false);
   }
 
+  /* ---------------- UI ---------------- */
+
   return (
-    <View className="flex-1 justify-center p-5 bg-white dark:bg-black">
-      <Stack.Screen options={{ title: "Sign in" }} />
-
-      {/* Email */}
-      <Text className="text-gray-600 dark:text-gray-300 mb-1">
-        Email
-      </Text>
-      <TextInput
-        value={email}
-        onChangeText={setEmail}
-        placeholder="jon@gmail.com"
-        placeholderTextColor="#9CA3AF"
-        className="border border-gray-400 dark:border-gray-600
-                   bg-white dark:bg-gray-900
-                   text-black dark:text-white
-                   rounded-md px-3 py-2 mb-5"
-      />
-
-      {/* Password */}
-      <Text className="text-gray-600 dark:text-gray-300 mb-1">
-        Password
-      </Text>
-      <TextInput
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        placeholder="••••••••"
-        placeholderTextColor="#9CA3AF"
-        className="border border-gray-400 dark:border-gray-600
-                   bg-white dark:bg-gray-900
-                   text-black dark:text-white
-                   rounded-md px-3 py-2 mb-6"
-      />
-
-      {/* Button */}
-      <Button
-        onPress={signInWithEmail}
-        text={loading ? "Signing in..." : "Sign in"}
-        disabled={loading}
-      />
-
-      {/* Link */}
-      <Link
-        href="/sign-up"
-        className="mt-4 text-center font-bold text-blue-600 dark:text-blue-400"
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
+      style={{ flex: 1 }}
+    >
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ flexGrow: 1 }}
       >
-        Create an account
-      </Link>
+        <View className="flex-1 justify-center items-center px-8 bg-white">
+          <Stack.Screen options={{ title: "Sign in" }} />
 
+          {/* HERO IMAGE */}
+          <Image
+            source={require("../../assets/images/auth-image.png")}
+            style={{ width: 260, height: 260 }}
+            resizeMode="contain"
+          />
 
-    </View>
+          {/* FORM */}
+          <View className="w-full gap-4 mt-6">
+            {/* EMAIL */}
+            <View>
+              <TextInput
+                value={email}
+                onChangeText={(text) => {
+                  setEmail(text);
+                  if (!emailTouched) setEmailTouched(true);
+                }}
+                placeholder="Email address"
+                autoCapitalize="none"
+                keyboardType="email-address"
+                placeholderTextColor="#9CA3AF"
+                className={`border rounded-full px-5 py-3 text-black ${
+                  showEmailError ? "border-red-500" : "border-gray-300"
+                }`}
+              />
+              {showEmailError && (
+                <Text className="text-red-500 text-xs mt-1 ml-2">
+                  Enter a valid email address
+                </Text>
+              )}
+            </View>
+
+            {/* PASSWORD */}
+            <View>
+              <TextInput
+                value={password}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  if (!passwordTouched) setPasswordTouched(true);
+                }}
+                placeholder="Password"
+                secureTextEntry
+                placeholderTextColor="#9CA3AF"
+                className={`border rounded-full px-5 py-3 text-black ${
+                  showPasswordError ? "border-red-500" : "border-gray-300"
+                }`}
+              />
+              {showPasswordError && (
+                <Text className="text-red-500 text-xs mt-1 ml-2">
+                  Password is required
+                </Text>
+              )}
+            </View>
+
+            {/* FORM ERROR */}
+            {!!error && (
+              <Text className="text-red-500 text-sm text-center">{error}</Text>
+            )}
+
+            {/* SIGN IN BUTTON */}
+            <TouchableOpacity
+              onPress={signInWithEmail}
+              disabled={loading}
+              className={`rounded-full py-3 items-center ${
+                loading ? "bg-gray-300" : "bg-black"
+              }`}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text className="text-white font-semibold text-base">
+                  Sign in
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {/* SIGN UP LINK */}
+          <Link href="/sign-up" className="mt-6 text-blue-600 font-medium">
+            Create an account
+          </Link>
+
+          {/* FOOTER */}
+          <Text className="text-center text-gray-500 text-xs leading-4 mt-6 px-2">
+            By signing in, you agree to our{" "}
+            <Text className="text-blue-500">Terms</Text>,{" "}
+            <Text className="text-blue-500">Privacy Policy</Text> and{" "}
+            <Text className="text-blue-500">Cookie Use</Text>
+          </Text>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

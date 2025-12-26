@@ -1,42 +1,80 @@
-import Button from "@/components/Button";
 import { supabase } from "@/lib/supabase";
 import { Link, Stack } from "expo-router";
-import React, { useState } from "react";
-import { Alert, Text, TextInput, View } from "react-native";
+import React, { useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+
+/* ---------------- REGEX ---------------- */
+
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const upperCase = /[A-Z]/;
+const lowerCase = /[a-z]/;
+const number = /\d/;
+const symbol = /[@$!%*?&#^()_+\-=[\]{};':"\\|,.<>/?]/;
 
 export default function SignUpScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [errors, setErrors] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const validateInputs = () => {
-    setErrors("");
+  /* ---------------- VALIDATIONS ---------------- */
 
-    if (!email) {
-      setErrors("Email is required");
-      return false;
-    }
-    if (!password) {
-      setErrors("Password is required");
-      return false;
-    }
-    if (password.length < 6) {
-      setErrors("Password must be at least 6 characters");
-      return false;
-    }
-    if (password !== confirmPassword) {
-      setErrors("Passwords do not match");
-      return false;
-    }
-    return true;
-  };
+  const isEmailValid = email.length === 0 || emailRegex.test(email);
+  const isPasswordMatch =
+    confirmPassword.length === 0 || password === confirmPassword;
+
+  /* ---------------- PASSWORD RULES ---------------- */
+
+  const passwordRules = useMemo(() => {
+    return {
+      length: password.length >= 8,
+      upper: upperCase.test(password),
+      lower: lowerCase.test(password),
+      number: number.test(password),
+      symbol: symbol.test(password),
+    };
+  }, [password]);
+
+  const passwordScore = Object.values(passwordRules).filter(Boolean).length;
+
+  const passwordStrength =
+    passwordScore <= 2 ? "Weak" : passwordScore <= 4 ? "Medium" : "Strong";
+
+  const strengthColor =
+    passwordStrength === "Weak"
+      ? "bg-red-500"
+      : passwordStrength === "Medium"
+      ? "bg-yellow-500"
+      : "bg-green-500";
+
+
+  const isFormValid =
+    emailRegex.test(email) &&
+    passwordScore === 5 &&
+    password === confirmPassword;
+
 
   async function signUpWithEmail() {
-    if (!validateInputs()) return;
+    if (!isFormValid) {
+      setError("Please fix the errors above");
+      return;
+    }
 
+    setError("");
     setLoading(true);
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -46,80 +84,155 @@ export default function SignUpScreen() {
     setLoading(false);
   }
 
+
   return (
-    <View className="flex-1 justify-center p-5 bg-white dark:bg-black">
-      <Stack.Screen options={{ title: "Sign Up" }} />
-
-      {/* Email */}
-      <Text className="text-gray-600 dark:text-gray-300 mb-1">
-        Email
-      </Text>
-      <TextInput
-        value={email}
-        onChangeText={setEmail}
-        placeholder="Enter your email"
-        keyboardType="email-address"
-        autoCapitalize="none"
-        placeholderTextColor="#9CA3AF"
-        className="border border-gray-400 dark:border-gray-600
-                   bg-white dark:bg-gray-900
-                   text-black dark:text-white
-                   rounded-md px-3 py-2 mb-4"
-      />
-
-      {/* Password */}
-      <Text className="text-gray-600 dark:text-gray-300 mb-1">
-        Password
-      </Text>
-      <TextInput
-        value={password}
-        onChangeText={setPassword}
-        placeholder="Enter password"
-        secureTextEntry
-        placeholderTextColor="#9CA3AF"
-        className="border border-gray-400 dark:border-gray-600
-                   bg-white dark:bg-gray-900
-                   text-black dark:text-white
-                   rounded-md px-3 py-2 mb-4"
-      />
-
-      {/* Confirm Password */}
-      <Text className="text-gray-600 dark:text-gray-300 mb-1">
-        Confirm Password
-      </Text>
-      <TextInput
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        placeholder="Confirm password"
-        secureTextEntry
-        placeholderTextColor="#9CA3AF"
-        className="border border-gray-400 dark:border-gray-600
-                   bg-white dark:bg-gray-900
-                   text-black dark:text-white
-                   rounded-md px-3 py-2 mb-2"
-      />
-
-      {/* Error message */}
-      {!!errors && (
-        <Text className="text-red-500 text-xs mb-3">
-          {errors}
-        </Text>
-      )}
-
-      {/* Button */}
-      <Button
-        text={loading ? "Creating account..." : "Create account"}
-        onPress={signUpWithEmail}
-        disabled={loading}
-      />
-
-      {/* Sign in link */}
-      <Link
-        href="/sign-in"
-        className="mt-4 text-center font-bold text-blue-600 dark:text-blue-400"
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
+      style={{ flex: 1 }}
+    >
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ flexGrow: 1 }}
       >
-        Already have an account?
-      </Link>
-    </View>
+        <View className="flex-1 justify-center items-center px-8 bg-white">
+          <Stack.Screen options={{ title: "Sign up" }} />
+
+          {/* HERO IMAGE */}
+          <Image
+            source={require("../../assets/images/auth-image.png")}
+            style={{ width: 260, height: 260 }}
+            resizeMode="contain"
+          />
+
+          {/* FORM */}
+          <View className="w-full gap-4 mt-6">
+            {/* EMAIL */}
+            <View>
+              <TextInput
+                value={email}
+                onChangeText={setEmail}
+                placeholder="Email address"
+                autoCapitalize="none"
+                keyboardType="email-address"
+                placeholderTextColor="#9CA3AF"
+                className={`border rounded-full px-5 py-3 text-black ${
+                  !isEmailValid ? "border-red-500" : "border-gray-300"
+                }`}
+              />
+              {!isEmailValid && (
+                <Text className="text-red-500 text-xs mt-1 ml-2">
+                  Enter a valid email address
+                </Text>
+              )}
+            </View>
+
+            {/* PASSWORD */}
+            <TextInput
+              value={password}
+              onChangeText={setPassword}
+              placeholder="Password"
+              secureTextEntry
+              placeholderTextColor="#9CA3AF"
+              className="border border-gray-300 rounded-full px-5 py-3 text-black"
+            />
+
+            {/* PASSWORD STRENGTH */}
+            {password.length > 0 && (
+              <View className="gap-2">
+                <View className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                  <View
+                    className={`${strengthColor} h-full`}
+                    style={{ width: `${(passwordScore / 5) * 100}%` }}
+                  />
+                </View>
+                <Text className="text-xs text-gray-600">
+                  Password strength:{" "}
+                  <Text className="font-semibold">{passwordStrength}</Text>
+                </Text>
+              </View>
+            )}
+
+            {/* PASSWORD CHECKLIST */}
+            {password.length > 0 && (
+              <View className="gap-1">
+                {[
+                  ["At least 8 characters", passwordRules.length],
+                  ["One uppercase letter", passwordRules.upper],
+                  ["One lowercase letter", passwordRules.lower],
+                  ["One number", passwordRules.number],
+                  ["One symbol", passwordRules.symbol],
+                ].map(([label, valid], i) => (
+                  <Text
+                    key={i}
+                    className={`text-xs ${
+                      valid ? "text-green-600" : "text-gray-500"
+                    }`}
+                  >
+                    {valid ? "✓" : "○"} {label}
+                  </Text>
+                ))}
+              </View>
+            )}
+
+            {/* CONFIRM PASSWORD */}
+            <View>
+              <TextInput
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                placeholder="Confirm password"
+                secureTextEntry
+                placeholderTextColor="#9CA3AF"
+                className={`border rounded-full px-5 py-3 text-black ${
+                  !isPasswordMatch ? "border-red-500" : "border-gray-300"
+                }`}
+              />
+              {!isPasswordMatch && (
+                <Text className="text-red-500 text-xs mt-1 ml-2">
+                  Passwords do not match
+                </Text>
+              )}
+            </View>
+
+            {/* FORM ERROR */}
+            {!!error && (
+              <Text className="text-red-500 text-sm text-center">
+                {error}
+              </Text>
+            )}
+
+            {/* SUBMIT */}
+            <TouchableOpacity
+              onPress={signUpWithEmail}
+              disabled={loading}
+              className={`rounded-full py-3 items-center ${
+                loading ? "bg-gray-300" : "bg-black"
+              }`}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text className="text-white font-semibold text-base">
+                  Create account
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {/* SIGN IN */}
+          <Link href="/sign-in" className="mt-6 text-blue-600 font-medium">
+            Already have an account?
+          </Link>
+
+          {/* FOOTER */}
+          <Text className="text-center text-gray-500 text-xs leading-4 mt-6 px-2">
+            By signing up, you agree to our{" "}
+            <Text className="text-blue-500">Terms</Text>,{" "}
+            <Text className="text-blue-500">Privacy Policy</Text> and{" "}
+            <Text className="text-blue-500">Cookie Use</Text>
+          </Text>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
