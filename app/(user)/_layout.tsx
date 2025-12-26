@@ -1,5 +1,6 @@
 import { useColorScheme } from "@/components/useColorScheme";
 import { useAuth } from "@/providers/AuthProvider";
+import { Ionicons } from "@expo/vector-icons";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { BlurView } from "expo-blur";
 import { Redirect, Tabs } from "expo-router";
@@ -57,6 +58,7 @@ export default function TabLayout() {
     >
       <Tabs.Screen name="index" options={{ href: null }} />
       <Tabs.Screen name="address" options={{href: null }} />
+      <Tabs.Screen name="wishList" options={{href: null }} />
 
       <Tabs.Screen
         name="menu"
@@ -64,7 +66,7 @@ export default function TabLayout() {
           title: "Menu",
           headerShown: false,
           tabBarIcon: ({ color }) => (
-            <TabBarIcon name="cutlery" color={color} />
+            <Ionicons name="apps" size={20} color={color} />
           ),
         }}
       />

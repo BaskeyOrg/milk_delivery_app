@@ -12,7 +12,6 @@ import {
 } from "react-native";
 
 import AddressSelectionModal from "@/components/Address/AddressSelectionModal";
-import Button from "@/components/Button";
 import CartListItem from "@/components/CartListItems";
 import OrderSummeryFooter from "@/components/OrderSummeryFooter";
 
@@ -24,10 +23,7 @@ import { useCart } from "@/providers/CartProvider";
 const CartScreen = () => {
   const { items, total, checkout } = useCart();
   const { session } = useAuth();
-    const { data: addresses = [] } = useAddressList(
-    session?.user.id ?? ""
-  );
-
+  const { data: addresses = [] } = useAddressList(session?.user.id ?? "");
 
   const [addressModalVisible, setAddressModalVisible] = useState(false);
 
@@ -66,12 +62,28 @@ const CartScreen = () => {
 
   if (items.length === 0) {
     return (
-      <View className="flex-1 justify-center items-center bg-background p-4">
-        <Text className="text-2xl font-bold text-text-primary mb-4">
+      <View className="flex-1 items-center justify-center px-6 ">
+        <Ionicons name="cart-outline" size={80} color="#666" />
+
+        <Text className="text-text-primary font-semibold text-xl mt-4">
           Your cart is empty
         </Text>
-        <Button text="Go to Menu" onPress={() => router.push("/(user)/menu")} />
-        <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
+
+        <Text className="text-text-secondary text-center mt-2">
+          Looks like you haven’t added anything yet
+        </Text>
+
+        <View className="mt-6 ">
+          
+          <TouchableOpacity
+            className={`rounded-full px-8 py-4 flex-row justify-center bg-primary`}
+            activeOpacity={0.8}
+            onPress={() => router.push("/(user)/menu")}
+          >
+            <Ionicons name="apps" size={24} color="#121212" />
+            <Text className={`font-bold text-lg ml-2 `}>Go to Menu</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }

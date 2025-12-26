@@ -19,7 +19,7 @@ const MENU_ITEMS = [
     icon: "list-outline",
     title: "Orders",
     color: "#10B981",
-    action: "/orders",
+    action: "/(user)/orders",
   },
 ] as const;
 
@@ -36,7 +36,7 @@ const MENU_ITEMS_TWO = [
     icon: "heart-outline",
     title: "Wishlist",
     color: "#EF4444",
-    action: "/wishlist",
+    action: "/(user)/wishList",
   },
 ] as const;
 
@@ -57,7 +57,7 @@ const handleMenuPress = (action: Href) => {
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{ paddingBottom: 100, paddingTop: 16 }}
       >
         {/* HEADER */}
         <View className="px-6 pb-8">
