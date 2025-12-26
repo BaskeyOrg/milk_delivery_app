@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       addresses: {
         Row: {
+          area: string | null
           city: string
           created_at: string | null
           deleted: boolean | null
@@ -23,13 +24,13 @@ export type Database = {
           id: number
           is_default: boolean | null
           label: string | null
+          landmark: string | null
           phone: string
-          state: string
           street: string
           user_id: string
-          zip_code: string
         }
         Insert: {
+          area?: string | null
           city: string
           created_at?: string | null
           deleted?: boolean | null
@@ -37,13 +38,13 @@ export type Database = {
           id?: never
           is_default?: boolean | null
           label?: string | null
+          landmark?: string | null
           phone: string
-          state: string
           street: string
           user_id: string
-          zip_code: string
         }
         Update: {
+          area?: string | null
           city?: string
           created_at?: string | null
           deleted?: boolean | null
@@ -51,11 +52,10 @@ export type Database = {
           id?: never
           is_default?: boolean | null
           label?: string | null
+          landmark?: string | null
           phone?: string
-          state?: string
           street?: string
           user_id?: string
-          zip_code?: string
         }
         Relationships: [
           {

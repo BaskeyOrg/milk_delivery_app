@@ -3,9 +3,10 @@ import {
   useCreateAddress,
   useUpdateAddress,
 } from "@/api/addresses";
+import { AREAS } from "@/constants/area-location";
 import { useAuth } from "@/providers/AuthProvider";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -18,125 +19,224 @@ import {
   View,
 } from "react-native";
 
+/* ---------------- CONSTANTS ---------------- */
+
+const phoneRegex = /^[0-9]{10}$/;
+
+/* ---------------- COMPONENT ---------------- */
+
 export default function CreateAddressScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const editId = params?.editId ? Number(params.editId) : undefined;
   const returnTo = params?.returnTo as string | undefined;
-  const { session } = useAuth();
 
+  const { session } = useAuth();
   const userId = session?.user.id ?? "";
 
   const { data: editAddress } = useAddressById(editId);
   const { mutateAsync: createAddress } = useCreateAddress(userId);
   const { mutateAsync: updateAddress } = useUpdateAddress(userId);
 
-  const [full_name, setFullName] = useState("");
-  const [street, setStreet] = useState("");
-  const [city, setCity] = useState("");
-  const [stateVal, setStateVal] = useState("");
-  const [zip_code, setZipCode] = useState("");
-  const [phone, setPhone] = useState("");
-  const [label, setLabel] = useState("");
-  const [isDefault, setIsDefault] = useState(false);
+  /* ---------------- STATE ---------------- */
+
+  const [form, setForm] = useState({
+    full_name: "",
+    phone: "",
+    street: "",
+    area: "",
+    city: "Chennai",
+    landmark: "",
+    label: "",
+    is_default: false,
+  });
+
+  const [showAreaPicker, setShowAreaPicker] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Load edit data
+  /* ---------------- EDIT MODE ---------------- */
+
   useEffect(() => {
     if (!editAddress) return;
-
-    setFullName(editAddress.full_name);
-    setStreet(editAddress.street);
-    setCity(editAddress.city);
-    setStateVal(editAddress.state);
-    setZipCode(editAddress.zip_code);
-    setPhone(editAddress.phone);
-    setLabel(editAddress.label ?? "");
-    setIsDefault(Boolean(editAddress.is_default));
+    setForm({
+      full_name: editAddress.full_name,
+      phone: editAddress.phone,
+      street: editAddress.street || "",
+      area: editAddress.area || "",
+      city: editAddress.city || "Chennai",
+      landmark: editAddress.landmark || "",
+      label: editAddress.label || "",
+      is_default: Boolean(editAddress.is_default),
+    });
   }, [editAddress]);
 
+  /* ---------------- HELPERS ---------------- */
+
+  const update = (key: keyof typeof form, value: any) =>
+    setForm((prev) => ({ ...prev, [key]: value }));
+
+  const errors = useMemo(
+    () => ({
+      full_name: !form.full_name.trim(),
+      phone: !phoneRegex.test(form.phone),
+      street: !form.street.trim(),
+      area: !form.area.trim(),
+      city: !form.city.trim(),
+    }),
+    [form]
+  );
+
+  const isValid = !Object.values(errors).some(Boolean);
+
+  const inputClass = (error?: boolean) =>
+    `rounded-xl border px-4 py-3 text-white bg-neutral-800 ${
+      error && submitted ? "border-red-500" : "border-neutral-700"
+    }`;
+
+  /* ---------------- SAVE ---------------- */
+
   const handleSave = async () => {
-    if (!userId || saving) return;
+    setSubmitted(true);
+    if (!userId || saving || !isValid) return;
+
     setSaving(true);
-
     try {
-      const payload = {
-        full_name,
-        street,
-        city,
-        state: stateVal,
-        zip_code,
-        phone,
-        label,
-        is_default: isDefault,
-        user_id: userId,
-      };
-
+      const payload = { ...form, user_id: userId };
       if (editId) {
-        await updateAddress({
-          id: editId,
-          data: payload,
-        });
+        await updateAddress({ id: editId, data: payload });
       } else {
         await createAddress(payload);
       }
 
-      if (returnTo === "cart") {
-        router.push("/(user)/cart?openAddressModal=1");
-      } else {
-        router.push("/(user)/address");
-      }
-    } catch (e) {
-      console.log("Save address error", e);
+      router.push(
+        returnTo === "cart"
+          ? "/(user)/cart?openAddressModal=1"
+          : "/(user)/address"
+      );
     } finally {
       setSaving(false);
     }
   };
 
+  /* ---------------- UI ---------------- */
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
-      className="flex-1 bg-white dark:bg-neutral-900"
+      className="flex-1 bg-neutral-900"
     >
       <ScrollView
         className="flex-1 px-4"
-        contentContainerStyle={{ paddingBottom: 40 }}
         keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingBottom: 40 }}
       >
-
-        {[
-          ["Full name", full_name, setFullName],
-          ["Phone", phone, setPhone],
-          ["Flate, House No., Building, Company, Appartment", city, setCity],
-          ["Landmark", zip_code, setZipCode],
-          ["Area, Street, Sector, Village", street, setStreet],
-          ["State", stateVal, setStateVal],
-          ["Label (Home / Work)", label, setLabel],
-        ].map(([placeholder, value, setter]: any, index) => (
-          <TextInput
-            key={index}
-            placeholder={placeholder}
-            placeholderTextColor="#9CA3AF"
-            value={value}
-            onChangeText={setter}
-            className="mb-3 rounded-xl border border-gray-300 dark:border-neutral-700 px-4 py-3 text-gray-900 dark:text-white bg-white dark:bg-neutral-800"
-          />
-        ))}
-
-        {/* ✅ Default Address Toggle */}
-        <View className="flex-row justify-between items-center mt-4">
-          <Text className="text-gray-800 dark:text-white font-medium">
-            Set as default address
+        {/* FULL NAME */}
+        <TextInput
+          placeholder="Full name"
+          placeholderTextColor="#9CA3AF"
+          value={form.full_name}
+          onChangeText={(v) => update("full_name", v)}
+          className={inputClass(errors.full_name)}
+        />
+        {submitted && errors.full_name && (
+          <Text className="text-red-500 text-xs mt-1 ml-2">
+            Full name is required
           </Text>
-          <Switch value={isDefault} onValueChange={setIsDefault} />
+        )}
+
+        {/* PHONE */}
+        <TextInput
+          placeholder="Mobile number"
+          placeholderTextColor="#9CA3AF"
+          keyboardType="number-pad"
+          maxLength={10}
+          value={form.phone}
+          onChangeText={(v) => update("phone", v.replace(/[^0-9]/g, ""))}
+          className={`${inputClass(errors.phone)} mt-4`}
+        />
+        {submitted && errors.phone && (
+          <Text className="text-red-500 text-xs mt-1 ml-2">
+            Mobile number must be 10 digits
+          </Text>
+        )}
+
+        {/* STREET */}
+        <TextInput
+          placeholder="Flat / House / Building"
+          placeholderTextColor="#9CA3AF"
+          value={form.street}
+          onChangeText={(v) => update("street", v)}
+          className={`${inputClass(errors.street)} mt-4`}
+        />
+        {submitted && errors.street && (
+          <Text className="text-red-500 text-xs mt-1 ml-2">
+            Street is required
+          </Text>
+        )}
+
+        {/* LANDMARK */}
+        <TextInput
+          placeholder="Landmark (optional)"
+          placeholderTextColor="#9CA3AF"
+          value={form.landmark}
+          onChangeText={(v) => update("landmark", v)}
+          className={`${inputClass()} mt-4`}
+        />
+
+        {/* AREA (Dropdown) */}
+        <TouchableOpacity
+          onPress={() => setShowAreaPicker(true)}
+          className={`${inputClass(errors.area)} mt-4 justify-center`}
+        >
+          <Text className={form.area ? "text-white" : "text-gray-400"}>
+            {form.area || "Select area"}
+          </Text>
+        </TouchableOpacity>
+        {submitted && errors.area && (
+          <Text className="text-red-500 text-xs mt-1 ml-2">
+            Please select an area
+          </Text>
+        )}
+
+        {/* CITY */}
+        <TextInput
+          placeholder="City"
+          placeholderTextColor="#9CA3AF"
+          value={form.city}
+          onChangeText={(v) => update("city", v)}
+          className={`${inputClass(errors.city)} mt-4`}
+        />
+        {submitted && errors.city && (
+          <Text className="text-red-500 text-xs mt-1 ml-2">
+            City is required
+          </Text>
+        )}
+
+        {/* LABEL */}
+        <TextInput
+          placeholder="Label (Home / Work)"
+          placeholderTextColor="#9CA3AF"
+          value={form.label}
+          onChangeText={(v) => update("label", v)}
+          className={`${inputClass()} mt-4`}
+        />
+
+        {/* DEFAULT SWITCH */}
+        <View className="flex-row justify-between items-center mt-6">
+          <Text className="text-white font-medium">Set as default address</Text>
+          <Switch
+            value={form.is_default}
+            onValueChange={(v) => update("is_default", v)}
+          />
         </View>
 
-        {/* Save Button */}
+        {/* SAVE */}
         <TouchableOpacity
-          disabled={saving}
           onPress={handleSave}
-          className={`mt-6 rounded-xl py-4 ${
-            saving ? "bg-gray-400" : "bg-primary"
+          disabled={saving}
+          className={`mt-8 rounded-xl py-4 ${
+            saving ? "bg-gray-500" : "bg-primary"
           }`}
         >
           {saving ? (
@@ -148,6 +248,36 @@ export default function CreateAddressScreen() {
           )}
         </TouchableOpacity>
       </ScrollView>
+
+      {/* AREA PICKER */}
+      {showAreaPicker && (
+        <View className="absolute inset-0 bg-black/70 justify-center px-6">
+          <View className="bg-neutral-900 rounded-2xl max-h-[70%]">
+            <ScrollView>
+              {AREAS.map((area) => (
+                <TouchableOpacity
+                  key={area}
+                  onPress={() => {
+                    update("area", area);
+                    setShowAreaPicker(false);
+                  }}
+                  className="px-5 py-4 border-b border-neutral-800"
+                >
+                  <Text className="text-white text-base">{area}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity
+              onPress={() => setShowAreaPicker(false)}
+              className="py-4"
+            >
+              <Text className="text-center text-red-400 font-medium">
+                Cancel
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </KeyboardAvoidingView>
   );
 }

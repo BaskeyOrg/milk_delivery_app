@@ -70,11 +70,11 @@ export default function AddressCard({
         </Text>
 
         <Text className="text-text-secondary text-sm mb-1">
-          {address.street}
+          {address.landmark}
         </Text>
 
         <Text className="text-text-secondary text-sm mb-2">
-          {address.city}, {address.state} {address.zip_code}
+          {address.street}, {address.area}, {address.city} 
         </Text>
 
         <View className="flex-row items-center">
