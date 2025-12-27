@@ -115,7 +115,7 @@ const AddressSelectionModal = ({ visible, onClose, onProceed }: Props) => {
                         {address.street}
                       </Text>
                       <Text className="text-gray-600 dark:text-neutral-300">
-                        {address.city}, {address.state}
+                        {address.area}, {address.city}
                       </Text>
                     </TouchableOpacity>
                   ))

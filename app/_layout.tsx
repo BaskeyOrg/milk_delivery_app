@@ -9,6 +9,7 @@ import CartProvider from "@/providers/CartProvider";
 import NotificationProvider from "@/providers/NotificationProvider";
 import QueryProvider from "@/providers/QueryProvider";
 
+import { LocationProvider } from "@/providers/LocationProvider";
 import {
   DarkTheme,
   DefaultTheme,
@@ -45,15 +46,17 @@ function RootLayoutNav() {
       <AuthProvider>
         <QueryProvider>
           <NotificationProvider>
-            <CartProvider>
-              {/* <SafeScreen> */}
-                <Stack>
-                  <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                  <Stack.Screen name="(admin)" options={{ headerShown: false }} />
-                  <Stack.Screen name="(user)" options={{ headerShown: false }} />
-                </Stack>
-              {/* </SafeScreen> */}
-            </CartProvider>
+            <LocationProvider>
+              <CartProvider>
+                {/* <SafeScreen> */}
+                  <Stack>
+                    <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                    <Stack.Screen name="(admin)" options={{ headerShown: false }} />
+                    <Stack.Screen name="(user)" options={{ headerShown: false }} />
+                  </Stack>
+                {/* </SafeScreen> */}
+              </CartProvider>
+            </LocationProvider>
           </NotificationProvider>
         </QueryProvider>
       </AuthProvider>

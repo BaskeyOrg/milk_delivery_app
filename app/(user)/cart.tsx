@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useMemo, useState } from "react";
 import {
@@ -13,23 +13,25 @@ import {
 
 import AddressSelectionModal from "@/components/Address/AddressSelectionModal";
 import CartListItem from "@/components/CartListItems";
+import LocationModal from "@/components/Location/LocationModal";
+import LocationHeaderContent from "@/components/LocationHeaderContent";
 import OrderSummeryFooter from "@/components/OrderSummeryFooter";
+import OverlayHeader from "@/components/OverlayHeader";
 
 import { useAddressList } from "@/api/addresses";
 import { Tables } from "@/assets/data/types";
-import OverlayHeader from "@/components/OverlayHeader";
 import { useAuth } from "@/providers/AuthProvider";
 import { useCart } from "@/providers/CartProvider";
 
-const CartScreen = () => {
+export default function CartScreen() {
+  const router = useRouter();
+
   const { items, total, checkout } = useCart();
   const { session } = useAuth();
   const { data: addresses = [] } = useAddressList(session?.user.id ?? "");
 
   const [addressModalVisible, setAddressModalVisible] = useState(false);
-
-  const router = useRouter();
-  const params = useLocalSearchParams();
+  const [locationModalVisible, setLocationModalVisible] = useState(false);
 
   const cartItemCount = useMemo(
     () => items.reduce((sum, item) => sum + item.quantity, 0),
@@ -38,32 +40,38 @@ const CartScreen = () => {
 
   const deliveryCharge = 0;
 
-  /** STEP 1: Checkout click */
+  /* ---------------- CHECKOUT ---------------- */
+
   const handleCheckout = () => {
     if (items.length === 0) return;
 
-    if (!addresses || addresses.length === 0) {
-      Alert.alert("No address found", "Please add an address before checkout", [
-        {
-          text: "Go to Profile",
-          onPress: () => router.push("/(user)/profile"),
-        },
-      ]);
+    if (!addresses.length) {
+      Alert.alert(
+        "No address found",
+        "Please add an address before checkout",
+        [
+          {
+            text: "Go to Profile",
+            onPress: () => router.push("/(user)/profile"),
+          },
+        ]
+      );
       return;
     }
 
     setAddressModalVisible(true);
   };
 
-  /** STEP 2: Address selected */
   const handleAddressProceed = (address: Tables<"addresses">) => {
     setAddressModalVisible(false);
     checkout(address);
   };
 
+  /* ---------------- EMPTY CART ---------------- */
+
   if (items.length === 0) {
     return (
-      <View className="flex-1 items-center justify-center px-6 ">
+      <View className="flex-1 items-center justify-center px-6">
         <Ionicons name="cart-outline" size={80} color="#666" />
 
         <Text className="text-text-primary font-semibold text-xl mt-4">
@@ -74,28 +82,41 @@ const CartScreen = () => {
           Looks like you haven’t added anything yet
         </Text>
 
-        <View className="mt-6 ">
+        <View className="mt-6">
           <TouchableOpacity
-            className={`rounded-full px-8 py-4 flex-row justify-center bg-primary`}
-            activeOpacity={0.8}
             onPress={() => router.push("/(user)/menu")}
+            className="rounded-full px-8 py-4 flex-row items-center bg-primary"
+            activeOpacity={0.85}
           >
-            <Ionicons name="apps" size={24} color="#121212" />
-            <Text className={`font-bold text-lg ml-2 `}>Go to Menu</Text>
+            <Ionicons name="apps" size={22} color="#121212" />
+            <Text className="font-bold text-lg ml-2">Go to Menu</Text>
           </TouchableOpacity>
         </View>
       </View>
     );
   }
 
+  /* ---------------- MAIN UI ---------------- */
+
   return (
     <View className="flex-1 bg-background">
-      <OverlayHeader title="Cart" />
-      {/* Cart List + Summary */}
+      {/* OVERLAY HEADER */}
+      <OverlayHeader
+        centerSlot={
+          <LocationHeaderContent
+            onPress={() => setLocationModalVisible(true)}
+          />
+        }
+        rightSlot={
+          <Ionicons name="heart-outline" size={22} color="#fff" />
+        }
+      />
+
+      {/* CART ITEMS */}
       <FlatList
         data={items}
-        renderItem={({ item }) => <CartListItem cartItem={item} />}
         keyExtractor={(item) => item.id}
+        renderItem={({ item }) => <CartListItem cartItem={item} />}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           padding: 16,
@@ -111,9 +132,8 @@ const CartScreen = () => {
         }
       />
 
-      {/* Sticky Checkout Bar */}
-      <View className="absolute bottom-0 left-0 right-0 bg-background/95 backdrop-blur-xl border-t border-surface pt-4 pb-32 px-6">
-        {/* Quick Stats */}
+      {/* STICKY CHECKOUT BAR */}
+      <View className="absolute bottom-0 left-0 right-0 bg-background/95 border-t border-surface pt-4 pb-32 px-6">
         <View className="flex-row items-center justify-between mb-4">
           <View className="flex-row items-center">
             <Ionicons name="cart" size={20} color="#1DB954" />
@@ -127,11 +147,10 @@ const CartScreen = () => {
           </Text>
         </View>
 
-        {/* Checkout Button */}
         <TouchableOpacity
-          className="bg-primary rounded-2xl overflow-hidden"
-          activeOpacity={0.9}
           onPress={handleCheckout}
+          activeOpacity={0.9}
+          className="bg-primary rounded-2xl"
         >
           <View className="py-5 flex-row items-center justify-center">
             <Text className="text-background font-bold text-lg mr-2">
@@ -142,16 +161,20 @@ const CartScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Address Modal */}
+      {/* ADDRESS MODAL */}
       <AddressSelectionModal
         visible={addressModalVisible}
         onClose={() => setAddressModalVisible(false)}
         onProceed={handleAddressProceed}
       />
 
+      {/* LOCATION MODAL */}
+      <LocationModal
+        visible={locationModalVisible}
+        onClose={() => setLocationModalVisible(false)}
+      />
+
       <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
     </View>
   );
-};
-
-export default CartScreen;
+}
