@@ -10,12 +10,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 /* ---------------- TYPES ---------------- */
@@ -126,7 +126,7 @@ export default function WishlistScreen() {
   return (
     <SafeScreen>
       {/* HEADER */}
-      <View className="px-6 border-b border-surface flex-row items-center">
+      <View className="px-6 mt-4 pb-4 border-b border-surface flex-row items-center">
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
           <Ionicons name="arrow-back" size={28} color="#FFFFFF" />
         </TouchableOpacity>

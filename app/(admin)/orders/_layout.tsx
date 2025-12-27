@@ -1,6 +1,5 @@
 import { Stack } from "expo-router";
 import React from "react";
-import { StyleSheet } from "react-native";
 
 export default function Orderlayout() {
   return (
@@ -11,4 +10,3 @@ export default function Orderlayout() {
   );
 }
 
-const styles = StyleSheet.create({});
