@@ -1,10 +1,9 @@
 import SafeScreen from "@/components/SafeScreen";
-import { Text } from "@/components/Themed";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/providers/AuthProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { Href, Link, router } from "expo-router";
-import { ScrollView, TouchableOpacity, View } from "react-native";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 const MENU_ITEMS = [
   {

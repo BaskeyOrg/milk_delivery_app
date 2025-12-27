@@ -5,7 +5,6 @@ import { useEffect } from "react";
 import "../global.css";
 
 import SafeScreen from "@/components/SafeScreen";
-import { useColorScheme } from "@/components/useColorScheme";
 import AuthProvider from "@/providers/AuthProvider";
 import CartProvider from "@/providers/CartProvider";
 import NotificationProvider from "@/providers/NotificationProvider";
@@ -16,6 +15,7 @@ import {
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
+import { useColorScheme } from "react-native";
 
 export { ErrorBoundary } from "expo-router";
 

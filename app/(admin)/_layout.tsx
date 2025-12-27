@@ -2,10 +2,9 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Redirect, Tabs } from "expo-router";
 import React from "react";
 
-import { useColorScheme } from "@/components/useColorScheme";
 import { useAuth } from "@/providers/AuthProvider";
 import { BlurView } from "expo-blur";
-import { ActivityIndicator, StyleSheet } from "react-native";
+import { ActivityIndicator, StyleSheet, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 

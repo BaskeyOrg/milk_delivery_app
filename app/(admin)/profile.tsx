@@ -1,9 +1,8 @@
 import Button from '@/components/Button';
-import { Text } from '@/components/Themed';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/providers/AuthProvider';
 import { Link } from 'expo-router';
-import { View } from 'react-native';
+import { Text, View } from 'react-native';
 
 export default function ProfileScreen() {
 
