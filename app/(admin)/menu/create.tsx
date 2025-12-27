@@ -15,6 +15,7 @@ import * as ImagePicker from "expo-image-picker";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Image,
   KeyboardAvoidingView,
@@ -25,7 +26,6 @@ import {
   View,
 } from "react-native";
 
-/* ---------------- VALIDATION ---------------- */
 const priceRegex = /^\d+(\.\d{1,2})?$/;
 
 export default function CreateProductScreen() {
@@ -36,19 +36,19 @@ export default function CreateProductScreen() {
 
   const { id: idString } = useLocalSearchParams();
   const id = Number(typeof idString === "string" ? idString : idString?.[0]);
+  const isUpdating = !!id;
 
   const router = useRouter();
-  const isUpdating = !!id;
 
   const { data: updatingProduct } = useProduct(id);
   const { mutate: insertProduct, isPending: isCreating } = useInsertProduct();
   const { mutate: updateProduct, isPending: isUpdatingProduct } =
     useUpdateProduct();
-  const { mutate: deleteProduct } = useDeleteProduct();
+  const { mutate: deleteProduct, isPending: isDeleting } = useDeleteProduct();
 
-  const isSubmitting = isCreating || isUpdatingProduct;
+  const isSubmitting = isCreating || isUpdatingProduct || isDeleting;
 
-  /* ---------------- LOAD DATA ---------------- */
+  // Load data when updating
   useEffect(() => {
     if (updatingProduct) {
       setName(updatingProduct.name);
@@ -57,13 +57,11 @@ export default function CreateProductScreen() {
     }
   }, [updatingProduct]);
 
-  /* ---------------- VALIDATIONS ---------------- */
   const isNameValid = name.length > 0;
   const isPriceValid = priceRegex.test(price) && Number(price) > 0;
-
   const isFormValid = isNameValid && isPriceValid;
 
-  /* ---------------- IMAGE PICKER ---------------- */
+  // Image picker
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
@@ -77,7 +75,7 @@ export default function CreateProductScreen() {
     }
   };
 
-  /* ---------------- UPLOAD IMAGE ---------------- */
+  // Upload image
   const uploadImage = async () => {
     if (!image?.startsWith("file://")) return image;
 
@@ -97,7 +95,7 @@ export default function CreateProductScreen() {
     return data.path;
   };
 
-  /* ---------------- SUBMIT ---------------- */
+  // Submit handler
   const onSubmit = async () => {
     if (!isFormValid || isSubmitting) {
       setError("Please fix the errors above");
@@ -118,48 +116,40 @@ export default function CreateProductScreen() {
       if (isUpdating) {
         updateProduct({ id, ...payload }, { onSuccess: () => router.back() });
       } else {
-        insertProduct(payload, {
-          onSuccess: () => router.back(),
-        });
+        insertProduct(payload, { onSuccess: () => router.back() });
       }
-    } catch (err) {
+    } catch {
       setError("Image upload failed");
     }
   };
 
-  /* ---------------- DELETE ---------------- */
+  // Delete handler
   const confirmDelete = () => {
+    if (isDeleting) return;
+
     Alert.alert("Delete product?", "This action cannot be undone", [
       { text: "Cancel", style: "cancel" },
       {
         text: "Delete",
         style: "destructive",
         onPress: () =>
-          deleteProduct(id, {
-            onSuccess: () => router.replace("/(admin)"),
-          }),
+          deleteProduct(id, { onSuccess: () => router.replace("/(admin)") }),
       },
     ]);
   };
 
-  /* ---------------- UI ---------------- */
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
       style={{ flex: 1 }}
     >
-      <ScrollView
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ flexGrow: 1 }}
-      >
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         <Stack.Screen
           options={{
             title: isUpdating ? "Update Product" : "Create Product",
           }}
         />
 
-        {/* MAIN CONTAINER */}
         <View className="flex-1 items-center px-6 bg-white dark:bg-black">
           {/* IMAGE */}
           {isUpdating ? (
@@ -171,7 +161,7 @@ export default function CreateProductScreen() {
           ) : (
             <Image
               source={{ uri: image || defaultPizzaImage }}
-              className="w-1/2 aspect-square self-center rounded-lg"
+              className="w-1/2 aspect-square self-center rounded-lg mt-8"
             />
           )}
 
@@ -186,46 +176,42 @@ export default function CreateProductScreen() {
           <View className="w-full gap-4">
             {/* NAME */}
             <Text className="text-white text-sm mb-1 ml-2">Product name</Text>
-            <View>
-              <TextInput
-                value={name}
-                onChangeText={setName}
-                placeholder="Product name"
-                placeholderTextColor="#9CA3AF"
-                className={`border rounded-full px-5 py-3 text-black dark:text-white bg-white dark:bg-black ${
-                  !isNameValid
-                    ? "border-red-500"
-                    : "border-gray-300 dark:border-gray-700"
-                }`}
-              />
-              {!isNameValid && (
-                <Text className="text-red-500 text-xs mt-1 ml-2">
-                  Product name is required
-                </Text>
-              )}
-            </View>
+            <TextInput
+              value={name}
+              onChangeText={setName}
+              placeholder="Product name"
+              placeholderTextColor="#9CA3AF"
+              className={`border rounded-full px-5 py-3 text-black dark:text-white bg-white dark:bg-black ${
+                !isNameValid
+                  ? "border-red-500"
+                  : "border-gray-300 dark:border-gray-700"
+              }`}
+            />
+            {!isNameValid && (
+              <Text className="text-red-500 text-xs mt-1 ml-2">
+                Product name is required
+              </Text>
+            )}
 
             {/* PRICE */}
-            <View>
-              <Text className="text-white text-sm mb-1 ml-2">Price</Text>
-              <TextInput
-                value={price}
-                onChangeText={setPrice}
-                placeholder="Price"
-                keyboardType="numeric"
-                placeholderTextColor="#9CA3AF"
-                className={`border rounded-full px-5 py-3 text-black dark:text-white bg-white dark:bg-black ${
-                  !isPriceValid
-                    ? "border-red-500"
-                    : "border-gray-300 dark:border-gray-700"
-                }`}
-              />
-              {!isPriceValid && (
-                <Text className="text-red-500 text-xs mt-1 ml-2">
-                  Enter a valid price
-                </Text>
-              )}
-            </View>
+            <Text className="text-white text-sm mb-1 ml-2">Price</Text>
+            <TextInput
+              value={price}
+              onChangeText={setPrice}
+              placeholder="Price"
+              keyboardType="numeric"
+              placeholderTextColor="#9CA3AF"
+              className={`border rounded-full px-5 py-3 text-black dark:text-white bg-white dark:bg-black ${
+                !isPriceValid
+                  ? "border-red-500"
+                  : "border-gray-300 dark:border-gray-700"
+              }`}
+            />
+            {!isPriceValid && (
+              <Text className="text-red-500 text-xs mt-1 ml-2">
+                Enter a valid price
+              </Text>
+            )}
 
             {!!error && (
               <Text className="text-red-500 text-sm text-center">{error}</Text>
@@ -239,18 +225,30 @@ export default function CreateProductScreen() {
                     ? "Updating..."
                     : "Creating..."
                   : isUpdating
-                    ? "Update Product"
-                    : "Create Product"
+                  ? "Update Product"
+                  : "Create Product"
               }
               onPress={onSubmit}
               disabled={!isFormValid || isSubmitting}
             />
 
             {/* DELETE */}
-            {isUpdating && !isSubmitting && (
-              <Text className="text-center text-red-500 font-semibold mt-4">
-                Delete Product
-              </Text>
+            {isUpdating && (
+              <View className="mt-4 items-center">
+                {isDeleting ? (
+                  <>
+                    <ActivityIndicator color="red" />
+                    <Text className="text-red-500 mt-2">Deleting product...</Text>
+                  </>
+                ) : (
+                  <Text
+                    onPress={confirmDelete}
+                    className="text-red-500 font-semibold"
+                  >
+                    Delete Product
+                  </Text>
+                )}
+              </View>
             )}
           </View>
         </View>
