@@ -1,102 +1,133 @@
 import { useOrderDetails, useUpdateOrder } from "@/api/orders";
 import { OrderStatusList } from "@/assets/data/types";
-import OrderItemListItem from "@/components/OrderItemListItem";
-import OrderListItem from "@/components/OrderListItem";
-import { Text } from "@/components/Themed";
-import Colors from "@/constants/Colors";
+import OrderAddressCard from "@/components/Address/OrderAddressCard";
+import OrderItemList from "@/components/OrderItemListItem";
+import OrderBillFooter from "@/components/OrderSummeryFooter";
 import { notifyUserAboutOrderUpdate } from "@/lib/notifications";
+import { Ionicons } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams } from "expo-router";
 import {
   ActivityIndicator,
-  FlatList,
+  Linking,
   Pressable,
-  StyleSheet,
+  ScrollView,
+  Text,
   View,
 } from "react-native";
 
-const OrderDetailScreen = () => {
-  const { id: isString } = useLocalSearchParams();
-  const id = parseFloat(
-    typeof isString === "string" ? isString : isString?.[0]
-  );
+export default function AdminOrderDetailScreen() {
+  const { id: idString } = useLocalSearchParams();
+  const id = Number(typeof idString === "string" ? idString : idString?.[0]);
+  const deliveryCharge = 20;
 
-  const { data: order, error, isLoading } = useOrderDetails(id);
+  const { data: order, isLoading, error } = useOrderDetails(id);
   const { mutate: updateOrder } = useUpdateOrder();
 
   const updateOrderStatus = async (status: string) => {
     updateOrder({
       id,
-      updatedFields: {
-        status,
-      },
+      updatedFields: { status },
     });
 
     if (order) {
       await notifyUserAboutOrderUpdate({ ...order, status });
     }
   };
+  /* 📞 Call customer (ADMIN ACTION) */
+  const callCustomer = () => {
+    if (!order?.addresses?.phone) return;
+    Linking.openURL(`tel:${order.addresses.phone}`);
+  };
 
   if (isLoading) {
-    return <ActivityIndicator />;
+    return (
+      <View className="flex-1 justify-center items-center bg-background">
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
+
   if (error || !order) {
-    return <Text>Failed to load order</Text>;
+    return (
+      <View className="flex-1 justify-center items-center bg-background">
+        <Text className="text-red-500 text-lg">Failed to load order</Text>
+      </View>
+    );
   }
 
   return (
-    <View style={styles.container}>
-      <Stack.Screen options={{ title: `Order #${id}` }} />
+    <View className="flex-1 bg-background">
+      <Stack.Screen options={{ title: `Order #${order.id}` }} />
 
-      <OrderListItem order={order} />
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 140, gap: 16 }}
+        className="p-4"
+      >
+        {/* ✅ Delivery Address (shared component) */}
+        {order.addresses && <OrderAddressCard address={order.addresses} />}
+        {/* 📞 Call Customer (ADMIN ONLY) */}
+        {order.addresses?.phone && (
+          <Pressable
+            onPress={callCustomer}
+            className="flex-row items-center bg-surface rounded-2xl p-4"
+          >
+            {/* Icon */}
+            <View className="bg-primary/20 rounded-full w-12 h-12 items-center justify-center mr-3">
+              <Ionicons name="call" size={24} color="#1DB954" />
+            </View>
 
-      <FlatList
-        data={order?.order_items}
-        renderItem={({ item }) => <OrderItemListItem item={item} />}
-        contentContainerStyle={{ gap: 10 }}
-        ListFooterComponent={() => (
-          <>
-            <Text style={{ fontWeight: "bold" }}>Status</Text>
-            <View style={{ flexDirection: "row", gap: 5 }}>
-              {OrderStatusList.map((status) => (
+            {/* Text */}
+            <View>
+              <Text className="text-text-primary font-bold text-base">
+                Call Customer
+              </Text>
+              <Text className="text-text-secondary text-sm">
+                {order.addresses.phone}
+              </Text>
+            </View>
+          </Pressable>
+        )}
+
+        {/* ✅ Order Items (shared component) */}
+        <OrderItemList items={order.order_items ?? []} />
+
+        {/* ✅ Admin Status Controls */}
+        <View className="bg-surface rounded-2xl p-4 space-y-3">
+          <Text className="text-lg font-bold text-text-primary">
+            Order Status
+          </Text>
+
+          <View className="flex-row flex-wrap gap-2 mt-2">
+            {OrderStatusList.map((status) => {
+              const isActive = order.status === status;
+
+              return (
                 <Pressable
                   key={status}
                   onPress={() => updateOrderStatus(status)}
-                  style={{
-                    borderColor: Colors.light.tint,
-                    borderWidth: 1,
-                    padding: 10,
-                    borderRadius: 5,
-                    marginVertical: 10,
-                    backgroundColor:
-                      order?.status === status
-                        ? Colors.light.tint
-                        : "transparent",
-                  }}
+                  className={`px-4 py-2 rounded-xl border
+                    ${
+                      isActive ? "bg-primary border-primary" : "border-primary"
+                    }`}
                 >
                   <Text
-                    style={{
-                      color:
-                        order.status === status ? "white" : Colors.light.tint,
-                    }}
+                    className={`font-semibold capitalize
+                      ${isActive ? "text-white" : "text-primary"}`}
                   >
                     {status}
                   </Text>
                 </Pressable>
-              ))}
-            </View>
-          </>
-        )}
-      />
+              );
+            })}
+          </View>
+        </View>
+
+        {/* ✅ Order Summary Footer (shared component) */}
+        <OrderBillFooter
+          itemsTotal={order.total}
+          deliveryCharge={deliveryCharge}
+        />
+      </ScrollView>
     </View>
   );
-};
-
-const styles = StyleSheet.create({
-  container: {
-    padding: 10,
-    flex: 1,
-    gap: 10,
-  },
-});
-
-export default OrderDetailScreen;
+}

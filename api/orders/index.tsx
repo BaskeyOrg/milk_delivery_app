@@ -24,10 +24,20 @@ export const useAdminOrderList = ({ archived = false }) => {
 };
 
 export type OrderWithItems = Tables<"orders"> & {
-  order_items: (Tables<"order_items"> & {
-    products: Tables<"products"> | null;
+  order_items?: (Tables<"order_items"> & {
+    products?: Tables<"products"> | null;
   })[];
+  addresses?: {
+    full_name: string;
+    phone: string;
+    street: string;
+    landmark: string | null;
+    area: string;
+    city: string;
+    label: string | null;
+  } | null;
 };
+
 
 export const useMyOrderList = () => {
   const { session } = useAuth();
