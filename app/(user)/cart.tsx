@@ -17,6 +17,7 @@ import OrderSummeryFooter from "@/components/OrderSummeryFooter";
 
 import { useAddressList } from "@/api/addresses";
 import { Tables } from "@/assets/data/types";
+import OverlayHeader from "@/components/OverlayHeader";
 import { useAuth } from "@/providers/AuthProvider";
 import { useCart } from "@/providers/CartProvider";
 
@@ -74,7 +75,6 @@ const CartScreen = () => {
         </Text>
 
         <View className="mt-6 ">
-          
           <TouchableOpacity
             className={`rounded-full px-8 py-4 flex-row justify-center bg-primary`}
             activeOpacity={0.8}
@@ -90,6 +90,7 @@ const CartScreen = () => {
 
   return (
     <View className="flex-1 bg-background">
+      <OverlayHeader title="Cart" />
       {/* Cart List + Summary */}
       <FlatList
         data={items}
@@ -98,6 +99,7 @@ const CartScreen = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           padding: 16,
+          paddingTop: 100,
           paddingBottom: 340,
           gap: 12,
         }}

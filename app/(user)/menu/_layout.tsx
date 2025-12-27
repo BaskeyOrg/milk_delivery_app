@@ -5,7 +5,7 @@ export default function MenuStack() {
   return (
     <Stack
       screenOptions={{
-        headerShown: true
+        headerShown: false
       }}
     >
       <Stack.Screen name="index" options={{ title: 'Menu' }} />

@@ -1,4 +1,5 @@
 import { Tables } from "@/assets/data/types";
+import OverlayHeader from "@/components/OverlayHeader";
 import { defaultPizzaImage } from "@/components/ProductListItem";
 import RemoteImage from "@/components/RemoteImage";
 import SafeScreen from "@/components/SafeScreen";
@@ -123,92 +124,92 @@ export default function WishlistScreen() {
 
   /* ---------------- UI ---------------- */
 
-  return (
-    <SafeScreen>
-      {/* HEADER */}
-      <View className="px-6 mt-4 pb-4 border-b border-surface flex-row items-center">
-        <TouchableOpacity onPress={() => router.back()} className="mr-4">
-          <Ionicons name="arrow-back" size={28} color="#FFFFFF" />
-        </TouchableOpacity>
-
-        <Text className="text-text-primary text-2xl font-bold">Wishlist</Text>
-
-        <Text className="text-text-secondary text-sm ml-auto">
+return (
+  <View className="flex-1 bg-background">
+    {/* OVERLAY HEADER */}
+    <OverlayHeader
+      title="Wishlist"
+      rightSlot={
+        <Text className="text-text-secondary text-sm">
           {wishlist.length} {wishlist.length === 1 ? "item" : "items"}
         </Text>
-      </View>
+      }
+    />
 
-      {wishlist.length === 0 ? (
-        <EmptyState />
-      ) : (
-        <ScrollView
-          className="flex-1"
-          contentContainerStyle={{ paddingBottom: 120 }}
-        >
-          <View className="p-6 gap-4">
-            {wishlist.map((item) => (
-              <View key={item.id} className="bg-surface rounded-3xl p-4">
-                {/* PRODUCT INFO */}
-                <View className="flex-row">
-                  <RemoteImage
-                    path={item.products.image ?? undefined}
-                    fallback={defaultPizzaImage}
-                    className="w-24 aspect-square rounded-lg"
-                  />
+    {wishlist.length === 0 ? (
+      <EmptyState />
+    ) : (
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{
+          paddingTop: 120, // 👈 space for overlay header
+          paddingBottom: 120,
+        }}
+      >
+        <View className="px-6 gap-4">
+          {wishlist.map((item) => (
+            <View key={item.id} className="bg-surface rounded-3xl p-4">
+              {/* PRODUCT INFO */}
+              <View className="flex-row">
+                <RemoteImage
+                  path={item.products.image ?? undefined}
+                  fallback={defaultPizzaImage}
+                  className="w-24 aspect-square rounded-lg"
+                />
 
-                  <View className="flex-1 ml-4">
-                    <Text
-                      className="text-text-primary font-bold text-lg"
-                      numberOfLines={2}
-                    >
-                      {item.products.name}
-                    </Text>
-
-                    <Text className="text-primary text-xl font-bold mt-1">
-                      ₹ {item.products.price}
-                    </Text>
-
-                    <Text className="text-text-secondary text-sm mt-1">
-                      Size: M
-                    </Text>
-                  </View>
-
-                  {/* REMOVE */}
-                  <TouchableOpacity
-                    onPress={() => removeFromWishlist(item)}
-                    disabled={removingId === item.id}
-                    className="p-2"
+                <View className="flex-1 ml-4">
+                  <Text
+                    className="text-text-primary font-bold text-lg"
+                    numberOfLines={2}
                   >
-                    {removingId === item.id ? (
-                      <ActivityIndicator size="small" />
-                    ) : (
-                      <Ionicons
-                        name="trash-outline"
-                        size={22}
-                        color="#EF4444"
-                      />
-                    )}
-                  </TouchableOpacity>
+                    {item.products.name}
+                  </Text>
+
+                  <Text className="text-primary text-xl font-bold mt-1">
+                    ₹ {item.products.price}
+                  </Text>
+
+                  <Text className="text-text-secondary text-sm mt-1">
+                    Size: M
+                  </Text>
                 </View>
 
-                {/* ADD TO CART */}
+                {/* REMOVE */}
                 <TouchableOpacity
-                  className="rounded-2xl px-8 py-4 mt-4 flex-row items-center justify-center bg-primary"
-                  activeOpacity={0.8}
-                  onPress={() => addToCartFromWishlist(item.products)}
+                  onPress={() => removeFromWishlist(item)}
+                  disabled={removingId === item.id}
+                  className="p-2"
                 >
-                  <Ionicons name="cart" size={24} color="#121212" />
-                  <Text className="font-bold text-lg text-background ml-2">
-                    Add to Cart
-                  </Text>
+                  {removingId === item.id ? (
+                    <ActivityIndicator size="small" />
+                  ) : (
+                    <Ionicons
+                      name="trash-outline"
+                      size={22}
+                      color="#EF4444"
+                    />
+                  )}
                 </TouchableOpacity>
               </View>
-            ))}
-          </View>
-        </ScrollView>
-      )}
-    </SafeScreen>
-  );
+
+              {/* ADD TO CART */}
+              <TouchableOpacity
+                className="rounded-2xl px-8 py-4 mt-4 flex-row items-center justify-center bg-primary"
+                activeOpacity={0.8}
+                onPress={() => addToCartFromWishlist(item.products)}
+              >
+                <Ionicons name="cart" size={24} color="#121212" />
+                <Text className="font-bold text-lg text-background ml-2">
+                  Add to Cart
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+    )}
+  </View>
+);
 }
 
 /* ---------------- EMPTY STATE ---------------- */
