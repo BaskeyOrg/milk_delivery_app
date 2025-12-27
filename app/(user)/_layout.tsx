@@ -17,12 +17,13 @@ function TabBarIcon(props: {
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-  const { session } = useAuth();
+  const { session, loading } = useAuth();
   const insets = useSafeAreaInsets();
 
+  if (loading) return null; // ⬅️ WAIT
+
   if (!session) {
-    console.log("user: layout sessiion.....");
-    return <Redirect href={'/sign-in'} />;
+    return <Redirect href="/(auth)/sign-in" />;
   }
 
   return (

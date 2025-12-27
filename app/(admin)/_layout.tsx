@@ -19,15 +19,17 @@ function TabBarIcon(props: {
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const { profile, loading, session } = useAuth();
-    const insets = useSafeAreaInsets();
+  const insets = useSafeAreaInsets();
   
+  if (loading) {
+    return <ActivityIndicator style={{ flex: 1 }} />;
+  }
 
-  if (loading) return <ActivityIndicator />;
+  if (!session) {
+    return <Redirect href="/(auth)/sign-in" />;
+  }
 
-  if (!session) return <Redirect href="/(auth)/sign-in" />;
-
-  if (!profile || profile.group !== 'ADMIN') {
-    console.log("profile 2 :", profile);
+  if (!profile || profile.group !== "ADMIN") {
     return <Redirect href="/" />;
   }
 
