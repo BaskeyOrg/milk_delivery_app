@@ -6,6 +6,7 @@ import {
 } from "@/api/products";
 import Button from "@/components/Button";
 import { defaultPizzaImage } from "@/components/ProductListItem";
+import RemoteImage from "@/components/RemoteImage";
 import { supabase } from "@/lib/supabase";
 import { decode } from "base64-arraybuffer";
 import { randomUUID } from "expo-crypto";
@@ -13,38 +14,41 @@ import * as FileSystem from "expo-file-system/legacy";
 import * as ImagePicker from "expo-image-picker";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Alert, Image, Text, TextInput, View } from "react-native";
+import {
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+
+/* ---------------- VALIDATION ---------------- */
+const priceRegex = /^\d+(\.\d{1,2})?$/;
 
 export default function CreateProductScreen() {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
-  const [errors, setErrors] = useState("");
   const [image, setImage] = useState<string | null>(null);
+  const [error, setError] = useState("");
 
-  const { id: isString } = useLocalSearchParams();
-  const id = parseFloat(
-    typeof isString === "string" ? isString : isString?.[0]
-  );
-
-  const {
-    mutate: insertProduct,
-    isPending: isCreating,
-  } = useInsertProduct();
-
-  const {
-    mutate: updateProduct,
-    isPending: isUpdatingProduct,
-  } = useUpdateProduct();
-
-  const { data: updatingProduct } = useProduct(id);
-  const { mutate: deleteProduct } = useDeleteProduct();
+  const { id: idString } = useLocalSearchParams();
+  const id = Number(typeof idString === "string" ? idString : idString?.[0]);
 
   const router = useRouter();
   const isUpdating = !!id;
 
+  const { data: updatingProduct } = useProduct(id);
+  const { mutate: insertProduct, isPending: isCreating } = useInsertProduct();
+  const { mutate: updateProduct, isPending: isUpdatingProduct } =
+    useUpdateProduct();
+  const { mutate: deleteProduct } = useDeleteProduct();
+
   const isSubmitting = isCreating || isUpdatingProduct;
 
-  /* ----------------------------- Load Data ----------------------------- */
+  /* ---------------- LOAD DATA ---------------- */
   useEffect(() => {
     if (updatingProduct) {
       setName(updatingProduct.name);
@@ -53,35 +57,13 @@ export default function CreateProductScreen() {
     }
   }, [updatingProduct]);
 
-  /* ----------------------------- Helpers ----------------------------- */
-  const resetFields = () => {
-    setName("");
-    setPrice("");
-    setImage(null);
-  };
+  /* ---------------- VALIDATIONS ---------------- */
+  const isNameValid = name.length > 0;
+  const isPriceValid = priceRegex.test(price) && Number(price) > 0;
 
-  const validateInputs = () => {
-    setErrors("");
+  const isFormValid = isNameValid && isPriceValid;
 
-    if (!name) {
-      setErrors("Name is required");
-      return false;
-    }
-
-    if (!price) {
-      setErrors("Price is required");
-      return false;
-    }
-
-    if (isNaN(Number(price))) {
-      setErrors("Price must be a number");
-      return false;
-    }
-
-    return true;
-  };
-
-  /* ----------------------------- Image Picker ----------------------------- */
+  /* ---------------- IMAGE PICKER ---------------- */
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
@@ -95,63 +77,7 @@ export default function CreateProductScreen() {
     }
   };
 
-  /* ----------------------------- Submit ----------------------------- */
-  const onSubmit = () => {
-    if (isSubmitting) return;
-    isUpdating ? onUpdate() : onCreate();
-  };
-
-  const onCreate = async () => {
-    if (!validateInputs()) return;
-
-    const imagePath = await uploadImage();
-
-    insertProduct(
-      { name, price: parseFloat(price), image: imagePath },
-      {
-        onSuccess: () => {
-          resetFields();
-          router.back();
-        },
-      }
-    );
-  };
-
-  const onUpdate = async () => {
-    if (!validateInputs()) return;
-
-    const imagePath = await uploadImage();
-
-    updateProduct(
-      { id, name, price: parseFloat(price), image: imagePath },
-      {
-        onSuccess: () => {
-          resetFields();
-          router.back();
-        },
-      }
-    );
-  };
-
-  /* ----------------------------- Delete ----------------------------- */
-  const confirmation = () => {
-    Alert.alert("Are you sure?", "This will delete the product", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: () =>
-          deleteProduct(id, {
-            onSuccess: () => {
-              resetFields();
-              router.replace("/(admin)");
-            },
-          }),
-      },
-    ]);
-  };
-
-  /* ----------------------------- Upload Image ----------------------------- */
+  /* ---------------- UPLOAD IMAGE ---------------- */
   const uploadImage = async () => {
     if (!image?.startsWith("file://")) return image;
 
@@ -161,76 +87,174 @@ export default function CreateProductScreen() {
 
     const filePath = `${randomUUID()}.png`;
 
-    const { data } = await supabase.storage
+    const { data, error } = await supabase.storage
       .from("product-images")
       .upload(filePath, decode(base64), {
         contentType: "image/png",
       });
 
-    return data?.path;
+    if (error) throw error;
+    return data.path;
   };
 
-  /* ----------------------------- UI ----------------------------- */
+  /* ---------------- SUBMIT ---------------- */
+  const onSubmit = async () => {
+    if (!isFormValid || isSubmitting) {
+      setError("Please fix the errors above");
+      return;
+    }
+
+    setError("");
+
+    try {
+      const imagePath = await uploadImage();
+
+      const payload = {
+        name,
+        price: Number(price),
+        image: imagePath,
+      };
+
+      if (isUpdating) {
+        updateProduct({ id, ...payload }, { onSuccess: () => router.back() });
+      } else {
+        insertProduct(payload, {
+          onSuccess: () => router.back(),
+        });
+      }
+    } catch (err) {
+      setError("Image upload failed");
+    }
+  };
+
+  /* ---------------- DELETE ---------------- */
+  const confirmDelete = () => {
+    Alert.alert("Delete product?", "This action cannot be undone", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () =>
+          deleteProduct(id, {
+            onSuccess: () => router.replace("/(admin)"),
+          }),
+      },
+    ]);
+  };
+
+  /* ---------------- UI ---------------- */
   return (
-    <View className="flex-1 justify-center bg-white px-4">
-      <Stack.Screen
-        options={{ title: isUpdating ? "Update Product" : "Create Product" }}
-      />
-
-      <Image
-        source={{ uri: image || defaultPizzaImage }}
-        className="w-1/2 aspect-square self-center rounded-lg"
-      />
-
-      <Text
-        onPress={pickImage}
-        className="text-center font-bold text-primary my-3"
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
+      style={{ flex: 1 }}
+    >
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ flexGrow: 1 }}
       >
-        Select Image
-      </Text>
-
-      <Text className="text-gray-500">Name</Text>
-      <TextInput
-        value={name}
-        onChangeText={setName}
-        placeholder="Enter name"
-        className="bg-white border border-gray-300 rounded-md px-3 py-2 mt-1 mb-3"
-      />
-
-      <Text className="text-gray-500">Price</Text>
-      <TextInput
-        value={price}
-        onChangeText={setPrice}
-        placeholder="Enter price"
-        keyboardType="numeric"
-        className="bg-white border border-gray-300 rounded-md px-3 py-2 mt-1 mb-2"
-      />
-
-      {!!errors && (
-        <Text className="text-red-500 text-xs mt-1">{errors}</Text>
-      )}
-
-      <Button
-        text={
-          isSubmitting
-            ? isUpdating
-              ? "Updating..."
-              : "Creating..."
-            : isUpdating
-            ? "Update"
-            : "Create"
-        }
-        onPress={onSubmit}
-        disabled={isSubmitting}
-      />
-
-      {isUpdating && !isSubmitting && (
-        <Button
-          onPress={confirmation}
-          className="text-center font-bold text-red-500 mt-4"
-          text="Delete Product"
+        <Stack.Screen
+          options={{
+            title: isUpdating ? "Update Product" : "Create Product",
+          }}
         />
-      )}
-    </View>
+
+        {/* MAIN CONTAINER */}
+        <View className="flex-1 items-center px-6 bg-white dark:bg-black">
+          {/* IMAGE */}
+          {isUpdating ? (
+            <RemoteImage
+              path={image ?? undefined}
+              fallback={defaultPizzaImage}
+              className="w-56 h-56 rounded-3xl mt-8"
+            />
+          ) : (
+            <Image
+              source={{ uri: image || defaultPizzaImage }}
+              className="w-1/2 aspect-square self-center rounded-lg"
+            />
+          )}
+
+          <Text
+            onPress={pickImage}
+            className="text-primary font-semibold mt-3 mb-6"
+          >
+            Change product image
+          </Text>
+
+          {/* FORM */}
+          <View className="w-full gap-4">
+            {/* NAME */}
+            <Text className="text-white text-sm mb-1 ml-2">Product name</Text>
+            <View>
+              <TextInput
+                value={name}
+                onChangeText={setName}
+                placeholder="Product name"
+                placeholderTextColor="#9CA3AF"
+                className={`border rounded-full px-5 py-3 text-black dark:text-white bg-white dark:bg-black ${
+                  !isNameValid
+                    ? "border-red-500"
+                    : "border-gray-300 dark:border-gray-700"
+                }`}
+              />
+              {!isNameValid && (
+                <Text className="text-red-500 text-xs mt-1 ml-2">
+                  Product name is required
+                </Text>
+              )}
+            </View>
+
+            {/* PRICE */}
+            <View>
+              <Text className="text-white text-sm mb-1 ml-2">Price</Text>
+              <TextInput
+                value={price}
+                onChangeText={setPrice}
+                placeholder="Price"
+                keyboardType="numeric"
+                placeholderTextColor="#9CA3AF"
+                className={`border rounded-full px-5 py-3 text-black dark:text-white bg-white dark:bg-black ${
+                  !isPriceValid
+                    ? "border-red-500"
+                    : "border-gray-300 dark:border-gray-700"
+                }`}
+              />
+              {!isPriceValid && (
+                <Text className="text-red-500 text-xs mt-1 ml-2">
+                  Enter a valid price
+                </Text>
+              )}
+            </View>
+
+            {!!error && (
+              <Text className="text-red-500 text-sm text-center">{error}</Text>
+            )}
+
+            {/* SUBMIT */}
+            <Button
+              text={
+                isSubmitting
+                  ? isUpdating
+                    ? "Updating..."
+                    : "Creating..."
+                  : isUpdating
+                    ? "Update Product"
+                    : "Create Product"
+              }
+              onPress={onSubmit}
+              disabled={!isFormValid || isSubmitting}
+            />
+
+            {/* DELETE */}
+            {isUpdating && !isSubmitting && (
+              <Text className="text-center text-red-500 font-semibold mt-4">
+                Delete Product
+              </Text>
+            )}
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

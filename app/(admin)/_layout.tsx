@@ -2,11 +2,12 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Redirect, Tabs } from "expo-router";
 import React from "react";
 
-import { useClientOnlyValue } from "@/components/useClientOnlyValue";
 import { useColorScheme } from "@/components/useColorScheme";
-import Colors from "@/constants/Colors";
 import { useAuth } from "@/providers/AuthProvider";
-import { ActivityIndicator } from "react-native";
+import { BlurView } from "expo-blur";
+import { ActivityIndicator, StyleSheet } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
 
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>["name"];
@@ -18,6 +19,8 @@ function TabBarIcon(props: {
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const { profile, loading, session } = useAuth();
+    const insets = useSafeAreaInsets();
+  
 
   if (loading) return <ActivityIndicator />;
 
@@ -31,17 +34,35 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.light.background,
-        tabBarInactiveTintColor: "gainsboro",
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: useClientOnlyValue(false, true),
+        tabBarActiveTintColor: "#e4240bff",
+        tabBarInactiveTintColor: "#B3B3B3",
         tabBarStyle: {
-          backgroundColor: Colors.light.tint,
+          position: "absolute",
+          borderColor: "transparent",
+          borderTopWidth: 0,
+          height: 50 + insets.bottom,
+          paddingTop: 4,
+          marginHorizontal: 100,
+          marginBottom: 24 + insets.bottom,
+          borderRadius: 24,
+          overflow: "hidden",
+
         },
+        tabBarBackground: () => (
+          <BlurView
+            intensity={80}
+            tint="dark"
+            style={StyleSheet.absoluteFill}
+          />
+        ),
+        tabBarLabelStyle:{
+          fontSize: 10,
+          fontWeight: 600,
+        },
+        headerShown: false,
       }}
     >
-      <Tabs.Screen name="index" options={{ href: null }} />
+  <Tabs.Screen name="index" options={{ href: null, headerShown: false }} />
       <Tabs.Screen
         name="menu"
         options={{
@@ -64,7 +85,7 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: "Admin",
-          // headerShown: false,
+          headerShown: false,
           tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
         }}
       />
