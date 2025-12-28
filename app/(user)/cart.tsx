@@ -13,12 +13,11 @@ import {
 
 import AddressSelectionModal from "@/components/Address/AddressSelectionModal";
 import CartListItem from "@/components/CartListItems";
-import LocationModal from "@/components/Location/LocationModal";
 import OrderSummeryFooter from "@/components/OrderSummeryFooter";
-import OverlayHeader from "@/components/OverlayHeader";
 
 import { useAddressList } from "@/api/addresses";
 import { Tables } from "@/assets/data/types";
+import GradientHeader from "@/components/GradientHeader";
 import { useAuth } from "@/providers/AuthProvider";
 import { useCart } from "@/providers/CartProvider";
 
@@ -29,7 +28,6 @@ export default function CartScreen() {
   const { data: addresses = [] } = useAddressList(session?.user.id ?? "");
 
   const [addressModalVisible, setAddressModalVisible] = useState(false);
-  const [locationModalVisible, setLocationModalVisible] = useState(false);
 
   const cartItemCount = useMemo(
     () => items.reduce((sum, item) => sum + item.quantity, 0),
@@ -101,12 +99,7 @@ export default function CartScreen() {
   return (
     <View className="flex-1 bg-background">
       {/* OVERLAY HEADER */}
-      <OverlayHeader
-        title="Cart"
-        rightSlot={
-          <Ionicons name="heart-outline" size={22} color="#43ce4e" />
-        }
-      />
+      <GradientHeader title="Cart" />
 
       {/* CART ITEMS */}
       <FlatList
@@ -116,7 +109,7 @@ export default function CartScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           padding: 16,
-          paddingTop: 100,
+          paddingTop: 10,
           paddingBottom: 340,
           gap: 12,
         }}
@@ -129,7 +122,7 @@ export default function CartScreen() {
       />
 
       {/* STICKY CHECKOUT BAR */}
-      <View className="absolute bottom-0 left-0 right-0 bg-background/95 border-t border-black/5 bg-black/3 pt-4 pb-28 px-6">
+      <View className="absolute bottom-0 left-0 right-0 border-t border-background-subtle bg-background pt-4 pb-28 px-6">
         <View className="flex-row items-center justify-between mb-4">
           <View className="flex-row items-center">
             <Ionicons name="cart" size={20} color="#43ce4e" />
@@ -164,11 +157,6 @@ export default function CartScreen() {
         onProceed={handleAddressProceed}
       />
 
-      {/* LOCATION MODAL */}
-      <LocationModal
-        visible={locationModalVisible}
-        onClose={() => setLocationModalVisible(false)}
-      />
 
       <StatusBar style={Platform.OS === "ios" ? "dark" : "auto"} />
     </View>

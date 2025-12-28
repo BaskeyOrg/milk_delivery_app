@@ -27,7 +27,7 @@ export default function AddressCard({
   isDeletingAddress = false,
 }: Props) {
   return (
-    <View className="bg-black/5 rounded-2xl p-5 mt-4">
+    <View className="bg-black/5 rounded-2xl p-5">
       {/* HEADER */}
       <View className="flex-row items-start justify-between mb-4">
         <View className="flex-row items-center flex-1">

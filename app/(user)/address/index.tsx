@@ -1,8 +1,9 @@
 import { useAddressList, useDeleteAddress } from "@/api/addresses";
 import AddressCard from "@/components/Address/AddressCard";
+import GradientHeader from "@/components/GradientHeader";
 import { useAuth } from "@/providers/AuthProvider";
 import { Ionicons } from "@expo/vector-icons";
-import { Stack, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import React from "react";
 import {
   ActivityIndicator,
@@ -34,10 +35,10 @@ export default function AddressesScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background p-4">
-      <Stack.Screen options={{ title: "Your Addresses" }} />
+    <View className="flex-1 bg-background">
+      <GradientHeader title="Your Addresses" />
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 120, gap: 16 }}>
+      <ScrollView contentContainerStyle={{ paddingTop: 10, paddingBottom: 120, gap: 8, paddingHorizontal: 16 }}>
         {/* Loading */}
         {isLoading && (
           <View className="py-12 items-center">
@@ -75,7 +76,7 @@ export default function AddressesScreen() {
         <TouchableOpacity
           activeOpacity={0.9}
           onPress={() => router.push("/(user)/address/create-address")}
-          className="bg-primary rounded-2xl py-5 flex-row items-center justify-center"
+          className="bg-primary rounded-full py-5 flex-row items-center justify-center"
         >
           <Ionicons name="add" size={20} color="#ffffff" />
           <Text className="text-white font-bold text-lg ml-2">

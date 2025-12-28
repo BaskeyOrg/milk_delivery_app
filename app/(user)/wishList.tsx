@@ -3,7 +3,7 @@ import {
   useWishlist,
 } from "@/api/wishlist";
 import { Tables } from "@/assets/data/types";
-import OverlayHeader from "@/components/OverlayHeader";
+import GradientHeader from "@/components/GradientHeader";
 import { defaultPizzaImage } from "@/components/ProductListItem";
 import RemoteImage from "@/components/RemoteImage";
 import SafeScreen from "@/components/SafeScreen";
@@ -69,21 +69,14 @@ export default function WishlistScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      <OverlayHeader
-        title="Wishlist"
-        rightSlot={
-          <Text className="text-text-secondary text-sm">
-            {wishlist.length} {wishlist.length === 1 ? "item" : "items"}
-          </Text>
-        }
-      />
+      <GradientHeader title="Wishlist" />
 
       {wishlist.length === 0 ? (
         <EmptyState />
       ) : (
         <ScrollView
           contentContainerStyle={{
-            paddingTop: 120,
+            paddingTop: 10,
             paddingBottom: 120,
             gap: 16,
           }}
@@ -92,7 +85,7 @@ export default function WishlistScreen() {
             {wishlist.map((item) => (
               <View
                 key={item.id}
-                className="bg-black/5 rounded-3xl p-4"
+                className="bg-background-subtle rounded-3xl p-4 mb-4"
               >
                 {/* PRODUCT */}
                 <View className="flex-row">
@@ -139,7 +132,7 @@ export default function WishlistScreen() {
                 <TouchableOpacity
                   onPress={() => addToCart(item.products)}
                   activeOpacity={0.85}
-                  className="mt-4 rounded-2xl py-4 flex-row items-center justify-center bg-primary"
+                  className="mt-4 rounded-full py-4 flex-row items-center justify-center bg-primary"
                 >
                   <Ionicons name="cart" size={22} color="#121212" />
                   <Text className="ml-2 font-bold text-base text-inverse">

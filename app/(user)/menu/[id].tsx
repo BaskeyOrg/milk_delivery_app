@@ -92,13 +92,13 @@ export default function ProductDetailsScreen() {
                   onPress={() => setSelectedSize(size)}
                   className={`w-12 aspect-square rounded-full items-center justify-center ${
                     isSelected
-                      ? "bg-surface-light border border-primary"
-                      : "bg-surface"
+                      ? "bg-primary border border-primary"
+                      : "bg-background-subtle"
                   }`}
                 >
                   <Text
                     className={`text-lg font-medium ${
-                      isSelected ? "text-primary-light" : "text-gray-500"
+                      isSelected ? "text-text-primary" : "text-text-tertiary"
                     }`}
                   >
                     {size}
@@ -116,14 +116,14 @@ export default function ProductDetailsScreen() {
 
             <View className="flex-row items-center">
               <TouchableOpacity
-                className="bg-surface rounded-full w-12 h-12 items-center justify-center"
+                className="bg-background-subtle rounded-full w-12 h-12 items-center justify-center"
                 onPress={() => setQuantity(Math.max(1, quantity - 1))}
                 disabled={!inStock}
               >
                 <Ionicons
                   name="remove"
                   size={24}
-                  color={inStock ? "#FFFFFF" : "#666"}
+                  color="#666"
                 />
               </TouchableOpacity>
 
@@ -139,7 +139,7 @@ export default function ProductDetailsScreen() {
                 <Ionicons
                   name="add"
                   size={24}
-                  color={!inStock ? "#666" : "#121212"}
+                  color="#666"
                 />
               </TouchableOpacity>
             </View>
@@ -158,7 +158,7 @@ export default function ProductDetailsScreen() {
       </ScrollView>
 
       {/* BOTTOM BAR */}
-      <View className="absolute bottom-16 left-0 right-0 bg-background/95 backdrop-blur-xl border-t border-surface px-6 py-4 pb-8">
+      <View className="absolute bottom-16 left-0 right-0 bg-background/95 backdrop-blur-xl border-t border-background-subtle px-6 py-4 pb-8 mt-4">
         <View className="flex-row items-center gap-3">
           <View className="flex-1">
             <Text className="text-text-secondary text-base font-bold">
@@ -170,9 +170,7 @@ export default function ProductDetailsScreen() {
           </View>
 
           <TouchableOpacity
-            className={`rounded-2xl px-8 py-4 flex-row items-center ${
-              !inStock ? "bg-surface" : "bg-primary"
-            }`}
+            className={"rounded-full px-8 py-4 flex-row items-center bg-primary"}
             onPress={addToCart}
             disabled={!inStock}
           >

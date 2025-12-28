@@ -1,4 +1,4 @@
-import SafeScreen from "@/components/SafeScreen";
+import GradientHeader from "@/components/GradientHeader";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/providers/AuthProvider";
 import { Ionicons } from "@expo/vector-icons";
@@ -122,7 +122,8 @@ export default function ProfileScreen() {
   };
 
   return (
-    <SafeScreen>
+    <View className="flex-1 bg-background">
+      <GradientHeader title="Profile" />
       <ScrollView
         className="flex-1 bg-background"
         showsVerticalScrollIndicator={false}
@@ -190,6 +191,6 @@ export default function ProfileScreen() {
           Version 1.0.0
         </Text>
       </ScrollView>
-    </SafeScreen>
+    </View>
   );
 }

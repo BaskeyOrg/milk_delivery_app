@@ -8,6 +8,38 @@ export type WishlistItem = Tables<"wishlist"> & {
   products: Tables<"products">;
 };
 
+
+/* ---------------- LIST ---------------- */
+
+export const useWishlist = (userId?: string) => {
+  return useQuery({
+    queryKey: ["wishlist", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("wishlist")
+        .select(
+          `
+          id,
+          product_id,
+          user_id,
+          created_at,
+          products (
+            id,
+            name,
+            price,
+            image
+          )
+        `
+        )
+        .eq("user_id", userId!);
+
+      if (error) throw error;
+      return (data ?? []) as WishlistItem[];
+    },
+  });
+};
+
 /* ---------------- CHECK STATUS ---------------- */
 
 export const useWishlistStatus = (

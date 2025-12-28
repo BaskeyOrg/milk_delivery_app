@@ -19,7 +19,7 @@ export default function LocationMapScreen() {
   const mapRef = useRef<MapView>(null);
 
   const [pin, setPin] = useState(
-    currentLocation ?? { latitude: 28.6139, longitude: 77.209 }
+    currentLocation ?? { latitude: 13.0397, longitude: 80.2793 }
   );
 
   useEffect(() => {
