@@ -35,7 +35,7 @@ export default function LocationModal({
 
   return (
     <Modal transparent animationType="slide" visible={visible}>
-      <View className="flex-1 bg-black/40 justify-end">
+      <View className="flex-1 justify-end">
         <View className="bg-background rounded-t-3xl p-6">
           <Text className="text-xl font-bold text-text-primary mb-4">
             Choose delivery location

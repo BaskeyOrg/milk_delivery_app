@@ -14,7 +14,6 @@ import {
 import AddressSelectionModal from "@/components/Address/AddressSelectionModal";
 import CartListItem from "@/components/CartListItems";
 import LocationModal from "@/components/Location/LocationModal";
-import LocationHeaderContent from "@/components/LocationHeaderContent";
 import OrderSummeryFooter from "@/components/OrderSummeryFooter";
 import OverlayHeader from "@/components/OverlayHeader";
 
@@ -102,11 +101,7 @@ export default function CartScreen() {
     <View className="flex-1 bg-background">
       {/* OVERLAY HEADER */}
       <OverlayHeader
-        centerSlot={
-          <LocationHeaderContent
-            onPress={() => setLocationModalVisible(true)}
-          />
-        }
+        title="Cart"
         rightSlot={
           <Ionicons name="heart-outline" size={22} color="#fff" />
         }
