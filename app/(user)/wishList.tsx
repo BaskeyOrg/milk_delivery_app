@@ -1,12 +1,8 @@
-import {
-  useRemoveFromWishlist,
-  useWishlist,
-} from "@/api/wishlist";
+import { useRemoveFromWishlist, useWishlist } from "@/api/wishlist";
 import { Tables } from "@/assets/data/types";
 import GradientHeader from "@/components/GradientHeader";
 import { defaultPizzaImage } from "@/components/ProductListItem";
 import RemoteImage from "@/components/RemoteImage";
-import SafeScreen from "@/components/SafeScreen";
 import { useAuth } from "@/providers/AuthProvider";
 import { useCart } from "@/providers/CartProvider";
 
@@ -36,18 +32,14 @@ export default function WishlistScreen() {
   /* ---------------- ACTIONS ---------------- */
 
   const handleRemove = (id: number, name: string) => {
-    Alert.alert(
-      "Remove item",
-      `Remove ${name} from wishlist?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Remove",
-          style: "destructive",
-          onPress: () => removeItem(id),
-        },
-      ]
-    );
+    Alert.alert("Remove item", `Remove ${name} from wishlist?`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Remove",
+        style: "destructive",
+        onPress: () => removeItem(id),
+      },
+    ]);
   };
 
   const addToCart = (product: Tables<"products">) => {
@@ -58,11 +50,7 @@ export default function WishlistScreen() {
   /* ---------------- LOADING ---------------- */
 
   if (isLoading) {
-    return (
-      <SafeScreen>
-        <ActivityIndicator className="mt-10" />
-      </SafeScreen>
-    );
+    return <ActivityIndicator className="mt-10" />;
   }
 
   /* ---------------- UI ---------------- */
@@ -114,17 +102,11 @@ export default function WishlistScreen() {
 
                   {/* REMOVE */}
                   <TouchableOpacity
-                    onPress={() =>
-                      handleRemove(item.id, item.products.name)
-                    }
+                    onPress={() => handleRemove(item.id, item.products.name)}
                     disabled={isPending}
                     className="p-2"
                   >
-                    <Ionicons
-                      name="trash-outline"
-                      size={22}
-                      color="#EF4444"
-                    />
+                    <Ionicons name="trash-outline" size={22} color="#EF4444" />
                   </TouchableOpacity>
                 </View>
 

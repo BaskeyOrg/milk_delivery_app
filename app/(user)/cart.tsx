@@ -139,7 +139,7 @@ export default function CartScreen() {
         <TouchableOpacity
           onPress={handleCheckout}
           activeOpacity={0.9}
-          className="bg-primary rounded-2xl"
+          className="bg-primary rounded-full"
         >
           <View className="py-5 flex-row items-center justify-center">
             <Text className="text-background font-bold text-lg mr-2">
