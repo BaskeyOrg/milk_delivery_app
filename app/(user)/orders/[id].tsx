@@ -1,9 +1,10 @@
 import { useOrderDetails } from "@/api/orders";
 import { useUpdateOrderSubscription } from "@/api/orders/subscription";
 import OrderAddressCard from "@/components/Address/OrderAddressCard";
+import GradientHeader from "@/components/GradientHeader";
 import OrderItemList from "@/components/OrderItemListItem";
 import OrderBillFooter from "@/components/OrderSummeryFooter";
-import { Stack, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 
 export default function OrderDetailsScreen() {
@@ -14,37 +15,37 @@ export default function OrderDetailsScreen() {
   const { data: order, isLoading, error } = useOrderDetails(id);
   useUpdateOrderSubscription(id);
 
+
+
   if (isLoading) {
     return (
-      <View className="flex-1 justify-center items-center">
-        <ActivityIndicator size="large" color="#4F46E5" />
+      <View className="flex-1 justify-center items-center bg-background">
+        <ActivityIndicator size="large" color="#43ce4e" />
       </View>
     );
   }
 
   if (error || !order) {
     return (
-      <View className="flex-1 justify-center items-center">
-        <Text className="text-red-500 text-lg">Failed to fetch order</Text>
+      <View className="flex-1 justify-center items-center bg-background">
+        <Text className="text-accent-error text-lg">Failed to fetch order</Text>
       </View>
     );
   }
 
   return (
-    <View className="flex-1 p-4">
-      <Stack.Screen options={{ title: `Order #${order.id}` }} />
+    <View className="flex-1 bg-background">
+      <GradientHeader title={order ? `Order #${order.id}` : "Order Details"} />
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 140, gap: 16 }}>
-        {/* Address Section */}
-        {order.addresses && (
-          <OrderAddressCard address={order.addresses} />
-        )}
+      <ScrollView contentContainerStyle={{ paddingBottom: 140, gap: 16, paddingHorizontal: 16 }}>
+        {order.addresses && <OrderAddressCard address={order.addresses} />}
 
-        {/* Single Card for All Products */}
         <OrderItemList items={order.order_items} />
 
-        {/* Footer */}
-        <OrderBillFooter itemsTotal={order.total} deliveryCharge={deliveryCharge} />
+        <OrderBillFooter
+          itemsTotal={order.total}
+          deliveryCharge={deliveryCharge}
+        />
       </ScrollView>
     </View>
   );

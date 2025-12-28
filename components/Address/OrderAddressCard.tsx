@@ -10,7 +10,11 @@ type Props = {
 
 export default function OrderAddressCard({ address }: Props) {
   return (
-    <View className="bg-white dark:bg-neutral-900 rounded-2xl p-5">
+    <View
+      className="bg-background-card
+    rounded-3xl p-5
+    bg-black/5"
+    >
       {/* Header */}
       <View className="flex-row items-center justify-between mb-4">
         <View className="flex-row items-center">
@@ -43,7 +47,7 @@ export default function OrderAddressCard({ address }: Props) {
         </Text>
 
         <Text className="text-text-secondary text-sm mb-2">
-          {address.city}, {address.state} {address.zip_code}
+          {address.area}, {address.city}
         </Text>
 
         <View className="flex-row items-center">
@@ -53,9 +57,7 @@ export default function OrderAddressCard({ address }: Props) {
             color="#6B7280"
             style={{ marginRight: 6 }}
           />
-          <Text className="text-text-secondary text-sm">
-            {address.phone}
-          </Text>
+          <Text className="text-text-secondary text-sm">{address.phone}</Text>
         </View>
       </View>
     </View>

@@ -13,7 +13,9 @@ const OrderSummeryFooter = ({
   const grandTotal = itemsTotal + deliveryCharge;
 
   return (
-    <View className="bg-white dark:bg-neutral-900 rounded-3xl p-5">
+    <View className="bg-background-card
+    rounded-3xl p-5
+    bg-black/5">
       {/* Header */}
       <View className="flex-row items-center mb-4">
         {/* <Ionicons name="receipt-outline" size={20} color="#4F46E5" /> */}

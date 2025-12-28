@@ -12,6 +12,13 @@ type Props = {
   isDeletingAddress?: boolean;
 };
 
+const getLabelIcon = (label?: string | null) => {
+  const value = label?.toLowerCase();
+  if (value === "home") return "home";
+  if (value === "work" || value === "office") return "briefcase";
+  return "location-outline";
+};
+
 export default function AddressCard({
   address,
   onEdit,
@@ -20,31 +27,27 @@ export default function AddressCard({
   isDeletingAddress = false,
 }: Props) {
   return (
-    <View className="bg-white dark:bg-neutral-900 rounded-2xl p-5">
-      {/* Header */}
-      <View className="flex-row items-center justify-between mb-4">
-        <View className="flex-row items-center">
-          <View className="bg-primary/20 rounded-full w-12 h-12 items-center justify-center mr-3">
-            <Ionicons name="location" size={24} color="#1DB954" />
+    <View className="bg-black/5 rounded-2xl p-5 mt-4">
+      {/* HEADER */}
+      <View className="flex-row items-start justify-between mb-4">
+        <View className="flex-row items-center flex-1">
+          {/* ICON */}
+          <View className="bg-primary/15 rounded-full w-12 h-12 items-center justify-center mr-3">
+            <Ionicons name="location" size={22} color="#43ce4e" />
           </View>
 
-          <View className="flex-col items-start">
-            <Text className="text-text-primary font-bold text-lg">
+          {/* TITLE */}
+          <View className="flex-1">
+            <Text className="text-gray-900 font-bold text-base">
               Delivery Address
             </Text>
+
             {address.label && (
-              <View className="bg-primary px-3 py-1 rounded-full border flex-row items-center gap-1">
+              <View className="self-start mt-1 px-3 py-1 rounded-full bg-primary flex-row items-center gap-2">
                 <Ionicons
-                  name={
-                    address.label.toLowerCase() === "home"
-                      ? "home"
-                      : address.label.toLowerCase() === "work" ||
-                          address.label.toLowerCase() === "office"
-                        ? "briefcase"
-                        : "location-outline"
-                  }
+                  name={getLabelIcon(address.label)}
                   size={12}
-                  color="#121212"
+                  color="#5c5c5cff"
                 />
                 <Text className="text-background text-xs font-bold">
                   {address.label}
@@ -55,44 +58,44 @@ export default function AddressCard({
         </View>
 
         {address.is_default && (
-          <View className="bg-gray-300 px-3 py-1 rounded-full">
-            <Text className="text-background text-xs font-bold">
-              Default
-            </Text>
+          <View className="bg-gray-900 px-3 py-1 rounded-full">
+            <Text className="text-white text-xs font-bold">Default</Text>
           </View>
         )}
       </View>
 
-      {/* Address details */}
-      <View className="ml-15">
-        <Text className="text-text-primary font-semibold mb-1">
+      {/* DETAILS */}
+      <View className="ml-[60px]">
+        <Text className="text-gray-900 font-semibold mb-1">
           {address.full_name}
         </Text>
 
-        <Text className="text-text-secondary text-sm mb-1">
-          {address.landmark}
-        </Text>
+        {!!address.landmark && (
+          <Text className="text-gray-500 text-sm mb-1">
+            {address.landmark}
+          </Text>
+        )}
 
-        <Text className="text-text-secondary text-sm mb-2">
-          {address.street}, {address.area}, {address.city} 
+        <Text className="text-gray-600 text-sm mb-2">
+          {address.street}, {address.area}, {address.city}
         </Text>
 
         <View className="flex-row items-center">
           <Ionicons
-            name="call"
-            size={16}
+            name="call-outline"
+            size={14}
             color="#6B7280"
             style={{ marginRight: 6 }}
           />
-          <Text className="text-text-secondary text-sm">{address.phone}</Text>
+          <Text className="text-gray-600 text-sm">{address.phone}</Text>
         </View>
       </View>
 
-      {/* Actions */}
-      <View className="flex-row mt-4 gap-2">
+      {/* ACTIONS */}
+      <View className="flex-row mt-5 gap-3">
         <TouchableOpacity
-          className="flex-1 bg-primary/20 py-3 rounded-xl items-center"
-          activeOpacity={0.7}
+          className="flex-1 bg-primary/15 py-3 rounded-xl items-center"
+          activeOpacity={0.8}
           onPress={() => onEdit(address)}
           disabled={isUpdatingAddress}
         >
@@ -102,8 +105,8 @@ export default function AddressCard({
         </TouchableOpacity>
 
         <TouchableOpacity
-          className="flex-1 bg-red-500/20 py-3 rounded-xl items-center"
-          activeOpacity={0.7}
+          className="flex-1 bg-red-500/15 py-3 rounded-xl items-center"
+          activeOpacity={0.8}
           onPress={() => onDelete(address.id, address.label)}
           disabled={isDeletingAddress}
         >

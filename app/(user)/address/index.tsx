@@ -1,4 +1,3 @@
-// app/(user)/address/index.tsx
 import { useAddressList, useDeleteAddress } from "@/api/addresses";
 import AddressCard from "@/components/Address/AddressCard";
 import { useAuth } from "@/providers/AuthProvider";
@@ -18,43 +17,38 @@ export default function AddressesScreen() {
   const router = useRouter();
   const { session } = useAuth();
 
-  const { data: addresses = [], isLoading } = useAddressList(
-    session?.user.id ?? ""
-  );
+  const userId = session?.user.id ?? "";
 
-  const { mutate: deleteAddress, isPending } = useDeleteAddress(
-    session?.user.id ?? ""
-  );
+  const { data: addresses = [], isLoading } = useAddressList(userId);
+  const { mutate: deleteAddress, isPending } = useDeleteAddress(userId);
 
-  const handleDelete = (addressId: number, label?: string | null) => {
+  const handleDelete = (id: number, label?: string | null) => {
     Alert.alert(
       "Delete address",
-      `Are you sure you want to delete ${label ?? "this address"}?`,
+      `Delete ${label ?? "this address"}?`,
       [
         { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => deleteAddress(addressId),
-        },
+        { text: "Delete", style: "destructive", onPress: () => deleteAddress(id) },
       ]
     );
   };
 
   return (
-    <View className="flex-1 p-4">
+    <View className="flex-1 bg-background p-4">
       <Stack.Screen options={{ title: "Your Addresses" }} />
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 100, gap: 16 }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 120, gap: 16 }}>
+        {/* Loading */}
         {isLoading && (
-          <View className="py-10 items-center">
-            <ActivityIndicator size="large" />
+          <View className="py-12 items-center">
+            <ActivityIndicator size="large" color="#43ce4e" />
           </View>
         )}
 
+        {/* Empty */}
         {!isLoading && addresses.length === 0 && (
-          <View className="flex-1 items-center justify-center px-6">
-            <Ionicons name="location-outline" size={80} color="#666" />
+          <View className="items-center justify-center px-6 py-20">
+            <Ionicons name="location-outline" size={80} color="#9CA3AF" />
             <Text className="text-text-primary font-semibold text-xl mt-4">
               No addresses yet
             </Text>
@@ -64,6 +58,7 @@ export default function AddressesScreen() {
           </View>
         )}
 
+        {/* Address Cards */}
         {addresses.map((item) => (
           <AddressCard
             key={item.id}
@@ -76,17 +71,16 @@ export default function AddressesScreen() {
           />
         ))}
 
+        {/* Add Address */}
         <TouchableOpacity
-          className="bg-primary rounded-2xl overflow-hidden"
           activeOpacity={0.9}
           onPress={() => router.push("/(user)/address/create-address")}
+          className="bg-primary rounded-2xl py-5 flex-row items-center justify-center"
         >
-          <View className="py-5 flex-row items-center justify-center">
-            <Ionicons name="add" size={20} color="#121212" />
-            <Text className="text-background font-bold text-lg ml-2">
-              Add Address
-            </Text>
-          </View>
+          <Ionicons name="add" size={20} color="#ffffff" />
+          <Text className="text-white font-bold text-lg ml-2">
+            Add Address
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </View>

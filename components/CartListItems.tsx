@@ -34,14 +34,14 @@ const CartListItem = ({ cartItem }: CartListItemProps) => {
   };
 
   const handleRemove = () => {
-    removeItem(cartItem.id); // ✅ removes whole item
+    removeItem(cartItem.id); 
     setModalVisible(false);
   };
 
   return (
     <>
       {/* Card */}
-      <View className="bg-surface rounded-3xl overflow-hidden">
+      <View className="bg-black/5 rounded-3xl ">
         <View className="p-4 flex-row">
           {/* Image */}
           <View className="relative">
@@ -49,12 +49,12 @@ const CartListItem = ({ cartItem }: CartListItemProps) => {
               path={cartItem.product.image ?? undefined}
               fallback={defaultPizzaImage}
               resizeMode="cover"
-              className="w-32 h-32 rounded-2xl bg-gray-100"
+              className="w-32 h-32 rounded-2xl bg-surface-elevated"
             />
 
             {/* Quantity Badge */}
             <View className="absolute top-2 right-2 bg-primary rounded-full px-2 py-0.5">
-              <Text className="text-white text-xs font-bold">
+              <Text className="text-inverse text-xs font-bold">
                 ×{cartItem.quantity}
               </Text>
             </View>
@@ -64,7 +64,7 @@ const CartListItem = ({ cartItem }: CartListItemProps) => {
           <View className="flex-1 ml-4 justify-between">
             <View>
               <Text
-                className="text-black dark:text-white font-bold text-lg leading-tight"
+                className="text-text-primary font-bold text-lg leading-tight"
                 numberOfLines={2}
               >
                 {cartItem.product.name}
@@ -74,13 +74,12 @@ const CartListItem = ({ cartItem }: CartListItemProps) => {
                 <Text className="text-primary font-bold text-2xl">
                   ₹ {itemTotal.toFixed(2)}
                 </Text>
-                <Text className="text-gray-500 dark:text-neutral-400 text-sm ml-2">
+                <Text className="text-text-secondary text-sm ml-2">
                   ₹ {cartItem.product.price.toFixed(2)} each
                 </Text>
               </View>
-              <Text
-                className="text-black dark:text-white font-bold text-lg leading-tight"
-              >
+
+              <Text className="text-text-primary font-bold text-lg leading-tight">
                 {cartItem.size}
               </Text>
             </View>
@@ -90,19 +89,19 @@ const CartListItem = ({ cartItem }: CartListItemProps) => {
               {/* Minus */}
               <Pressable
                 onPress={handleMinus}
-                className="bg-gray-200 dark:bg-neutral-800 rounded-full w-9 h-9 items-center justify-center"
+                className="bg-surface-elevated rounded-full w-9 h-9 items-center justify-center"
                 disabled={isUpdating}
               >
                 {isUpdating ? (
                   <ActivityIndicator size="small" />
                 ) : (
-                  <Ionicons name="remove" size={18} color="#ffffffff" />
+                  <Ionicons name="remove" size={18} color="#111827" />
                 )}
               </Pressable>
 
               {/* Quantity */}
               <View className="mx-4 min-w-[32px] items-center">
-                <Text className="text-black dark:text-white font-bold text-lg">
+                <Text className="text-text-primary font-bold text-lg">
                   {cartItem.quantity}
                 </Text>
               </View>
@@ -123,7 +122,7 @@ const CartListItem = ({ cartItem }: CartListItemProps) => {
               {/* Trash */}
               <Pressable
                 onPress={() => setModalVisible(true)}
-                className="ml-auto bg-red-500/10 rounded-full w-9 h-9 items-center justify-center"
+                className="ml-auto bg-accent-error/10 rounded-full w-9 h-9 items-center justify-center"
               >
                 <Ionicons name="trash-outline" size={18} color="#EF4444" />
               </Pressable>
@@ -140,12 +139,12 @@ const CartListItem = ({ cartItem }: CartListItemProps) => {
         onRequestClose={() => setModalVisible(false)}
       >
         <View className="flex-1 justify-center items-center bg-black/40 p-4">
-          <View className="bg-white dark:bg-neutral-900 rounded-2xl p-5 w-full max-w-md">
-            <Text className="text-lg font-bold mb-3 text-black dark:text-white">
+          <View className="bg-background rounded-2xl p-5 w-full max-w-md">
+            <Text className="text-text-primary text-lg font-bold mb-3">
               Remove Item?
             </Text>
 
-            <Text className="text-gray-600 dark:text-neutral-300 mb-4">
+            <Text className="text-text-secondary mb-4">
               Remove{" "}
               <Text className="font-semibold">{cartItem.product.name}</Text>{" "}
               from cart?
@@ -154,17 +153,17 @@ const CartListItem = ({ cartItem }: CartListItemProps) => {
             <View className="flex-row justify-end gap-3">
               <Pressable
                 onPress={() => setModalVisible(false)}
-                className="px-4 py-2 rounded-xl border border-gray-300"
+                className="px-4 py-2 rounded-xl border border-surface-border"
               >
-                <Text className="text-gray-700">Cancel</Text>
+                <Text className="text-text-secondary">Cancel</Text>
               </Pressable>
 
               <Pressable
                 onPress={handleRemove}
-                className="px-4 py-2 rounded-xl bg-red-500 flex-row items-center"
+                className="px-4 py-2 rounded-xl bg-accent-error flex-row items-center"
               >
                 <AntDesign name="delete" size={16} color="#fff" />
-                <Text className="text-white ml-2">Remove</Text>
+                <Text className="text-inverse ml-2">Remove</Text>
               </Pressable>
             </View>
           </View>

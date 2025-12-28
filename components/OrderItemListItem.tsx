@@ -13,7 +13,9 @@ const OrderItemList = ({ items }: OrderItemListItemProps) => {
   const segments = useSegments();
 
   return (
-    <View className="bg-white dark:bg-neutral-900 rounded-2xl p-4">
+    <View className="bg-background-card
+    rounded-3xl p-5
+    bg-black/5">
       {items.map((item, index) => (
         <View key={item.id}>
           <View className="flex-row items-center">
@@ -25,7 +27,7 @@ const OrderItemList = ({ items }: OrderItemListItemProps) => {
                     path={item.products.image ?? undefined}
                     fallback={defaultPizzaImage}
                     resizeMode="cover"
-                    className="w-24 h-24 rounded-2xl bg-gray-100"
+                    className="w-24 h-24 rounded-2xl bg-surface-muted"
                   />
                 </Pressable>
               </Link>
@@ -44,8 +46,7 @@ const OrderItemList = ({ items }: OrderItemListItemProps) => {
                 {/* Name */}
                 <Link href={`/${segments[0]}/menu/${item.products.id}`} asChild>
                   <Pressable>
-                    <Text
-                      className="text-black dark:text-white font-bold text-lg leading-tight"
+                    <Text className="text-text-primary font-bold text-lg"
                       numberOfLines={2}
                     >
                       {item.products.name}
@@ -81,7 +82,7 @@ const OrderItemList = ({ items }: OrderItemListItemProps) => {
 
           {/* Divider except last item */}
           {index !== items.length - 1 && (
-            <View className="border-t border-gray-200 dark:border-neutral-700 my-3" />
+            <View className="border-t border-black/5 my-3" />
           )}
         </View>
       ))}

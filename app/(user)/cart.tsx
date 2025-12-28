@@ -24,7 +24,6 @@ import { useCart } from "@/providers/CartProvider";
 
 export default function CartScreen() {
   const router = useRouter();
-
   const { items, total, checkout } = useCart();
   const { session } = useAuth();
   const { data: addresses = [] } = useAddressList(session?.user.id ?? "");
@@ -42,7 +41,7 @@ export default function CartScreen() {
   /* ---------------- CHECKOUT ---------------- */
 
   const handleCheckout = () => {
-    if (items.length === 0) return;
+    if (!items.length) return;
 
     if (!addresses.length) {
       Alert.alert(
@@ -68,10 +67,10 @@ export default function CartScreen() {
 
   /* ---------------- EMPTY CART ---------------- */
 
-  if (items.length === 0) {
+  if (!items.length) {
     return (
-      <View className="flex-1 items-center justify-center px-6">
-        <Ionicons name="cart-outline" size={80} color="#666" />
+      <View className="flex-1 items-center justify-center px-6 bg-background">
+        <Ionicons name="cart-outline" size={80} color="#9CA3AF" />
 
         <Text className="text-text-primary font-semibold text-xl mt-4">
           Your cart is empty
@@ -88,7 +87,9 @@ export default function CartScreen() {
             activeOpacity={0.85}
           >
             <Ionicons name="apps" size={22} color="#121212" />
-            <Text className="font-bold text-lg ml-2">Go to Menu</Text>
+            <Text className="font-bold text-lg ml-2 text-background">
+              Go to Menu
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -103,7 +104,7 @@ export default function CartScreen() {
       <OverlayHeader
         title="Cart"
         rightSlot={
-          <Ionicons name="heart-outline" size={22} color="#fff" />
+          <Ionicons name="heart-outline" size={22} color="#43ce4e" />
         }
       />
 
@@ -128,10 +129,10 @@ export default function CartScreen() {
       />
 
       {/* STICKY CHECKOUT BAR */}
-      <View className="absolute bottom-0 left-0 right-0 bg-background/95 border-t border-surface pt-4 pb-32 px-6">
+      <View className="absolute bottom-0 left-0 right-0 bg-background/95 border-t border-black/5 bg-black/3 pt-4 pb-28 px-6">
         <View className="flex-row items-center justify-between mb-4">
           <View className="flex-row items-center">
-            <Ionicons name="cart" size={20} color="#1DB954" />
+            <Ionicons name="cart" size={20} color="#43ce4e" />
             <Text className="text-text-secondary ml-2">
               {cartItemCount} {cartItemCount === 1 ? "item" : "items"}
             </Text>
@@ -169,7 +170,7 @@ export default function CartScreen() {
         onClose={() => setLocationModalVisible(false)}
       />
 
-      <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
+      <StatusBar style={Platform.OS === "ios" ? "dark" : "auto"} />
     </View>
   );
 }

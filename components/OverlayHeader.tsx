@@ -34,7 +34,7 @@ export default function OverlayHeader({
         {centerSlot ? (
           centerSlot
         ) : title ? (
-          <Text className="text-white text-2xl font-semibold">
+          <Text className="text-text-primary text-2xl font-semibold">
             {title}
           </Text>
         ) : null}
