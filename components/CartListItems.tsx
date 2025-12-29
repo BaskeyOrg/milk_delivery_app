@@ -15,9 +15,11 @@ const CartListItem = ({ cartItem }: CartListItemProps) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const itemTotal = cartItem.product.price * cartItem.quantity;
+  // Use variant price, fallback to 0
+  const price = cartItem.size?.price ?? 0;
+  const itemTotal = price * cartItem.quantity;
 
-  const handleMinus = async () => {
+  const handleMinus = () => {
     if (cartItem.quantity === 1) {
       setModalVisible(true);
       return;
@@ -27,14 +29,14 @@ const CartListItem = ({ cartItem }: CartListItemProps) => {
     setIsUpdating(false);
   };
 
-  const handlePlus = async () => {
+  const handlePlus = () => {
     setIsUpdating(true);
     updateQuantity(cartItem.id, 1);
     setIsUpdating(false);
   };
 
   const handleRemove = () => {
-    removeItem(cartItem.id); 
+    removeItem(cartItem.id);
     setModalVisible(false);
   };
 
@@ -75,12 +77,12 @@ const CartListItem = ({ cartItem }: CartListItemProps) => {
                   ₹ {itemTotal.toFixed(2)}
                 </Text>
                 <Text className="text-text-secondary text-sm ml-2">
-                  ₹ {cartItem.product.price.toFixed(2)} each
+                  ₹ {price.toFixed(2)} each
                 </Text>
               </View>
 
               <Text className="text-text-primary font-bold text-lg leading-tight">
-                {cartItem.size}
+                {cartItem.size?.label}
               </Text>
             </View>
 

@@ -20,13 +20,27 @@ export type Enums<T extends keyof Database['public']['Enums']> =
 //   price: number;
 // };
 
-export type PizzaSize = 'S' | 'M' | 'L' | 'XL';
+/** Product Variant */
+export type ProductVariant = {
+  label: string;
+  price: number;
+};
+
+/** Product with typed variants */
+export type Product = Omit<Tables<"products">, "variants"> & {
+  variants: ProductVariant[];
+};
+
+// export type InsertOrderItem = InsertTables<"order_items">;
+// export type InsertOrder = InsertTables<"orders">;
+// export type UpdateOrder = UpdateTables<"orders">;
+
 
 export type CartItem = {
   id: string;
   product: Tables<'products'>;
   product_id: number;
-  size: PizzaSize;
+  size: ProductVariant;
   quantity: number;
 };
 
@@ -54,7 +68,7 @@ export type OrderItem = {
   product_id: number;
   products: Tables<'products'>;
   order_id: number;
-  size: PizzaSize;
+  size: ProductVariant;
   quantity: number;
 };
 

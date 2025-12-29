@@ -26,11 +26,18 @@ import {
   View,
 } from "react-native";
 
+type Variant = {
+  label: string;
+  price: string; // input as string
+};
+
 const priceRegex = /^\d+(\.\d{1,2})?$/;
 
 export default function CreateProductScreen() {
   const [name, setName] = useState("");
-  const [price, setPrice] = useState("");
+  const [variants, setVariants] = useState<Variant[]>([
+    { label: "", price: "" },
+  ]);
   const [image, setImage] = useState<string | null>(null);
   const [error, setError] = useState("");
 
@@ -48,25 +55,36 @@ export default function CreateProductScreen() {
 
   const isSubmitting = isCreating || isUpdatingProduct || isDeleting;
 
-  // Load data when updating
+  /* ---------------- LOAD PRODUCT ---------------- */
   useEffect(() => {
     if (updatingProduct) {
       setName(updatingProduct.name);
-      setPrice(updatingProduct.price.toString());
       setImage(updatingProduct.image);
+
+      setVariants(
+        updatingProduct.variants.map((v: any) => ({
+          label: v.label,
+          price: v.price.toString(),
+        }))
+      );
     }
   }, [updatingProduct]);
 
+  /* ---------------- VALIDATION ---------------- */
   const isNameValid = name.length > 0;
-  const isPriceValid = priceRegex.test(price) && Number(price) > 0;
-  const isFormValid = isNameValid && isPriceValid;
+  const areVariantsValid =
+    variants.length > 0 &&
+    variants.every(
+      (v) => v.label.length > 0 && priceRegex.test(v.price)
+    );
 
-  // Image picker
+  const isFormValid = isNameValid && areVariantsValid;
+
+  /* ---------------- IMAGE PICKER ---------------- */
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       allowsEditing: true,
-      aspect: [4, 3],
       quality: 1,
     });
 
@@ -75,7 +93,6 @@ export default function CreateProductScreen() {
     }
   };
 
-  // Upload image
   const uploadImage = async () => {
     if (!image?.startsWith("file://")) return image;
 
@@ -95,7 +112,7 @@ export default function CreateProductScreen() {
     return data.path;
   };
 
-  // Submit handler
+  /* ---------------- SUBMIT ---------------- */
   const onSubmit = async () => {
     if (!isFormValid || isSubmitting) {
       setError("Please fix the errors above");
@@ -109,8 +126,11 @@ export default function CreateProductScreen() {
 
       const payload = {
         name,
-        price: Number(price),
         image: imagePath,
+        variants: variants.map((v) => ({
+          label: v.label,
+          price: Number(v.price),
+        })),
       };
 
       if (isUpdating) {
@@ -123,10 +143,8 @@ export default function CreateProductScreen() {
     }
   };
 
-  // Delete handler
+  /* ---------------- DELETE ---------------- */
   const confirmDelete = () => {
-    if (isDeleting) return;
-
     Alert.alert("Delete product?", "This action cannot be undone", [
       { text: "Cancel", style: "cancel" },
       {
@@ -150,7 +168,7 @@ export default function CreateProductScreen() {
           }}
         />
 
-        <View className="flex-1 items-center px-6 bg-white dark:bg-black">
+        <View className="flex-1 items-center px-6 bg-white">
           {/* IMAGE */}
           {isUpdating ? (
             <RemoteImage
@@ -172,85 +190,80 @@ export default function CreateProductScreen() {
             Change product image
           </Text>
 
-          {/* FORM */}
-          <View className="w-full gap-4">
-            {/* NAME */}
-            <Text className="text-white text-sm mb-1 ml-2">Product name</Text>
-            <TextInput
-              value={name}
-              onChangeText={setName}
-              placeholder="Product name"
-              placeholderTextColor="#9CA3AF"
-              className={`border rounded-full px-5 py-3 text-black dark:text-white bg-white dark:bg-black ${
-                !isNameValid
-                  ? "border-red-500"
-                  : "border-gray-300 dark:border-gray-700"
-              }`}
-            />
-            {!isNameValid && (
-              <Text className="text-red-500 text-xs mt-1 ml-2">
-                Product name is required
-              </Text>
-            )}
+          {/* NAME */}
+          <Text className="text-sm mb-1">Product name</Text>
+          <TextInput
+            value={name}
+            onChangeText={setName}
+            placeholder="Product name"
+            className="border rounded-full px-5 py-3 mb-4"
+          />
 
-            {/* PRICE */}
-            <Text className="text-white text-sm mb-1 ml-2">Price</Text>
-            <TextInput
-              value={price}
-              onChangeText={setPrice}
-              placeholder="Price"
-              keyboardType="numeric"
-              placeholderTextColor="#9CA3AF"
-              className={`border rounded-full px-5 py-3 text-black dark:text-white bg-white dark:bg-black ${
-                !isPriceValid
-                  ? "border-red-500"
-                  : "border-gray-300 dark:border-gray-700"
-              }`}
-            />
-            {!isPriceValid && (
-              <Text className="text-red-500 text-xs mt-1 ml-2">
-                Enter a valid price
-              </Text>
-            )}
+          {/* VARIANTS */}
+          <Text className="text-lg font-bold mb-3">Variants</Text>
 
-            {!!error && (
-              <Text className="text-red-500 text-sm text-center">{error}</Text>
-            )}
+          {variants.map((variant, index) => (
+            <View key={index} className="flex-row gap-3 mb-3">
+              <TextInput
+                value={variant.label}
+                onChangeText={(text) => {
+                  const copy = [...variants];
+                  copy[index].label = text;
+                  setVariants(copy);
+                }}
+                placeholder="Quantity (e.g. 500ml)"
+                className="flex-1 border rounded-full px-4 py-3"
+              />
 
-            {/* SUBMIT */}
-            <Button
-              text={
-                isSubmitting
-                  ? isUpdating
-                    ? "Updating..."
-                    : "Creating..."
-                  : isUpdating
-                  ? "Update Product"
-                  : "Create Product"
-              }
-              onPress={onSubmit}
-              disabled={!isFormValid || isSubmitting}
-            />
+              <TextInput
+                value={variant.price}
+                onChangeText={(text) => {
+                  const copy = [...variants];
+                  copy[index].price = text;
+                  setVariants(copy);
+                }}
+                placeholder="Price"
+                keyboardType="numeric"
+                className="w-28 border rounded-full px-4 py-3"
+              />
+            </View>
+          ))}
 
-            {/* DELETE */}
-            {isUpdating && (
-              <View className="mt-4 items-center">
-                {isDeleting ? (
-                  <>
-                    <ActivityIndicator color="red" />
-                    <Text className="text-red-500 mt-2">Deleting product...</Text>
-                  </>
-                ) : (
-                  <Text
-                    onPress={confirmDelete}
-                    className="text-red-500 font-semibold"
-                  >
-                    Delete Product
-                  </Text>
-                )}
-              </View>
-            )}
-          </View>
+          <Text
+            onPress={() =>
+              setVariants([...variants, { label: "", price: "" }])
+            }
+            className="text-primary font-semibold mb-6"
+          >
+            + Add variant
+          </Text>
+
+          {!!error && (
+            <Text className="text-red-500 text-center mb-3">{error}</Text>
+          )}
+
+          {/* SUBMIT */}
+          <Button
+            text={isUpdating ? "Update Product" : "Create Product"}
+            onPress={onSubmit}
+            disabled={!isFormValid || isSubmitting}
+          />
+
+          {/* DELETE */}
+          {isUpdating && (
+            <View className="mt-6 items-center">
+              {isDeleting ? (
+                <ActivityIndicator color="red" />
+              ) : (
+                <Text
+                  onPress={confirmDelete}
+                  className="text-red-500 font-semibold"
+                >
+                  Delete Product
+                </Text>
+              )}
+            </View>
+          )}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

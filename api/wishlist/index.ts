@@ -1,13 +1,12 @@
-import { Tables } from "@/assets/data/types";
+import { Product, ProductVariant, Tables } from "@/assets/data/types";
 import { supabase } from "@/lib/supabase";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 /* ---------------- TYPES ---------------- */
 
 export type WishlistItem = Tables<"wishlist"> & {
-  products: Tables<"products">;
+  products: Product;
 };
-
 
 /* ---------------- LIST ---------------- */
 
@@ -27,15 +26,23 @@ export const useWishlist = (userId?: string) => {
           products (
             id,
             name,
-            price,
-            image
+            image,
+            variants
           )
         `
         )
         .eq("user_id", userId!);
 
       if (error) throw error;
-      return (data ?? []) as WishlistItem[];
+
+      // Map variants from JSON to typed ProductVariant[]
+      return (data ?? []).map((item: any) => ({
+        ...item,
+        products: {
+          ...item.products,
+          variants: (item.products.variants ?? []) as ProductVariant[],
+        },
+      })) as WishlistItem[];
     },
   });
 };

@@ -1,20 +1,28 @@
-import { InsertTables } from "@/assets/data/types";
 import { supabase } from "@/lib/supabase";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+export type InsertOrderItem = {
+  order_id: number;
+  product_id: number;
+  quantity: number;
+  variant_label: string;
+  variant_price: number;
+};
 
 export const useInsertOrderItems = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
-    async mutationFn(items: InsertTables<"order_items">[]) {
-      const { data: newOrderItem, error } = await supabase
+    mutationFn: async (items: InsertOrderItem[]) => {
+      const { error } = await supabase
         .from("order_items")
-        .insert(items)
-        .select();
+        .insert(items);
 
-      if (error) {
-        throw new Error(error.message);
-      }
+      if (error) throw new Error(error.message);
+    },
 
-      return newOrderItem;
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
     },
   });
 };

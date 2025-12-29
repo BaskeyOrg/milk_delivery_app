@@ -1,19 +1,28 @@
+import { Product, ProductVariant } from "@/assets/data/types";
 import { supabase } from "@/lib/supabase";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+/* ---------------- PRODUCT LIST ---------------- */
+
 export const useProductList = () => {
-  return useQuery({
+  return useQuery<Product[]>({
     queryKey: ["products"],
     queryFn: async () => {
       const { data, error } = await supabase.from("products").select("*");
       if (error) throw new Error(error.message);
-      return data;
+
+      return (data ?? []).map((p) => ({
+        ...p,
+        variants: (p.variants ?? []) as ProductVariant[],
+      }));
     },
   });
 };
 
+/* ---------------- SINGLE PRODUCT ---------------- */
+
 export const useProduct = (id: number) => {
-  return useQuery({
+  return useQuery<Product>({
     queryKey: ["products", id],
     enabled: !!id,
     queryFn: async () => {
@@ -24,10 +33,16 @@ export const useProduct = (id: number) => {
         .single();
 
       if (error) throw new Error(error.message);
-      return data;
+
+      return {
+        ...data,
+        variants: (data.variants ?? []) as ProductVariant[],
+      };
     },
   });
 };
+
+/* ---------------- INSERT PRODUCT ---------------- */
 
 export const useInsertProduct = () => {
   const queryClient = useQueryClient();
@@ -35,12 +50,17 @@ export const useInsertProduct = () => {
   return useMutation({
     mutationFn: async (data: {
       name: string;
-      price: number;
       image?: string | null;
+      variants: ProductVariant[];
     }) => {
       const { data: product, error } = await supabase
         .from("products")
-        .insert(data)
+        .insert({
+          name: data.name,
+          image: data.image,
+          variants: data.variants,
+          price: null, // legacy column
+        })
         .select()
         .single();
 
@@ -53,6 +73,8 @@ export const useInsertProduct = () => {
   });
 };
 
+/* ---------------- UPDATE PRODUCT ---------------- */
+
 export const useUpdateProduct = () => {
   const queryClient = useQueryClient();
 
@@ -60,15 +82,15 @@ export const useUpdateProduct = () => {
     mutationFn: async (data: {
       id: number;
       name: string;
-      price: number;
       image?: string | null;
+      variants: ProductVariant[];
     }) => {
       const { data: product, error } = await supabase
         .from("products")
         .update({
           name: data.name,
-          price: data.price,
           image: data.image,
+          variants: data.variants,
         })
         .eq("id", data.id)
         .select()
@@ -84,16 +106,14 @@ export const useUpdateProduct = () => {
   });
 };
 
+/* ---------------- DELETE PRODUCT ---------------- */
+
 export const useDeleteProduct = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (id: number) => {
-      const { error } = await supabase
-        .from("products")
-        .delete()
-        .eq("id", id);
-
+      const { error } = await supabase.from("products").delete().eq("id", id);
       if (error) throw new Error(error.message);
     },
     onSuccess: () => {

@@ -1,5 +1,5 @@
 import { useRemoveFromWishlist, useWishlist } from "@/api/wishlist";
-import { Tables } from "@/assets/data/types";
+import { Product, ProductVariant } from "@/assets/data/types";
 import GradientHeader from "@/components/GradientHeader";
 import { defaultPizzaImage } from "@/components/ProductListItem";
 import RemoteImage from "@/components/RemoteImage";
@@ -42,8 +42,11 @@ export default function WishlistScreen() {
     ]);
   };
 
-  const addToCart = (product: Tables<"products">) => {
-    addItem(product, "M", 1);
+  const addToCart = (product: Product) => {
+    // Safely pick first variant or default
+    const selectedVariant: ProductVariant = product.variants?.[0];
+
+    addItem(product, selectedVariant, 1);
     router.push("/(user)/cart");
   };
 
@@ -70,59 +73,71 @@ export default function WishlistScreen() {
           }}
         >
           <View className="px-6 space-y-4">
-            {wishlist.map((item) => (
-              <View
-                key={item.id}
-                className="bg-background-subtle rounded-3xl p-4 mb-4"
-              >
-                {/* PRODUCT */}
-                <View className="flex-row">
-                  <RemoteImage
-                    path={item.products.image ?? undefined}
-                    fallback={defaultPizzaImage}
-                    className="w-24 h-24 rounded-xl bg-surface-elevated"
-                  />
+            {wishlist.map((item) => {
+              const product: Product = item.products;
 
-                  <View className="flex-1 ml-4">
-                    <Text
-                      className="text-text-primary font-bold text-base"
-                      numberOfLines={2}
+              // Safely get first variant for display
+              const displayVariant: ProductVariant =
+                product.variants?.[0] ?? { label: "M", price: 0 };
+
+              return (
+                <View
+                  key={item.id}
+                  className="bg-background-subtle rounded-3xl p-4 mb-4"
+                >
+                  {/* PRODUCT */}
+                  <View className="flex-row">
+                    <RemoteImage
+                      path={product.image ?? undefined}
+                      fallback={defaultPizzaImage}
+                      className="w-24 h-24 rounded-xl bg-surface-elevated"
+                    />
+
+                    <View className="flex-1 ml-4">
+                      <Text
+                        className="text-text-primary font-bold text-base"
+                        numberOfLines={2}
+                      >
+                        {product.name}
+                      </Text>
+
+                      <Text className="text-primary font-bold text-lg mt-1">
+                        ₹ {displayVariant.price}
+                      </Text>
+
+                      <Text className="text-text-secondary text-sm mt-1">
+                        Size: {displayVariant.label}
+                      </Text>
+                    </View>
+
+                    {/* REMOVE */}
+                    <TouchableOpacity
+                      onPress={() => handleRemove(item.id, product.name)}
+                      disabled={isPending}
+                      className="p-2"
                     >
-                      {item.products.name}
-                    </Text>
-
-                    <Text className="text-primary font-bold text-lg mt-1">
-                      ₹ {item.products.price}
-                    </Text>
-
-                    <Text className="text-text-secondary text-sm mt-1">
-                      Size: M
-                    </Text>
+                      <Ionicons
+                        name="trash-outline"
+                        size={22}
+                        color="#EF4444"
+                      />
+                    </TouchableOpacity>
                   </View>
 
-                  {/* REMOVE */}
+                  {/* ADD TO CART */}
                   <TouchableOpacity
-                    onPress={() => handleRemove(item.id, item.products.name)}
-                    disabled={isPending}
-                    className="p-2"
+                    onPress={() => addToCart(product)}
+                    activeOpacity={0.85}
+                    className="mt-4 rounded-full py-4 flex-row items-center justify-center bg-primary"
                   >
-                    <Ionicons name="trash-outline" size={22} color="#EF4444" />
+                    <Ionicons name="cart" size={22} color="#121212" />
+                    <Text className="ml-2 font-bold text-base text-inverse">
+                      Add to Cart
+                    </Text>
                   </TouchableOpacity>
                 </View>
-
-                {/* ADD TO CART */}
-                <TouchableOpacity
-                  onPress={() => addToCart(item.products)}
-                  activeOpacity={0.85}
-                  className="mt-4 rounded-full py-4 flex-row items-center justify-center bg-primary"
-                >
-                  <Ionicons name="cart" size={22} color="#121212" />
-                  <Text className="ml-2 font-bold text-base text-inverse">
-                    Add to Cart
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            ))}
+              );
+            })}
           </View>
         </ScrollView>
       )}

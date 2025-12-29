@@ -3,7 +3,7 @@ import {
   useRemoveFromWishlist,
   useWishlistStatus,
 } from "@/api/wishlist";
-import { Tables } from "@/assets/data/types";
+import { ProductVariant, Tables } from "@/assets/data/types";
 import { useAuth } from "@/providers/AuthProvider";
 
 import { Ionicons } from "@expo/vector-icons";
@@ -22,7 +22,7 @@ export const defaultPizzaImage =
   "https://notjustdev-dummy.s3.us-east-2.amazonaws.com/food/default.png";
 
 type ProductListItemProps = {
-  product: Tables<"products">;
+  product: Tables<"products"> & { variants: ProductVariant[] };
 };
 
 export default function ProductListItem({ product }: ProductListItemProps) {
@@ -43,6 +43,10 @@ export default function ProductListItem({ product }: ProductListItemProps) {
       addToWishlist.mutate(product.id);
     }
   };
+
+  // Safely get base price from product or first variant
+  const displayPrice =
+    product.variants?.[0]?.price ?? 0;
 
   return (
     <Link href={`/${segments[0]}/menu/${product.id}`} asChild>
@@ -90,7 +94,7 @@ export default function ProductListItem({ product }: ProductListItemProps) {
           </Text>
 
           <Text className="text-primary font-bold text-lg">
-            ₹ {product.price}
+            ₹ {displayPrice.toFixed(2)}
           </Text>
         </View>
       </Pressable>

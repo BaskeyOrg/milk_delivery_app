@@ -74,7 +74,8 @@ export type Database = {
           order_id: number
           product_id: number
           quantity: number
-          size: string
+          variant_label: string
+          variant_price: number
         }
         Insert: {
           created_at?: string
@@ -82,7 +83,8 @@ export type Database = {
           order_id: number
           product_id: number
           quantity?: number
-          size?: string
+          variant_label?: string
+          variant_price?: number
         }
         Update: {
           created_at?: string
@@ -90,7 +92,8 @@ export type Database = {
           order_id?: number
           product_id?: number
           quantity?: number
-          size?: string
+          variant_label?: string
+          variant_price?: number
         }
         Relationships: [
           {
@@ -157,24 +160,27 @@ export type Database = {
       products: {
         Row: {
           created_at: string
+          description: string | null
           id: number
           image: string | null
           name: string
-          price: number
+          variants: Json
         }
         Insert: {
           created_at?: string
+          description?: string | null
           id?: number
           image?: string | null
           name: string
-          price: number
+          variants?: Json
         }
         Update: {
           created_at?: string
+          description?: string | null
           id?: number
           image?: string | null
           name?: string
-          price?: number
+          variants?: Json
         }
         Relationships: []
       }

@@ -6,86 +6,92 @@ import { defaultPizzaImage } from "./ProductListItem";
 import RemoteImage from "./RemoteImage";
 
 type OrderItemListItemProps = {
-  items: ({ products: Tables<"products"> } & Tables<"order_items">)[];
+  items: (Tables<"order_items"> & {
+    products?: Tables<"products"> | null;
+  })[];
 };
 
 const OrderItemList = ({ items }: OrderItemListItemProps) => {
   const segments = useSegments();
 
   return (
-    <View className="bg-background-card
-    rounded-3xl p-5
-    bg-black/5">
-      {items.map((item, index) => (
-        <View key={item.id}>
-          <View className="flex-row items-center">
-            {/* Product Image */}
-            <View className="relative">
-              <Link href={`/${segments[0]}/menu/${item.products.id}`} asChild>
-                <Pressable>
-                  <RemoteImage
-                    path={item.products.image ?? undefined}
-                    fallback={defaultPizzaImage}
-                    resizeMode="cover"
-                    className="w-24 h-24 rounded-2xl bg-surface-muted"
-                  />
-                </Pressable>
-              </Link>
+    <View className="bg-background-card rounded-3xl p-5 bg-black/5">
+      {items.map((item, index) => {
+        const product = item.products;
 
-              {/* Quantity badge */}
-              <View className="absolute top-2 right-2 bg-primary rounded-full px-2 py-0.5">
-                <Text className="text-white text-xs font-bold">
-                  ×{item.quantity}
-                </Text>
-              </View>
-            </View>
-
-            <View className="flex-1 ml-4 justify-between">
-              {/* Product Name */}
-              <View>
-                {/* Name */}
-                <Link href={`/${segments[0]}/menu/${item.products.id}`} asChild>
+        return (
+          <View key={item.id}>
+            <View className="flex-row items-center">
+              {/* Product Image */}
+              <View className="relative">
+                <Link href={`/${segments[0]}/menu/${product?.id ?? ""}`} asChild>
                   <Pressable>
-                    <Text className="text-text-primary font-bold text-lg"
-                      numberOfLines={2}
-                    >
-                      {item.products.name}
-                    </Text>
+                    <RemoteImage
+                      path={product?.image ?? undefined}
+                      fallback={defaultPizzaImage}
+                      resizeMode="cover"
+                      className="w-24 h-24 rounded-2xl bg-surface-muted"
+                    />
                   </Pressable>
                 </Link>
 
-                {/* Price + Size */}
-                <View className="mt-2">
-                  <Text className="text-text-secondary font-bold text-base">
-                    ₹ {item.products.price.toFixed(2)}
-                  </Text>
-                  <Text className="text-gray-500 dark:text-neutral-400 text-sm">
-                    Size:{" "}
-                    <Text className=" text-primary font-bold">{item.size}</Text>
+                {/* Quantity badge */}
+                <View className="absolute top-2 right-2 bg-primary rounded-full px-2 py-0.5">
+                  <Text className="text-white text-xs font-bold">
+                    ×{item.quantity}
                   </Text>
                 </View>
               </View>
-            </View>
 
-            <View className="mx-5">
-              <Text className="text-gray-500 dark:text-neutral-400 text-lg">
-                Qty: {item.quantity}
-              </Text>
-              <Text className="text-gray-500 dark:text-neutral-400 text-sm">
-                Total amt:{" "}
-                <Text className="text-lg text-primary font-bold">
-                  ₹ {(item.products.price * item.quantity).toFixed(2)}
+              <View className="flex-1 ml-4 justify-between">
+                {/* Product Name */}
+                <View>
+                  <Link href={`/${segments[0]}/menu/${product?.id ?? ""}`} asChild>
+                    <Pressable>
+                      <Text
+                        className="text-text-primary font-bold text-lg"
+                        numberOfLines={2}
+                      >
+                        {product?.name ?? "Unknown Product"}
+                      </Text>
+                    </Pressable>
+                  </Link>
+
+                  {/* Price + Size */}
+                  <View className="mt-2">
+                    <Text className="text-text-secondary font-bold text-base">
+                      ₹ {item.variant_price ?? 0}
+                    </Text>
+                    <Text className="text-gray-500 dark:text-neutral-400 text-sm">
+                      Size:{" "}
+                      <Text className="text-primary font-bold">
+                        {item.variant_label ?? "-"}
+                      </Text>
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              <View className="mx-5">
+                <Text className="text-gray-500 dark:text-neutral-400 text-lg">
+                  Qty: {item.quantity}
                 </Text>
-              </Text>
+                <Text className="text-gray-500 dark:text-neutral-400 text-sm">
+                  Total amt:{" "}
+                  <Text className="text-lg text-primary font-bold">
+                    ₹ {((item.variant_price ?? 0) * item.quantity).toFixed(2)}
+                  </Text>
+                </Text>
+              </View>
             </View>
-          </View>
 
-          {/* Divider except last item */}
-          {index !== items.length - 1 && (
-            <View className="border-t border-black/5 my-3" />
-          )}
-        </View>
-      ))}
+            {/* Divider except last item */}
+            {index !== items.length - 1 && (
+              <View className="border-t border-black/5 my-3" />
+            )}
+          </View>
+        );
+      })}
     </View>
   );
 };

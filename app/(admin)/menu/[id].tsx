@@ -1,5 +1,4 @@
 import { useProduct } from "@/api/products";
-import { PizzaSize } from "@/assets/data/types";
 import { defaultPizzaImage } from "@/components/ProductListItem";
 import RemoteImage from "@/components/RemoteImage";
 import Colors from "@/constants/Colors";
@@ -8,13 +7,9 @@ import { Link, Stack, useLocalSearchParams } from "expo-router";
 import React from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 
-const sizes: PizzaSize[] = ["S", "M", "L", "XL"];
-
 export default function ProductDetailsScreen() {
   const { id: isString } = useLocalSearchParams();
-  const id = parseFloat(
-    typeof isString === "string" ? isString : isString?.[0]
-  );
+  const id = Number(typeof isString === "string" ? isString : isString?.[0]);
 
   const { data: product, error, isLoading } = useProduct(id);
 
@@ -30,13 +25,12 @@ export default function ProductDetailsScreen() {
   /* ---------------- ERROR ---------------- */
   if (error) {
     return (
-      <View className="flex-1 items-center justify-center bg-white dark:bg-black">
+      <View className="flex-1 items-center justify-center">
         <Text className="text-red-500">{error.message}</Text>
       </View>
     );
   }
 
-  /* ---------------- EMPTY ---------------- */
   if (!product) {
     return (
       <View className="flex-1 items-center justify-center bg-white dark:bg-black">
@@ -47,7 +41,6 @@ export default function ProductDetailsScreen() {
     );
   }
 
-  /* ---------------- UI ---------------- */
   return (
     <View className="flex-1 bg-white dark:bg-black px-4">
       <Stack.Screen
@@ -56,22 +49,19 @@ export default function ProductDetailsScreen() {
           headerRight: () => (
             <Link href={`/(admin)/menu/create?id=${id}`} asChild>
               <Pressable className="mr-4">
-                {({ pressed }) => (
-                  <FontAwesome
-                    name="pencil"
-                    size={22}
-                    color={Colors.light.tint}
-                    style={{ opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
+                <FontAwesome
+                  name="pencil"
+                  size={22}
+                  color={Colors.light.tint}
+                />
               </Pressable>
             </Link>
           ),
         }}
       />
 
-      {/* IMAGE CARD */}
-      <View className="mt-4 rounded-3xl overflow-hidden bg-gray-100 dark:bg-neutral-900">
+      {/* IMAGE */}
+      <View className="mt-4 rounded-3xl overflow-hidden bg-gray-100">
         <RemoteImage
           path={product.image ?? undefined}
           fallback={defaultPizzaImage}
@@ -79,15 +69,24 @@ export default function ProductDetailsScreen() {
         />
       </View>
 
-      {/* DETAILS CARD */}
-      <View className="mt-6 bg-white dark:bg-neutral-900 rounded-3xl p-5 shadow-sm">
-        <Text className="text-2xl font-bold text-black dark:text-white">
-          {product.name}
-        </Text>
+      {/* DETAILS */}
+      <View className="mt-6 bg-white rounded-3xl p-5 shadow-sm">
+        <Text className="text-2xl font-bold">{product.name}</Text>
 
-        <Text className="mt-2 text-lg text-gray-600 dark:text-gray-400">
-          ₹ {product.price}
-        </Text>
+        {/* VARIANTS */}
+        <View className="mt-4">
+          <Text className="text-lg font-semibold mb-2">Variants</Text>
+
+          {product.variants.map((v) => (
+            <View
+              key={v.label}
+              className="flex-row justify-between py-2 border-b border-gray-200"
+            >
+              <Text className="text-base">{v.label}</Text>
+              <Text className="text-base font-bold">₹ {v.price}</Text>
+            </View>
+          ))}
+        </View>
       </View>
     </View>
   );

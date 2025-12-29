@@ -1,12 +1,26 @@
-import { InsertTables, Tables, UpdateTables } from "@/assets/data/types";
+import { UpdateTables } from "@/assets/data/types";
+import { Tables } from "@/lib/database.types";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/providers/AuthProvider";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-export const useAdminOrderList = ({ archived = false }) => {
-  const statuses = archived ? ["Delivered"] : ["New", "Cooking", "Delivering"];
+/* ---------------- TYPES ---------------- */
 
-  return useQuery({
+export type OrderWithItems = Tables<"orders"> & {
+  order_items?: (Tables<"order_items"> & {
+    products?: Tables<"products"> | null;
+  })[];
+  addresses?: Tables<"addresses"> | null;
+};
+
+/* ---------------- ADMIN ORDERS ---------------- */
+
+export const useAdminOrderList = ({ archived = false }) => {
+  const statuses = archived
+    ? ["Delivered"]
+    : ["New", "Cooking", "Delivering"];
+
+  return useQuery<Tables<"orders">[], Error>({
     queryKey: ["orders", { archived }],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -14,122 +28,84 @@ export const useAdminOrderList = ({ archived = false }) => {
         .select("*")
         .in("status", statuses)
         .order("created_at", { ascending: false });
-      if (error) {
-        throw new Error(error.message);
-      }
 
-      return data;
-    },
-  });
-};
-
-export type OrderWithItems = Tables<"orders"> & {
-  order_items?: (Tables<"order_items"> & {
-    products?: Tables<"products"> | null;
-  })[];
-  addresses?: {
-    full_name: string;
-    phone: string;
-    street: string;
-    landmark: string | null;
-    area: string;
-    city: string;
-    label: string | null;
-  } | null;
-};
-
-
-export const useMyOrderList = () => {
-  const { session } = useAuth();
-  const id = session?.user.id;
-
-  return useQuery<OrderWithItems[]>({
-    queryKey: ["orders", { user_id: id }],
-    queryFn: async () => {
-      if (!id) return [];
-
-      const { data, error } = await supabase
-        .from("orders")
-        .select(`
-          *,
-          order_items (
-            *,
-            products (*)
-          )
-        `)
-        .eq("user_id", id)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
+      if (error) throw new Error(error.message);
       return data ?? [];
     },
   });
 };
 
+/* ---------------- USER ORDERS ---------------- */
 
-export const useOrderDetails = (id: number) => {
-  return useQuery({
-    queryKey: ["orders", id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*,addresses(*), order_items(*, products(*))")
-        .eq("id", id)
-        .single();
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      return data;
-    },
-  });
-};
-
-export const useInsertOrder = () => {
-  const queryClient = useQueryClient();
+export const useMyOrderList = () => {
   const { session } = useAuth();
   const userId = session?.user.id;
 
-  return useMutation({
-    async mutationFn(data: InsertTables<"orders">) {
-      const { data: newOrder, error } = await supabase
+  return useQuery<OrderWithItems[], Error>({
+    queryKey: ["orders", { user_id: userId }],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
         .from("orders")
-        .insert({ ...data, user_id: userId })
-        .select()
-        .single();
+        .select(`
+          *,
+          order_items (*, products (*))
+        `)
+        .eq("user_id", userId!)
+        .order("created_at", { ascending: false });
 
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      return newOrder;
-    },
-    async onSuccess() {
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
-    },
-    onError(error) {
-      console.log(error);
+      if (error) throw new Error(error.message);
+      return data as OrderWithItems[];
     },
   });
 };
+
+/* ---------------- ORDER DETAILS ---------------- */
+
+export const useOrderDetails = (id: number) => {
+  return useQuery<OrderWithItems, Error>({
+    queryKey: ["orders", id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select(`
+          *,
+          addresses (
+            full_name,
+            phone,
+            street,
+            landmark,
+            area,
+            city,
+            label
+          ),
+          order_items (*, products (*))
+        `)
+        .eq("id", id)
+        .single();
+
+      if (error) throw new Error(error.message);
+      if (!data) throw new Error("Order not found");
+
+      return data as OrderWithItems;
+    },
+  });
+};
+
+/* ---------------- UPDATE ORDER ---------------- */
 
 export const useUpdateOrder = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    async mutationFn({
+    mutationFn: async ({
       id,
       updatedFields,
     }: {
       id: number;
       updatedFields: UpdateTables<"orders">;
-    }) {
-
-      // If admin changed the status → add timestamp
+    }) => {
       const finalFields = {
         ...updatedFields,
         ...(updatedFields.status && {
@@ -137,41 +113,57 @@ export const useUpdateOrder = () => {
         }),
       };
 
-      const { data: updatedOrder, error } = await supabase
+      const { data, error } = await supabase
         .from("orders")
         .update(finalFields)
         .eq("id", id)
         .select()
         .single();
 
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      return updatedOrder;
+      if (error) throw new Error(error.message);
+      return data;
     },
-    async onSuccess(_, { id }) {
+    onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       queryClient.invalidateQueries({ queryKey: ["orders", id] });
-    },
-    onError(error) {
-      console.log(error);
     },
   });
 };
 
-export const useDeleteOrder = () => {
+/* ---------------- INSERT ORDER ---------------- */
+
+export const useInsertOrder = () => {
+  const { session } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
-    async mutationFn(id: number) {
-      const { error } = await supabase.from("orders").delete().eq("id", id);
-
-      if (error) {
-        throw new Error(error.message);
+    mutationFn: async ({
+      total,
+      address_id,
+    }: {
+      total: number;
+      address_id?: number | null;
+    }) => {
+      if (!session?.user) {
+        throw new Error("User not authenticated");
       }
+
+      const { data, error } = await supabase
+        .from("orders")
+        .insert({
+          user_id: session.user.id,
+          total,
+          address_id: address_id ?? null,
+          status: "New",
+        })
+        .select()
+        .single();
+
+      if (error) throw new Error(error.message);
+      return data;
     },
-    async onSuccess() {
+
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
     },
   });
