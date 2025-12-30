@@ -1,7 +1,7 @@
 import { useRemoveFromWishlist, useWishlist } from "@/api/wishlist";
 import { Product, ProductVariant } from "@/assets/data/types";
 import GradientHeader from "@/components/GradientHeader";
-import { defaultPizzaImage } from "@/components/ProductListItem";
+import { defaultImage } from "@/components/ProductListItem";
 import RemoteImage from "@/components/RemoteImage";
 import { useAuth } from "@/providers/AuthProvider";
 import { useCart } from "@/providers/CartProvider";
@@ -89,7 +89,7 @@ export default function WishlistScreen() {
                   <View className="flex-row">
                     <RemoteImage
                       path={product.image ?? undefined}
-                      fallback={defaultPizzaImage}
+                      fallback={defaultImage}
                       className="w-24 h-24 rounded-xl bg-surface-elevated"
                     />
 

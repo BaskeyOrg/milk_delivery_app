@@ -1,5 +1,5 @@
 import { useProduct } from "@/api/products";
-import { defaultPizzaImage } from "@/components/ProductListItem";
+import { defaultImage } from "@/components/ProductListItem";
 import RemoteImage from "@/components/RemoteImage";
 import Colors from "@/constants/Colors";
 import { FontAwesome } from "@expo/vector-icons";
@@ -64,7 +64,7 @@ export default function ProductDetailsScreen() {
       <View className="mt-4 rounded-3xl overflow-hidden bg-gray-100">
         <RemoteImage
           path={product.image ?? undefined}
-          fallback={defaultPizzaImage}
+          fallback={defaultImage}
           className="w-full aspect-square"
         />
       </View>

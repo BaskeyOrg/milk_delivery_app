@@ -5,7 +5,7 @@ import {
   useUpdateProduct,
 } from "@/api/products";
 import Button from "@/components/Button";
-import { defaultPizzaImage } from "@/components/ProductListItem";
+import { defaultImage } from "@/components/ProductListItem";
 import RemoteImage from "@/components/RemoteImage";
 import { supabase } from "@/lib/supabase";
 import { decode } from "base64-arraybuffer";
@@ -28,7 +28,7 @@ import {
 
 type Variant = {
   label: string;
-  price: string; // input as string
+  price: string;
 };
 
 const priceRegex = /^\d+(\.\d{1,2})?$/;
@@ -60,7 +60,6 @@ export default function CreateProductScreen() {
     if (updatingProduct) {
       setName(updatingProduct.name);
       setImage(updatingProduct.image);
-
       setVariants(
         updatingProduct.variants.map((v: any) => ({
           label: v.label,
@@ -71,11 +70,12 @@ export default function CreateProductScreen() {
   }, [updatingProduct]);
 
   /* ---------------- VALIDATION ---------------- */
-  const isNameValid = name.length > 0;
+  const isNameValid = name.trim().length > 0;
+
   const areVariantsValid =
     variants.length > 0 &&
     variants.every(
-      (v) => v.label.length > 0 && priceRegex.test(v.price)
+      (v) => v.label.trim().length > 0 && priceRegex.test(v.price)
     );
 
   const isFormValid = isNameValid && areVariantsValid;
@@ -112,6 +112,27 @@ export default function CreateProductScreen() {
     return data.path;
   };
 
+  /* ---------------- VARIANT ACTIONS ---------------- */
+  const addVariant = () => {
+    setVariants([...variants, { label: "", price: "" }]);
+  };
+
+  const removeVariant = (index: number) => {
+    if (variants.length === 1) return;
+    setVariants((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const confirmRemoveVariant = (index: number) => {
+    Alert.alert("Remove variant?", "This variant will be removed", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Remove",
+        style: "destructive",
+        onPress: () => removeVariant(index),
+      },
+    ]);
+  };
+
   /* ---------------- SUBMIT ---------------- */
   const onSubmit = async () => {
     if (!isFormValid || isSubmitting) {
@@ -143,7 +164,7 @@ export default function CreateProductScreen() {
     }
   };
 
-  /* ---------------- DELETE ---------------- */
+  /* ---------------- DELETE PRODUCT ---------------- */
   const confirmDelete = () => {
     Alert.alert("Delete product?", "This action cannot be undone", [
       { text: "Cancel", style: "cancel" },
@@ -156,6 +177,7 @@ export default function CreateProductScreen() {
     ]);
   };
 
+  /* ---------------- UI ---------------- */
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -173,12 +195,12 @@ export default function CreateProductScreen() {
           {isUpdating ? (
             <RemoteImage
               path={image ?? undefined}
-              fallback={defaultPizzaImage}
+              fallback={defaultImage}
               className="w-56 h-56 rounded-3xl mt-8"
             />
           ) : (
             <Image
-              source={{ uri: image || defaultPizzaImage }}
+              source={{ uri: image || defaultImage }}
               className="w-1/2 aspect-square self-center rounded-lg mt-8"
             />
           )}
@@ -196,14 +218,17 @@ export default function CreateProductScreen() {
             value={name}
             onChangeText={setName}
             placeholder="Product name"
-            className="border rounded-full px-5 py-3 mb-4"
+            className="border rounded-full px-5 py-3 mb-4 w-full"
           />
 
           {/* VARIANTS */}
-          <Text className="text-lg font-bold mb-3">Variants</Text>
+          <Text className="text-lg font-bold mb-3 self-start">Variants</Text>
 
           {variants.map((variant, index) => (
-            <View key={index} className="flex-row gap-3 mb-3">
+            <View
+              key={index}
+              className="flex-row items-center gap-3 mb-3 w-full"
+            >
               <TextInput
                 value={variant.label}
                 onChangeText={(text) => {
@@ -224,16 +249,25 @@ export default function CreateProductScreen() {
                 }}
                 placeholder="Price"
                 keyboardType="numeric"
-                className="w-28 border rounded-full px-4 py-3"
+                className="w-24 border rounded-full px-4 py-3"
               />
+
+              <Text
+                onPress={() => confirmRemoveVariant(index)}
+                className={`px-3 py-2 text-lg font-bold ${
+                  variants.length === 1 || isSubmitting
+                    ? "text-gray-300"
+                    : "text-red-500"
+                }`}
+              >
+                ✕
+              </Text>
             </View>
           ))}
 
           <Text
-            onPress={() =>
-              setVariants([...variants, { label: "", price: "" }])
-            }
-            className="text-primary font-semibold mb-6"
+            onPress={addVariant}
+            className="text-primary font-semibold mb-6 self-start"
           >
             + Add variant
           </Text>
@@ -242,14 +276,12 @@ export default function CreateProductScreen() {
             <Text className="text-red-500 text-center mb-3">{error}</Text>
           )}
 
-          {/* SUBMIT */}
           <Button
             text={isUpdating ? "Update Product" : "Create Product"}
             onPress={onSubmit}
             disabled={!isFormValid || isSubmitting}
           />
 
-          {/* DELETE */}
           {isUpdating && (
             <View className="mt-6 items-center">
               {isDeleting ? (

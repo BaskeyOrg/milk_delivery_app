@@ -3,7 +3,7 @@ import { AntDesign, Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { ActivityIndicator, Modal, Pressable, Text, View } from "react-native";
 import { useCart } from "../providers/CartProvider";
-import { defaultPizzaImage } from "./ProductListItem";
+import { defaultImage } from "./ProductListItem";
 import RemoteImage from "./RemoteImage";
 
 type CartListItemProps = {
@@ -49,7 +49,7 @@ const CartListItem = ({ cartItem }: CartListItemProps) => {
           <View className="relative">
             <RemoteImage
               path={cartItem.product.image ?? undefined}
-              fallback={defaultPizzaImage}
+              fallback={defaultImage}
               resizeMode="cover"
               className="w-32 h-32 rounded-2xl bg-surface-elevated"
             />

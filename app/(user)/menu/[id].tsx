@@ -1,18 +1,18 @@
 import { useProduct } from "@/api/products";
 import OverlayHeader from "@/components/OverlayHeader";
-import { defaultPizzaImage } from "@/components/ProductListItem";
+import { defaultImage } from "@/components/ProductListItem";
 import RemoteImage from "@/components/RemoteImage";
 import { useCart } from "@/providers/CartProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Pressable,
+    ScrollView,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 export default function ProductDetailsScreen() {
@@ -56,7 +56,7 @@ export default function ProductDetailsScreen() {
         {/* IMAGE */}
         <RemoteImage
           path={product.image ?? undefined}
-          fallback={defaultPizzaImage}
+          fallback={defaultImage}
           className="w-full h-96"
         />
 

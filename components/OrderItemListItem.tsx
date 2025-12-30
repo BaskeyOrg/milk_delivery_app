@@ -2,7 +2,7 @@ import { Tables } from "@/assets/data/types";
 import { Link, useSegments } from "expo-router";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import { defaultPizzaImage } from "./ProductListItem";
+import { defaultImage } from "./ProductListItem";
 import RemoteImage from "./RemoteImage";
 
 type OrderItemListItemProps = {
@@ -28,7 +28,7 @@ const OrderItemList = ({ items }: OrderItemListItemProps) => {
                   <Pressable>
                     <RemoteImage
                       path={product?.image ?? undefined}
-                      fallback={defaultPizzaImage}
+                      fallback={defaultImage}
                       resizeMode="cover"
                       className="w-24 h-24 rounded-2xl bg-surface-muted"
                     />

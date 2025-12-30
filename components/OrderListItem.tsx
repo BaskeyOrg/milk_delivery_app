@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { Link, useSegments } from "expo-router";
 import { Pressable, ScrollView, Text, View } from "react-native";
-import { defaultPizzaImage } from "./ProductListItem";
+import { defaultImage } from "./ProductListItem";
 import RemoteImage from "./RemoteImage";
 
 dayjs.extend(relativeTime);
@@ -67,7 +67,7 @@ export default function OrderListItem({ order }: Props) {
             <View key={item.id} className="relative">
               <RemoteImage
                 path={item.products?.image ?? undefined}
-                fallback={defaultPizzaImage}
+                fallback={defaultImage}
                 className="w-16 h-16 rounded-xl bg-black/10"
               />
 

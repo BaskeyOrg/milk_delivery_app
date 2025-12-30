@@ -1,7 +1,7 @@
 import {
-  useAddToWishlist,
-  useRemoveFromWishlist,
-  useWishlistStatus,
+    useAddToWishlist,
+    useRemoveFromWishlist,
+    useWishlistStatus,
 } from "@/api/wishlist";
 import { ProductVariant, Tables } from "@/assets/data/types";
 import { useAuth } from "@/providers/AuthProvider";
@@ -10,15 +10,15 @@ import { Ionicons } from "@expo/vector-icons";
 import { Link, useSegments } from "expo-router";
 import React from "react";
 import {
-  ActivityIndicator,
-  Pressable,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Pressable,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import RemoteImage from "./RemoteImage";
 
-export const defaultPizzaImage =
+export const defaultImage =
   "https://notjustdev-dummy.s3.us-east-2.amazonaws.com/food/default.png";
 
 type ProductListItemProps = {
@@ -57,7 +57,7 @@ export default function ProductListItem({ product }: ProductListItemProps) {
         <View className="relative">
           <RemoteImage
             path={product.image ?? undefined}
-            fallback={defaultPizzaImage}
+            fallback={defaultImage}
             resizeMode="cover"
             className="w-full h-44 bg-background-lighter"
           />

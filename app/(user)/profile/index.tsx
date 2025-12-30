@@ -1,6 +1,6 @@
 import { useMyProfile } from "@/api/profile";
 import GradientHeader from "@/components/GradientHeader";
-import { defaultPizzaImage } from "@/components/ProductListItem";
+import { defaultImage } from "@/components/ProductListItem";
 import RemoteProfileImage from "@/components/RemoteProfileImage";
 import { supabase } from "@/lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
@@ -126,7 +126,7 @@ export default function ProfileScreen() {
             <View className="flex-row items-center">
               <RemoteProfileImage
                 path={profile?.avatar_url ?? undefined}
-                fallback={defaultPizzaImage}
+                fallback={defaultImage}
                 className="w-20 h-20 rounded-full"
               />              
 
