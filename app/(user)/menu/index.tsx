@@ -12,13 +12,18 @@ import EmptySearchState from "@/components/EmptySearchState";
 import Header from "@/components/Header";
 import LocationModal from "@/components/Location/LocationModal";
 import ProductListItem from "@/components/ProductListItem";
+// import { useLocationContext } from "@/providers/LocationProvider";
 
 export default function MenuScreen() {
   const { data: products, error, isLoading, refetch } = useProductList();
 
+  // const { setSelectedAddress } = useLocationContext();
+
   const [refreshing, setRefreshing] = useState(false);
-  const [locationModalVisible, setLocationModalVisible] = useState(false);
   const [searchText, setSearchText] = useState("");
+
+  const [locationModalVisible, setLocationModalVisible] = useState(false);
+  // const [addressFormVisible, setAddressFormVisible] = useState(false);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -35,6 +40,16 @@ export default function MenuScreen() {
       product.name?.toLowerCase().includes(searchText.toLowerCase())
     );
   }, [products, searchText]);
+
+  /** 📍 Save address handler */
+  const handleSaveAddress = (addressData: any) => {
+    console.log("Saved address:", addressData);
+
+    // Example provider update
+    // setSelectedAddress(addressData.fullAddress);
+
+    // setAddressFormVisible(false);
+  };
 
   if (isLoading) {
     return (
@@ -57,7 +72,7 @@ export default function MenuScreen() {
         numColumns={2}
         columnWrapperStyle={{ gap: 10, paddingHorizontal: 10 }}
         contentContainerStyle={{
-          paddingBottom: 100,
+          paddingBottom: 120,
           flexGrow: filteredProducts.length === 0 ? 1 : 0,
         }}
         showsVerticalScrollIndicator={false}
@@ -80,10 +95,20 @@ export default function MenuScreen() {
         }
       />
 
+      {/* 📍 Location selection modal */}
       <LocationModal
         visible={locationModalVisible}
-        onClose={() => setLocationModalVisible(false)}
+        onClose={() => {
+          setLocationModalVisible(false);
+          // setAddressFormVisible(true); // ➜ open address form after location
+        }}
       />
+
+      {/* 🏠 Address form modal */}
+      {/* <AddressFormModal
+        visible={addressFormVisible}
+        onClose={() => setAddressFormVisible(false)}
+      /> */}
     </View>
   );
 }

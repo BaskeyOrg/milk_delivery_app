@@ -48,11 +48,15 @@ function RootLayoutNav() {
           <NotificationProvider>
             <LocationProvider>
               <CartProvider>
-                  <Stack>
-                    <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                    <Stack.Screen name="(admin)" options={{ headerShown: false }} />
-                    <Stack.Screen name="(user)" options={{ headerShown: false }} />
-                  </Stack>
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                  }}
+                >
+                  <Stack.Screen name="(auth)" />
+                  <Stack.Screen name="(admin)" />
+                  <Stack.Screen name="(user)" />
+                </Stack>
               </CartProvider>
             </LocationProvider>
           </NotificationProvider>
