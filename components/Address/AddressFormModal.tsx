@@ -1,6 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { useState } from "react";
 import {
+  Alert,
   Modal,
   Pressable,
   ScrollView,
@@ -11,18 +13,27 @@ import {
   View,
 } from "react-native";
 
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/providers/AuthProvider";
 import { useLocationContext } from "@/providers/LocationProvider";
 
 type Props = {
   visible: boolean;
   onClose: () => void;
+  latitude: number;
+  longitude: number;
 };
 
 export default function AddressFormModal({
   visible,
+  latitude,
+  longitude,
   onClose,
 }: Props) {
+  const { session, profile } = useAuth();
   const { selectedAddress, setSelectedAddress } = useLocationContext();
+
+  const [loading, setLoading] = useState(false);
 
   const [orderFor, setOrderFor] = useState<"self" | "other">("self");
   const [addressType, setAddressType] = useState<
@@ -32,15 +43,68 @@ export default function AddressFormModal({
   const [flat, setFlat] = useState("");
   const [floor, setFloor] = useState("");
   const [landmark, setLandmark] = useState("");
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
 
-  const handleSave = () => {
-    // 🔹 Later this can be replaced with real map / backend data
-    const finalAddress = `ICAT Boys Hostel, Mylapore, Chennai`;
+  const [name, setName] = useState(profile?.full_name ?? "");
+  const [phone, setPhone] = useState(profile?.phone ?? "");
 
-    setSelectedAddress(finalAddress);
-    onClose();
+  /* ---------------- VALIDATION STATE ---------------- */
+
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+
+  const flatError = submitAttempted && !flat.trim();
+  const nameError = submitAttempted && !name.trim();
+  const phoneError =
+    submitAttempted && !/^[0-9]{10}$/.test(phone.trim());
+
+  /* ---------------- SAVE ---------------- */
+
+  const handleSave = async () => {
+    setSubmitAttempted(true);
+
+    if (!session) {
+      Alert.alert("Please login first");
+      return;
+    }
+
+    if (!flat.trim() || !name.trim() || !/^[0-9]{10}$/.test(phone.trim())) {
+      return;
+    }
+
+    if (!selectedAddress) {
+      Alert.alert("Area / locality is required");
+      return;
+    }
+
+try {
+  setLoading(true);
+
+  const { error } = await supabase.from("addresses").insert({
+    user_id: session.user.id,
+    order_for: orderFor,
+    address_type: addressType,
+    flat,
+    floor: floor || null,
+    landmark: landmark || null,
+    area: selectedAddress,
+    name,
+    phone,
+    is_default: false,
+    latitude,
+    longitude,
+  });
+
+  if (error) throw error;
+
+  setSelectedAddress(selectedAddress); // 🔥 update context
+  onClose();
+  router.replace("/(user)/menu"); // 🔥 redirect
+
+} catch (err: any) {
+  Alert.alert("Error", err.message);
+} finally {
+  setLoading(false);
+}
+
   };
 
   return (
@@ -51,15 +115,11 @@ export default function AddressFormModal({
       onRequestClose={onClose}
       statusBarTranslucent
     >
-      {/* BACKDROP */}
       <TouchableWithoutFeedback onPress={onClose}>
         <View className="flex-1 justify-end bg-black/40">
-
-          {/* MODAL */}
           <TouchableWithoutFeedback>
             <View className="bg-background rounded-t-3xl h-[50%] relative">
-
-              {/* FLOATING CLOSE */}
+              {/* CLOSE */}
               <Pressable
                 onPress={onClose}
                 className="absolute -top-16 self-center bg-surface-elevated rounded-full p-4 z-10"
@@ -80,7 +140,6 @@ export default function AddressFormModal({
                 contentContainerStyle={{ paddingBottom: 140 }}
                 showsVerticalScrollIndicator={false}
               >
-                {/* ORDER FOR */}
                 <Text className="text-text-secondary mb-3">
                   Who you are ordering for?
                 </Text>
@@ -98,14 +157,15 @@ export default function AddressFormModal({
                   />
                 </View>
 
-                {/* ADDRESS TYPE */}
                 <View className="flex-row gap-3 mb-5">
                   {["Home", "Work", "Hotel", "Other"].map((type) => (
                     <Chip
                       key={type}
                       label={type}
                       active={addressType === type}
-                      onPress={() => setAddressType(type as any)}
+                      onPress={() =>
+                        setAddressType(type as typeof addressType)
+                      }
                     />
                   ))}
                 </View>
@@ -114,6 +174,8 @@ export default function AddressFormModal({
                   label="Flat / House no / Building name *"
                   value={flat}
                   onChangeText={setFlat}
+                  error={flatError}
+                  errorText="Flat / house number is required"
                 />
 
                 <Input
@@ -131,9 +193,6 @@ export default function AddressFormModal({
                     <Text className="text-text-primary text-sm">
                       {selectedAddress}
                     </Text>
-                    <Text className="text-primary mt-2 font-semibold">
-                      Change
-                    </Text>
                   </View>
                 </View>
 
@@ -143,60 +202,49 @@ export default function AddressFormModal({
                   onChangeText={setLandmark}
                 />
 
-                {/* RECEIVER DETAILS */}
-                {orderFor === "other" && (
-                  <>
-                    <Text className="text-text-secondary mb-2 mt-2">
-                      Add Receiver's Details
-                    </Text>
-                    <Input
-                      label="Receiver's name *"
-                      value={name}
-                      onChangeText={setName}
-                    />
-                    <Input
-                      label="Receiver's phone *"
-                      keyboardType="phone-pad"
-                      value={phone}
-                      onChangeText={setPhone}
-                    />
-                  </>
-                )}
+                <Text className="text-text-secondary mb-2 mt-2">
+                  {orderFor === "self"
+                    ? "Enter your details"
+                    : "Receiver details"}
+                </Text>
 
-                {/* SELF DETAILS */}
-                {orderFor === "self" && (
-                  <>
-                    <Text className="text-text-secondary mb-2 mt-2">
-                      Enter your details
-                    </Text>
-                    <Input
-                      label="Your name *"
-                      value={name}
-                      onChangeText={setName}
-                    />
-                    <Input
-                      label="Your phone number (optional)"
-                      keyboardType="phone-pad"
-                      value={phone}
-                      onChangeText={setPhone}
-                    />
-                  </>
-                )}
+                <Input
+                  label="Name *"
+                  value={name}
+                  onChangeText={setName}
+                  error={nameError}
+                  errorText="Name is required"
+                />
+
+                <Input
+                  label="Phone *"
+                  keyboardType="phone-pad"
+                  value={phone}
+                  onChangeText={(text) => {
+                    const digitsOnly = text.replace(/\D/g, "");
+                    if (digitsOnly.length <= 10) {
+                      setPhone(digitsOnly);
+                    }
+                  }}
+                  error={phoneError}
+                  errorText="Phone number must be 10 digits"
+                />
+
               </ScrollView>
 
               {/* FOOTER */}
               <View className="px-5 py-4 border-t border-surface-border absolute bottom-0 w-full bg-background">
                 <TouchableOpacity
                   activeOpacity={0.9}
+                  disabled={loading}
                   onPress={handleSave}
                   className="bg-primary rounded-full py-4"
                 >
                   <Text className="text-text-inverse text-center text-lg font-bold">
-                    Save address
+                    {loading ? "Saving..." : "Save address"}
                   </Text>
                 </TouchableOpacity>
               </View>
-
             </View>
           </TouchableWithoutFeedback>
         </View>
@@ -205,7 +253,7 @@ export default function AddressFormModal({
   );
 }
 
-/* ------------------ UI PARTS ------------------ */
+/* ---------------- UI PARTS ---------------- */
 
 function Radio({
   label,
@@ -264,11 +312,15 @@ function Input({
   keyboardType,
   value,
   onChangeText,
+  error,
+  errorText,
 }: {
   label: string;
   keyboardType?: any;
   value?: string;
   onChangeText?: (text: string) => void;
+  error?: boolean;
+  errorText?: string;
 }) {
   return (
     <View className="mb-4">
@@ -278,8 +330,15 @@ function Input({
         value={value}
         onChangeText={onChangeText}
         placeholderTextColor="#9ca3af"
-        className="bg-surface border border-surface-border rounded-xl px-4 py-3 text-text-primary"
+        className={`bg-surface border rounded-xl px-4 py-3 text-text-primary ${
+          error ? "border-red-500" : "border-surface-border"
+        }`}
       />
+      {error && (
+        <Text className="text-red-500 text-xs mt-1 ml-1">
+          {errorText}
+        </Text>
+      )}
     </View>
   );
 }

@@ -1,15 +1,24 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import {
   Alert,
   Modal,
   Pressable,
+  ScrollView,
   Text,
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+
+import { Tables } from "@/assets/data/types";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/providers/AuthProvider";
+import { useLocationContext } from "@/providers/LocationProvider";
+
+type Address = Tables<"addresses">;
 
 export default function LocationModal({
   visible,
@@ -19,6 +28,38 @@ export default function LocationModal({
   onClose: () => void;
 }) {
   const router = useRouter();
+  const { session } = useAuth();
+
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const { setCurrentLocation, setSelectedAddress } = useLocationContext();
+
+  /* ---------------- FETCH SAVED ADDRESSES ---------------- */
+
+  useEffect(() => {
+    if (!visible || !session) return;
+
+    const fetchAddresses = async () => {
+      setLoading(true);
+
+      const { data, error } = await supabase
+        .from("addresses")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .order("created_at", { ascending: false });
+
+      if (!error && data) {
+        setAddresses(data); // now TypeScript is happy
+      }
+
+      setLoading(false);
+    };
+
+    fetchAddresses();
+  }, [visible, session]);
+
+  /* ---------------- HANDLERS ---------------- */
 
   const handleUseCurrentLocation = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -41,6 +82,24 @@ export default function LocationModal({
     onClose();
   };
 
+  const formatPhone = (phone: string) =>
+    phone.replace(/\D/g, "").replace(/(\d{5})(\d{5})/, "$1 $2");
+
+  const handleSelectAddress = (addr: Address) => {
+    if (addr.latitude == null || addr.longitude == null) {
+      Alert.alert(
+        "Location unavailable",
+        "This address does not have a valid location."
+      );
+      return;
+    }
+    setCurrentLocation({ latitude: addr.latitude, longitude: addr.longitude });
+    setSelectedAddress(`${addr.flat}, ${addr.area}`);
+    onClose();
+  };
+
+  /* ---------------- UI ---------------- */
+
   return (
     <Modal
       visible={visible}
@@ -49,14 +108,10 @@ export default function LocationModal({
       onRequestClose={onClose}
       statusBarTranslucent
     >
-      {/* BACKDROP (click outside closes) */}
       <TouchableWithoutFeedback onPress={onClose}>
         <View className="flex-1 justify-end bg-black/40">
-
-          {/* PREVENT CLOSE WHEN CLICKING CONTENT */}
           <TouchableWithoutFeedback>
             <View className="bg-background rounded-t-3xl p-6 relative">
-
               {/* Floating Close Button */}
               <Pressable
                 onPress={onClose}
@@ -77,17 +132,51 @@ export default function LocationModal({
                 </Text>
               </View>
 
-              {/* Use current location */}
+              {/* ✅ SAVED ADDRESSES (ADDED ONLY) */}
+              {addresses.length > 0 && (
+                <>
+                  <Text className="text-text-secondary mb-2">
+                    Your saved addresses
+                  </Text>
+
+                  <ScrollView
+                    className="mb-3"
+                    showsVerticalScrollIndicator={false}
+                    style={{ maxHeight: 220 }}
+                  >
+                    {addresses.map((addr) => (
+                      <TouchableOpacity
+                        key={addr.id}
+                        onPress={() => handleSelectAddress(addr)}
+                        className="bg-background-subtle rounded-xl p-4 mb-3"
+                      >
+                        <Text className="font-semibold text-text-primary">
+                          {addr.name}
+                        </Text>
+
+                        <Text
+                          numberOfLines={2}
+                          className="text-text-secondary text-sm mt-1"
+                        >
+                          {addr.flat}, {addr.area}
+                        </Text>
+
+                        <Text className="text-text-secondary text-sm mt-1">
+                          Phone number: {formatPhone(addr.phone)}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </>
+              )}
+
+              {/* 🔹 OLD BUTTON — UNCHANGED */}
               <TouchableOpacity
                 onPress={handleUseCurrentLocation}
                 className="flex-row items-center justify-between py-4"
               >
                 <View className="flex-row items-center gap-3">
-                  <Ionicons
-                    name="locate-outline"
-                    size={22}
-                    color="#1DB954"
-                  />
+                  <Ionicons name="locate-outline" size={22} color="#1DB954" />
                   <Text className="text-text-primary font-semibold">
                     Use current location
                   </Text>
@@ -98,11 +187,8 @@ export default function LocationModal({
 
               {/* Cancel */}
               <TouchableOpacity onPress={onClose} className="mt-6">
-                <Text className="text-center text-text-secondary">
-                  Cancel
-                </Text>
+                <Text className="text-center text-text-secondary">Cancel</Text>
               </TouchableOpacity>
-
             </View>
           </TouchableWithoutFeedback>
         </View>

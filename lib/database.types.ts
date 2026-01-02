@@ -16,45 +16,54 @@ export type Database = {
     Tables: {
       addresses: {
         Row: {
+          address_type: string | null
           area: string | null
-          city: string
           created_at: string | null
           deleted: boolean | null
-          full_name: string
+          flat: string | null
+          floor: string | null
           id: number
           is_default: boolean | null
-          label: string | null
           landmark: string | null
+          latitude: number | null
+          longitude: number | null
+          name: string
+          order_for: string | null
           phone: string
-          street: string
           user_id: string
         }
         Insert: {
+          address_type?: string | null
           area?: string | null
-          city: string
           created_at?: string | null
           deleted?: boolean | null
-          full_name: string
+          flat?: string | null
+          floor?: string | null
           id?: never
           is_default?: boolean | null
-          label?: string | null
           landmark?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          order_for?: string | null
           phone: string
-          street: string
           user_id: string
         }
         Update: {
+          address_type?: string | null
           area?: string | null
-          city?: string
           created_at?: string | null
           deleted?: boolean | null
-          full_name?: string
+          flat?: string | null
+          floor?: string | null
           id?: never
           is_default?: boolean | null
-          label?: string | null
           landmark?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          order_for?: string | null
           phone?: string
-          street?: string
           user_id?: string
         }
         Relationships: [

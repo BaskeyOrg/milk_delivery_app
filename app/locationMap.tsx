@@ -259,6 +259,8 @@ export default function LocationMapScreen() {
       <AddressFormModal
         visible={addressFormVisible}
         onClose={() => setAddressFormVisible(false)}
+        latitude={pin.latitude}
+        longitude={pin.longitude}
       />
     </View>
   );
