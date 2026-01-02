@@ -88,6 +88,37 @@ export default function AdminOrderDetailScreen() {
           </Pressable>
         )}
 
+        {/* 📍 View on Map */}
+        {order.addresses?.latitude && order.addresses?.longitude && (
+          <View className="bg-surface rounded-2xl overflow-hidden">
+            <Pressable
+              onPress={() => {
+                const { latitude, longitude } = order.addresses!;
+                const url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
+                Linking.openURL(url);
+              }}
+              className="flex-row items-center p-4"
+            >
+              {/* Icon */}
+              <View className="bg-primary/20 rounded-full w-12 h-12 items-center justify-center mr-3">
+                <Ionicons name="map" size={24} color="#1DB954" />
+              </View>
+
+              {/* Text */}
+              <View className="flex-1">
+                <Text className="text-text-primary font-bold text-base">
+                  View on Map
+                </Text>
+                <Text className="text-text-secondary text-sm">
+                  Open delivery location in Google Maps
+                </Text>
+              </View>
+
+              <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+            </Pressable>
+          </View>
+        )}
+
         {/* ✅ Order Items (shared component) */}
         <OrderItemList items={order.order_items ?? []} />
 

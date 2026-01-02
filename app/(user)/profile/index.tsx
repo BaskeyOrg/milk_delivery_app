@@ -46,13 +46,6 @@ const MENU_ITEMS: readonly MenuItem[] = [
 const MENU_ITEMS_TWO: readonly MenuItem[] = [
   {
     id: 3,
-    icon: "location-outline",
-    title: "Addresses",
-    color: "#F59E0B",
-    action: "/(user)/address",
-  },
-  {
-    id: 4,
     icon: "heart-outline",
     title: "Wishlist",
     color: "#EF4444",

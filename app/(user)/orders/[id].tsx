@@ -51,7 +51,7 @@ export default function OrderDetailsScreen() {
     return (
       <View className="flex-1 justify-center items-center bg-background">
         <Text className="text-accent-error text-lg">
-          Failed to fetch order ID ---
+          Failed to fetch order ID
         </Text>
       </View>
     );
