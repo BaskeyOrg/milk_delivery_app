@@ -17,6 +17,7 @@ import { Tables } from "@/assets/data/types";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/providers/AuthProvider";
 import { useLocationContext } from "@/providers/LocationProvider";
+import { formatPhone } from "@/lib/utils";
 
 type Address = Tables<"addresses">;
 
@@ -82,8 +83,8 @@ export default function LocationModal({
     onClose();
   };
 
-  const formatPhone = (phone: string) =>
-    phone.replace(/\D/g, "").replace(/(\d{5})(\d{5})/, "$1 $2");
+  // const formatPhone = (phone: string) =>
+  //   phone.replace(/\D/g, "").replace(/(\d{5})(\d{5})/, "$1 $2");
 
   const handleSelectAddress = (addr: Address) => {
     if (addr.latitude == null || addr.longitude == null) {
@@ -94,7 +95,15 @@ export default function LocationModal({
       return;
     }
     setCurrentLocation({ latitude: addr.latitude, longitude: addr.longitude });
-    setSelectedAddress(`${addr.flat}, ${addr.area}`);
+    setSelectedAddress({
+      id: addr.id,
+      name: addr.name,
+      phone: addr.phone,
+      flat: addr.flat,
+      area: addr.area,
+      latitude: addr.latitude,
+      longitude: addr.longitude,
+    });
     onClose();
   };
 

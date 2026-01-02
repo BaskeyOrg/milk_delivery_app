@@ -3,7 +3,7 @@ import { useUpdateOrderSubscription } from "@/api/orders/subscription";
 import OrderAddressCard from "@/components/Address/OrderAddressCard";
 import GradientHeader from "@/components/GradientHeader";
 import OrderItemList from "@/components/OrderItemListItem";
-import OrderBillFooter from "@/components/OrderSummeryFooter";
+import OrderSummeryFooter from "@/components/OrderSummeryFooter";
 import { useLocalSearchParams } from "expo-router";
 import {
   ActivityIndicator,
@@ -13,22 +13,32 @@ import {
 } from "react-native";
 
 export default function OrderDetailsScreen() {
-  /* ---------------- PARAMS ---------------- */
   const { id: idParam } = useLocalSearchParams();
 
-  const id = Number(
-    typeof idParam === "string" ? idParam : idParam?.[0]
-  );
+  const id = Array.isArray(idParam)
+    ? Number(idParam[0])
+    : Number(idParam);
 
-  const deliveryCharge = 20;
+  if (!id || isNaN(id)) {
+    return (
+      <View className="flex-1 justify-center items-center bg-background">
+        <Text className="text-accent-error text-lg">
+          Invalid Order ID
+        </Text>
+      </View>
+    );
+  }
 
-  /* ---------------- DATA ---------------- */
-  const { data: order, isLoading, error } = useOrderDetails(id);
+  const deliveryCharge = 0;
 
-  // 🔴 Real-time updates (Supabase channel / websocket)
+  const {
+    data: order,
+    isLoading,
+    error,
+  } = useOrderDetails(id);
+
   useUpdateOrderSubscription(id);
 
-  /* ---------------- LOADING ---------------- */
   if (isLoading) {
     return (
       <View className="flex-1 justify-center items-center bg-background">
@@ -37,40 +47,34 @@ export default function OrderDetailsScreen() {
     );
   }
 
-  /* ---------------- ERROR ---------------- */
   if (error || !order) {
     return (
       <View className="flex-1 justify-center items-center bg-background">
         <Text className="text-accent-error text-lg">
-          Failed to fetch order
+          Failed to fetch order ID ---
         </Text>
       </View>
     );
   }
 
-  /* ---------------- UI ---------------- */
   return (
     <View className="flex-1 bg-background">
       <GradientHeader title={`Order #${order.id}`} />
 
       <ScrollView
-        className="flex-1"
         contentContainerStyle={{
           paddingBottom: 140,
           gap: 16,
           paddingHorizontal: 16,
         }}
       >
-        {/* 📍 Delivery Address */}
         {order.addresses && (
           <OrderAddressCard address={order.addresses} />
         )}
 
-        {/* 🍕 Order Items */}
         <OrderItemList items={order.order_items ?? []} />
 
-        {/* 💰 Bill Summary */}
-        <OrderBillFooter
+        <OrderSummeryFooter
           itemsTotal={order.total}
           deliveryCharge={deliveryCharge}
         />

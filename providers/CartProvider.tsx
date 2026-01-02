@@ -23,7 +23,8 @@ type CartType = {
   updateQuantity: (itemId: string, amount: -1 | 1) => void;
   removeItem: (itemId: string) => void;
   total: number;
-  checkout: (address?: Tables<"addresses">) => void;
+  checkout: (address: Tables<"addresses">) => void;
+  isCheckingOut: boolean;
 };
 
 const CartContext = createContext<CartType>({
@@ -33,23 +34,28 @@ const CartContext = createContext<CartType>({
   removeItem: () => {},
   total: 0,
   checkout: () => {},
+  isCheckingOut: false,
 });
 
 const CartProvider = ({ children }: PropsWithChildren) => {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+
   const router = useRouter();
 
   const { mutate: insertOrder } = useInsertOrder();
   const { mutate: insertOrderItems } = useInsertOrderItems();
 
-  // Add item to cart
+  /* ---------------- ADD ITEM ---------------- */
   const addItem = (
     product: Product,
     size: ProductVariant,
-    quantity: number = 1
+    quantity = 1
   ) => {
     const existingItem = items.find(
-      (item) => item.product_id === product.id && item.size.label === size.label
+      (item) =>
+        item.product_id === product.id &&
+        item.size.label === size.label
     );
 
     if (existingItem) {
@@ -63,58 +69,69 @@ const CartProvider = ({ children }: PropsWithChildren) => {
       return;
     }
 
-    const newItem: CartItem = {
-      id: randomUUID(),
-      product,
-      product_id: product.id,
-      size,
-      quantity,
-    };
-
-    setItems((prev) => [newItem, ...prev]);
+    setItems((prev) => [
+      {
+        id: randomUUID(),
+        product,
+        product_id: product.id,
+        size,
+        quantity,
+      },
+      ...prev,
+    ]);
   };
 
-  // Update quantity
+  /* ---------------- UPDATE QTY ---------------- */
   const updateQuantity = (itemId: string, amount: -1 | 1) => {
     setItems((prev) =>
       prev
         .map((item) =>
-          item.id !== itemId
-            ? item
-            : { ...item, quantity: item.quantity + amount }
+          item.id === itemId
+            ? { ...item, quantity: item.quantity + amount }
+            : item
         )
         .filter((item) => item.quantity > 0)
     );
   };
 
-  // Remove item
+  /* ---------------- REMOVE ---------------- */
   const removeItem = (itemId: string) => {
     setItems((prev) => prev.filter((item) => item.id !== itemId));
   };
 
-  // Cart total
+  /* ---------------- TOTAL ---------------- */
   const total = useMemo(
-    () => items.reduce((sum, item) => sum + item.size.price * item.quantity, 0),
+    () =>
+      items.reduce(
+        (sum, item) => sum + item.size.price * item.quantity,
+        0
+      ),
     [items]
   );
 
-  const clearCart = () => {
-    setItems([]);
-  };
+  const clearCart = () => setItems([]);
 
-  // Checkout
-  const checkout = (address?: Tables<"addresses">) => {
-    if (items.length === 0) return;
+  /* ---------------- CHECKOUT ---------------- */
+  const checkout = (address: Tables<"addresses">) => {
+    if (!items.length || isCheckingOut) return;
+
+    setIsCheckingOut(true);
 
     insertOrder(
-      { total, address_id: address?.id ?? null },
+      {
+        total,
+        address_id: address.id,
+      },
       {
         onSuccess: saveOrderItems,
+        onError() {
+          setIsCheckingOut(false);
+        },
       }
     );
   };
 
-  // Save order items after order is created
+  /* ---------------- SAVE ORDER ITEMS ---------------- */
   const saveOrderItems = (order: Tables<"orders">) => {
     const orderItems = items.map((item) => ({
       order_id: order.id,
@@ -127,7 +144,11 @@ const CartProvider = ({ children }: PropsWithChildren) => {
     insertOrderItems(orderItems, {
       onSuccess() {
         clearCart();
-        router.push(`/(user)/orders/${order.id}`);
+        setIsCheckingOut(false);
+        router.replace(`/(user)/orders/${order.id}`);
+      },
+      onError() {
+        setIsCheckingOut(false);
       },
     });
   };
@@ -141,6 +162,7 @@ const CartProvider = ({ children }: PropsWithChildren) => {
         removeItem,
         total,
         checkout,
+        isCheckingOut,
       }}
     >
       {children}
@@ -149,6 +171,4 @@ const CartProvider = ({ children }: PropsWithChildren) => {
 };
 
 export default CartProvider;
-
-// Custom hook
 export const useCart = () => useContext(CartContext);

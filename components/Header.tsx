@@ -61,7 +61,7 @@ export default function Header({
       >
         <Ionicons name="location-outline" size={18} />
         <Text className="flex-1 font-medium" numberOfLines={1}>
-          {selectedAddress || "Select your location"}
+          {selectedAddress?.area ?? "Select delivery address"}
         </Text>
         <Ionicons name="chevron-down" size={18} />
       </TouchableOpacity>

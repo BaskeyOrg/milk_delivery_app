@@ -10,11 +10,7 @@ type Props = {
 
 export default function OrderAddressCard({ address }: Props) {
   return (
-    <View
-      className="bg-background-card
-    rounded-3xl p-5
-    bg-black/5"
-    >
+    <View className="rounded-3xl p-5 bg-black/5">
       {/* Header */}
       <View className="flex-row items-center justify-between mb-4">
         <View className="flex-row items-center">
@@ -27,10 +23,10 @@ export default function OrderAddressCard({ address }: Props) {
           </Text>
         </View>
 
-        {address.label && (
+        {address.address_type && (
           <View className="bg-primary px-3 py-1 rounded-full">
             <Text className="text-background text-xs font-bold">
-              {address.label}
+              {address.address_type}
             </Text>
           </View>
         )}
@@ -39,16 +35,20 @@ export default function OrderAddressCard({ address }: Props) {
       {/* Address Details */}
       <View className="ml-15">
         <Text className="text-text-primary font-semibold mb-1">
-          {address.full_name}
+          {address.name}
         </Text>
 
-        <Text className="text-text-secondary text-sm mb-1">
-          {address.street}
-        </Text>
+        {address.flat && (
+          <Text className="text-text-secondary text-sm mb-1">
+            {address.flat}
+          </Text>
+        )}
 
-        <Text className="text-text-secondary text-sm mb-2">
-          {address.area}, {address.city}
-        </Text>
+        {address.area && (
+          <Text className="text-text-secondary text-sm mb-2">
+            {address.area}
+          </Text>
+        )}
 
         <View className="flex-row items-center">
           <Ionicons
@@ -57,7 +57,9 @@ export default function OrderAddressCard({ address }: Props) {
             color="#6B7280"
             style={{ marginRight: 6 }}
           />
-          <Text className="text-text-secondary text-sm">{address.phone}</Text>
+          <Text className="text-text-secondary text-sm">
+            {address.phone}
+          </Text>
         </View>
       </View>
     </View>

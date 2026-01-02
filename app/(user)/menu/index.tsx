@@ -41,15 +41,6 @@ export default function MenuScreen() {
     );
   }, [products, searchText]);
 
-  /** 📍 Save address handler */
-  const handleSaveAddress = (addressData: any) => {
-    console.log("Saved address:", addressData);
-
-    // Example provider update
-    // setSelectedAddress(addressData.fullAddress);
-
-    // setAddressFormVisible(false);
-  };
 
   if (isLoading) {
     return (

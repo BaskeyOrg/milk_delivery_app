@@ -28,6 +28,7 @@ export default function LocationMapScreen() {
     setCurrentLocation,
     setSelectedAddress,
     selectedAddress,
+    setLocationLabel,
   } = useLocationContext();
 
   const mapRef = useRef<MapView>(null);
@@ -42,42 +43,49 @@ export default function LocationMapScreen() {
   const [addressFormVisible, setAddressFormVisible] = useState(false);
 
   /* ✅ SINGLE SOURCE OF TRUTH — PIN ➜ ADDRESS */
-  useEffect(() => {
-    let active = true;
+useEffect(() => {
+  let active = true;
 
-    const updateAddressFromPin = async () => {
-      try {
-        const [geo] = await Location.reverseGeocodeAsync({
-          latitude: pin.latitude,
-          longitude: pin.longitude,
-        });
+  const updateAddressFromPin = async () => {
+    try {
+      const [geo] = await Location.reverseGeocodeAsync(pin);
+      if (!geo || !active) return;
 
-        if (!geo || !active) return;
+      const label = [
+        geo.name,
+        geo.street,
+        geo.city,
+        geo.district,
+        geo.region,
+        geo.country,
+      ]
+        .filter(Boolean)
+        .join(", ");
 
-        const address = [
-          geo.name,
-          geo.street,
-          geo.city,
-          geo.district,
-          geo.region,
-          geo.country,
-        ]
-          .filter(Boolean)
-          .join(", ");
+      setCurrentLocation(pin);
 
-        setCurrentLocation(pin);
-        setSelectedAddress(address || "Selected location");
-      } catch {
-        setSelectedAddress("Selected location");
-      }
-    };
+      setSelectedAddress({
+        id: null,
+        name: "",
+        phone: "",
+        flat: null,
+        area: label || "Selected location",
+        latitude: pin.latitude,
+        longitude: pin.longitude,
+      });
 
-    updateAddressFromPin();
+      setLocationLabel(label);
+    } catch {
+      setLocationLabel("Selected location");
+    }
+  };
 
-    return () => {
-      active = false;
-    };
-  }, [pin]);
+  updateAddressFromPin();
+  return () => {
+    active = false;
+  };
+}, [pin]);
+
 
   /* 🔎 Search with suggestions */
   const onSearchChange = (text: string) => {
@@ -239,7 +247,7 @@ export default function LocationMapScreen() {
               Delivering to
             </Text>
             <Text className="text-text-primary font-semibold" numberOfLines={2}>
-              {selectedAddress}
+               {selectedAddress?.area ?? "Select delivery location"}
             </Text>
           </View>
 

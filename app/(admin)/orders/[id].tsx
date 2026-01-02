@@ -18,7 +18,7 @@ import {
 export default function AdminOrderDetailScreen() {
   const { id: idString } = useLocalSearchParams();
   const id = Number(typeof idString === "string" ? idString : idString?.[0]);
-  const deliveryCharge = 20;
+  const deliveryCharge = 0;
 
   const { data: order, isLoading, error } = useOrderDetails(id);
   const { mutate: updateOrder } = useUpdateOrder();

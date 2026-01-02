@@ -7,18 +7,16 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 /* ---------------- TYPES ---------------- */
 
 export type OrderWithItems = Tables<"orders"> & {
-  order_items?: (Tables<"order_items"> & {
-    products?: Tables<"products"> | null;
+  order_items: (Tables<"order_items"> & {
+    products: Tables<"products"> | null;
   })[];
-  addresses?: Tables<"addresses"> | null;
+  addresses: Tables<"addresses"> | null;
 };
 
 /* ---------------- ADMIN ORDERS ---------------- */
 
 export const useAdminOrderList = ({ archived = false }) => {
-  const statuses = archived
-    ? ["Delivered"]
-    : ["New", "Cooking", "Delivering"];
+  const statuses = archived ? ["Delivered"] : ["New", "Cooking", "Delivering"];
 
   return useQuery<Tables<"orders">[], Error>({
     queryKey: ["orders", { archived }],
@@ -47,10 +45,12 @@ export const useMyOrderList = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")
-        .select(`
+        .select(
+          `
           *,
           order_items (*, products (*))
-        `)
+        `
+        )
         .eq("user_id", userId!)
         .order("created_at", { ascending: false });
 
@@ -69,30 +69,32 @@ export const useOrderDetails = (id: number) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")
-        .select(`
+        .select(
+          `
           *,
-          addresses (
-            full_name,
-            phone,
-            street,
-            landmark,
-            area,
-            city,
-            label
-          ),
-          order_items (*, products (*))
-        `)
+          addresses (*),
+          order_items (
+            *,
+            products (*)
+          )
+        `
+        )
         .eq("id", id)
         .single();
 
-      if (error) throw new Error(error.message);
-      if (!data) throw new Error("Order not found");
+      if (error) {
+        console.error("❌ Order details fetch error:", error);
+        throw error;
+      }
+
+      if (!data) {
+        throw new Error("Order not found");
+      }
 
       return data as OrderWithItems;
     },
   });
 };
-
 /* ---------------- UPDATE ORDER ---------------- */
 
 export const useUpdateOrder = () => {

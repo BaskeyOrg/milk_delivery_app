@@ -70,7 +70,7 @@ export default function AddressFormModal({
       return;
     }
 
-    if (!selectedAddress) {
+    if (!selectedAddress?.area) {
       Alert.alert("Area / locality is required");
       return;
     }
@@ -85,7 +85,7 @@ try {
     flat,
     floor: floor || null,
     landmark: landmark || null,
-    area: selectedAddress,
+    area: selectedAddress?.area,
     name,
     phone,
     is_default: false,
@@ -191,7 +191,7 @@ try {
                   </Text>
                   <View className="bg-surface border border-surface-border rounded-xl p-4">
                     <Text className="text-text-primary text-sm">
-                      {selectedAddress}
+                      {selectedAddress?.area}
                     </Text>
                   </View>
                 </View>

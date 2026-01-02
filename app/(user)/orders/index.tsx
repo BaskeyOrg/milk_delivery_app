@@ -21,7 +21,7 @@ export default function OrdersScreen() {
       <View className="flex-1 items-center justify-center bg-background px-6">
         <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
         <Text className="text-text-primary font-semibold text-xl mt-4">
-          Failed to load orders
+          Failed to load orders Order-index
         </Text>
         <Text className="text-text-secondary text-center mt-2">
           Please try again later
