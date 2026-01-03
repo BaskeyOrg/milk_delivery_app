@@ -95,7 +95,7 @@ export default function CartScreen() {
       />
 
       {/* STICKY BAR */}
-      <View className="absolute bottom-0 left-0 right-0 border-t bg-background pt-4 pb-28 px-6">
+      <View className="absolute bottom-0 left-0 right-0 border-t border-background-subtle pt-2 pb-24 px-6">
         <View className="mb-3 bg-background-muted p-4 rounded-xl">
           <View className="flex-row justify-between">
             <Text className="text-text-secondary">Deliver to</Text>

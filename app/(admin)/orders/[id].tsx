@@ -1,5 +1,5 @@
 import { useOrderDetails, useUpdateOrder } from "@/api/orders";
-import { OrderStatusList } from "@/assets/data/types";
+import { OrderStatusList, statusColors } from "@/assets/data/types";
 import OrderAddressCard from "@/components/Address/OrderAddressCard";
 import OrderItemList from "@/components/OrderItemListItem";
 import OrderBillFooter from "@/components/OrderSummeryFooter";
@@ -131,19 +131,22 @@ export default function AdminOrderDetailScreen() {
           <View className="flex-row flex-wrap gap-2 mt-2">
             {OrderStatusList.map((status) => {
               const isActive = order.status === status;
+              const colorClass = statusColors[status];
 
               return (
                 <Pressable
                   key={status}
                   onPress={() => updateOrderStatus(status)}
-                  className={`px-4 py-2 rounded-xl border
-                    ${
-                      isActive ? "bg-primary border-primary" : "border-primary"
-                    }`}
+                  className={`
+                  px-4 py-2 rounded-xl border
+                  ${isActive ? colorClass : "border-gray-300 bg-transparent"}
+                `}
                 >
                   <Text
-                    className={`font-semibold capitalize
-                      ${isActive ? "text-white" : "text-primary"}`}
+                    className={`
+                    font-semibold capitalize
+                    ${isActive ? "text-white" : "text-gray-700"}
+                  `}
                   >
                     {status}
                   </Text>

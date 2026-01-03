@@ -1,7 +1,7 @@
 import {
-    useAddToWishlist,
-    useRemoveFromWishlist,
-    useWishlistStatus,
+  useAddToWishlist,
+  useRemoveFromWishlist,
+  useWishlistStatus,
 } from "@/api/wishlist";
 import { ProductVariant, Tables } from "@/assets/data/types";
 import { useAuth } from "@/providers/AuthProvider";
@@ -10,11 +10,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { Link, useSegments } from "expo-router";
 import React from "react";
 import {
-    ActivityIndicator,
-    Pressable,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Pressable,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import RemoteImage from "./RemoteImage";
 
@@ -44,14 +44,10 @@ export default function ProductListItem({ product }: ProductListItemProps) {
     }
   };
 
-  // Safely get base price from product or first variant
-  const displayPrice =
-    product.variants?.[0]?.price ?? 0;
-
   return (
     <Link href={`/${segments[0]}/menu/${product.id}`} asChild>
       <Pressable
-        className="rounded-3xl overflow-hidden mb-3 m-1 bg-black/5"
+        className="rounded-2xl overflow-hidden mb-3 m-1 bg-background-subtle"
         style={{ width: "48%" }}
       >
         <View className="relative">
@@ -59,7 +55,7 @@ export default function ProductListItem({ product }: ProductListItemProps) {
             path={product.image ?? undefined}
             fallback={defaultImage}
             resizeMode="cover"
-            className="w-full h-44 bg-background-lighter"
+            className="w-full h-44 bg-background-subtle"
           />
 
           {/* ❤️ WISHLIST */}
@@ -87,15 +83,27 @@ export default function ProductListItem({ product }: ProductListItemProps) {
 
         <View className="p-3">
           <Text
-            className="text-primary font-bold text-sm mb-2"
+            className="text-text-primary font-bold text-lg"
             numberOfLines={2}
           >
             {product.name}
           </Text>
-
-          <Text className="text-primary font-bold text-lg">
-            ₹ {displayPrice.toFixed(2)}
-          </Text>
+          {/* Variants */}
+          <View className="mt-2">
+            {product.variants.map((variant) => (
+              <View
+                key={variant.label}
+                className="flex-row items-center gap-2 rounded-full"
+              >
+                <Text className="text-text-primary text-sm">
+                  {variant.label}
+                </Text>
+                <Text className="text-text-primary font-semibold text-sm">
+                  ₹ {variant.price.toFixed(2)}
+                </Text>
+              </View>
+            ))}
+          </View>
         </View>
       </Pressable>
     </Link>

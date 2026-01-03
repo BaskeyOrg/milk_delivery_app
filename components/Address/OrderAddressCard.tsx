@@ -34,18 +34,17 @@ export default function OrderAddressCard({ address }: Props) {
 
       {/* Address Details */}
       <View className="ml-15">
-        <Text className="text-text-primary font-semibold mb-1">
+        <Text className="text-text-primary font-semibold">
           {address.name}
         </Text>
-
-        {address.flat && (
-          <Text className="text-text-secondary text-sm mb-1">
-            {address.flat}
+        {address.landmark && (
+          <Text className="text-text-secondary text-sm">
+            {address.landmark}, {address.flat ? address.flat : ""}
           </Text>
         )}
 
         {address.area && (
-          <Text className="text-text-secondary text-sm mb-2">
+          <Text className="text-text-secondary text-sm">
             {address.area}
           </Text>
         )}
@@ -53,7 +52,7 @@ export default function OrderAddressCard({ address }: Props) {
         <View className="flex-row items-center">
           <Ionicons
             name="call"
-            size={16}
+            size={12}
             color="#6B7280"
             style={{ marginRight: 6 }}
           />

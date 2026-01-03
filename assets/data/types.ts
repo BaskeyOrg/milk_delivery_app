@@ -46,12 +46,19 @@ export type CartItem = {
 
 export const OrderStatusList: OrderStatus[] = [
   'New',
-  'Cooking',
+  'Cancelled',
   'Delivering',
   'Delivered',
 ];
 
-export type OrderStatus = 'New' | 'Cooking' | 'Delivering' | 'Delivered';
+export type OrderStatus = 'New' | 'Cancelled' | 'Delivering' | 'Delivered';
+
+export const statusColors: Record<OrderStatus, string> = {
+  New: "bg-blue-500 border-blue-500",
+  Cancelled: "bg-red-500 border-red-500",
+  Delivering: "bg-amber-500 border-amber-500",
+  Delivered: "bg-green-500 border-green-500",
+};
 
 export type Order = {
   id: number;

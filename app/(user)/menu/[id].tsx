@@ -7,12 +7,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import {
-    ActivityIndicator,
-    Pressable,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function ProductDetailsScreen() {
@@ -62,7 +62,7 @@ export default function ProductDetailsScreen() {
 
         {/* CONTENT */}
         <View className="p-6">
-          <Text className="text-3xl font-bold mb-2">{product.name}</Text>
+          <Text className="text-3xl font-bold mb-4">{product.name}</Text>
 
           {/* VARIANT SELECT */}
           <Text className="font-semibold mb-2">Select variant</Text>
@@ -106,11 +106,17 @@ export default function ProductDetailsScreen() {
               <Ionicons name="add" size={22} color="#fff" />
             </TouchableOpacity>
           </View>
+
+          {/* DESCRIPTION */}
+          <Text className="font-semibold mb-2">Description</Text>
+          <View className="flex-row gap-3 mb-6">
+            {product.description || ""}
+          </View>
         </View>
       </ScrollView>
 
       {/* BOTTOM BAR */}
-      <View className="absolute bottom-16 left-0 right-0 bg-background px-6 py-4 border-t">
+      <View className="absolute bottom-20 left-0 right-0 bg-background px-6 py-4 border-t border-background-subtle">
         <View className="flex-row items-center">
           <View className="flex-1">
             <Text className="text-sm">Total</Text>

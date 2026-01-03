@@ -1,4 +1,4 @@
-import { OrderWithItems } from "@/api/orders";
+import { BaseOrder, OrderWithItems } from "@/api/orders";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { Link, useSegments } from "expo-router";
@@ -9,12 +9,10 @@ import RemoteImage from "./RemoteImage";
 dayjs.extend(relativeTime);
 
 type Props = {
-  order: OrderWithItems;
+  order: BaseOrder | OrderWithItems;
 };
-
 const statusColorMap: Record<string, { bg: string; text: string }> = {
   new: { bg: "bg-accent-warning/15", text: "text-accent-warning" },
-  cooking: { bg: "bg-accent-warning/15", text: "text-accent-warning" },
   delivering: { bg: "bg-accent-info/15", text: "text-accent-info" },
   delivered: { bg: "bg-accent-success/15", text: "text-accent-success" },
   cancelled: { bg: "bg-accent-error/15", text: "text-accent-error" },
@@ -26,7 +24,10 @@ export default function OrderListItem({ order }: Props) {
     statusColorMap[order.status?.toLowerCase() ?? "new"] ??
     statusColorMap.new;
 
-  const items = order.order_items ?? [];
+  const items =
+  "order_items" in order && Array.isArray(order.order_items)
+    ? order.order_items
+    : [];
 
   return (
     <View className="rounded-3xl p-5 bg-black/5 mx-3">
