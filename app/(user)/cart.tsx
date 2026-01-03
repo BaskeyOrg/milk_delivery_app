@@ -2,12 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useMemo, useState } from "react";
-import {
-  FlatList,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { FlatList, Text, TouchableOpacity, View } from "react-native";
 
 import { Tables } from "@/assets/data/types";
 import CartListItem from "@/components/CartListItems";
@@ -38,6 +33,9 @@ export default function CartScreen() {
 
   const deliveryCharge = 0;
 
+  const canCheckout =
+    !!selectedAddress?.area && !!selectedAddress?.name && !isCheckingOut;
+
   const handleCheckout = () => {
     if (!selectedAddress) {
       setLocationModalVisible(true);
@@ -46,25 +44,24 @@ export default function CartScreen() {
     checkout(selectedAddress as Tables<"addresses">);
   };
 
-if (!items.length) {
-  return (
-    <View className="flex-1 bg-background">
-      <GradientHeader title="Cart" />
+  if (!items.length) {
+    return (
+      <View className="flex-1 bg-background">
+        <GradientHeader title="Cart" />
 
-      {/* Empty content fills remaining space */}
-      <View className="flex-1">
-        <EmptyState
-          icon="cart-outline"
-          title="Your cart is empty"
-          description="Looks like you haven’t added anything yet"
-          actionLabel="Go to Menu"
-          actionHref="/(user)/menu"
-        />
+        {/* Empty content fills remaining space */}
+        <View className="flex-1">
+          <EmptyState
+            icon="cart-outline"
+            title="Your cart is empty"
+            description="Looks like you haven’t added anything yet"
+            actionLabel="Go to Menu"
+            actionHref="/(user)/menu"
+          />
+        </View>
       </View>
-    </View>
-  );
-}
-
+    );
+  }
 
   return (
     <View className="flex-1 bg-background">
@@ -102,7 +99,9 @@ if (!items.length) {
               <Text className="text-text-primary font-semibold mt-1">
                 {selectedAddress.name}
               </Text>
-              <Text className="text-text-secondary">{selectedAddress.area}</Text>
+              <Text className="text-text-secondary">
+                {selectedAddress.area}
+              </Text>
               <Text className="text-text-secondary">
                 Phone: {formatPhone(selectedAddress.phone)}
               </Text>
@@ -115,27 +114,25 @@ if (!items.length) {
         </View>
 
         <TouchableOpacity
-          disabled={!selectedAddress?.area || isCheckingOut}
-          onPress={handleCheckout}
+          disabled={!canCheckout}
+          onPress={() => {
+            if (!canCheckout) return; // 🛡️ extra safety
+            handleCheckout();
+          }}
           activeOpacity={0.9}
           className={`rounded-full py-5 flex-row items-center justify-center ${
-            selectedAddress?.area && !isCheckingOut
-              ? "bg-primary"
-              : "bg-surface-elevated"
+            canCheckout ? "bg-primary" : "bg-surface-elevated"
           }`}
         >
           <Ionicons
             name="cart"
             size={22}
-            color={
-              selectedAddress?.area && !isCheckingOut ? "#ffffff" : "#9ca3af"
-            }
+            color={canCheckout ? "#ffffff" : "#9ca3af"}
           />
+
           <Text
             className={`ml-2 font-bold text-lg ${
-              selectedAddress?.area && !isCheckingOut
-                ? "text-text-inverse"
-                : "text-text-tertiary"
+              canCheckout ? "text-text-inverse" : "text-text-tertiary"
             }`}
           >
             {isCheckingOut ? "Placing order..." : "Checkout"}
