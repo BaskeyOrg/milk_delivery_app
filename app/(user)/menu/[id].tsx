@@ -108,10 +108,10 @@ export default function ProductDetailsScreen() {
           </View>
 
           {/* DESCRIPTION */}
-          <Text className="font-semibold mb-2">Description</Text>
+          {/* <Text className="font-semibold mb-2">Description</Text>
           <View className="flex-row gap-3 mb-6">
             {product.description || ""}
-          </View>
+          </View> */}
         </View>
       </ScrollView>
 

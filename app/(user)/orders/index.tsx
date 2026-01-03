@@ -1,4 +1,5 @@
 import { useMyOrderList } from "@/api/orders";
+import EmptyState from "@/components/EmptyState";
 import GradientHeader from "@/components/GradientHeader";
 import OrderListItem from "@/components/OrderListItem";
 import { Ionicons } from "@expo/vector-icons";
@@ -32,31 +33,28 @@ export default function OrdersScreen() {
 
   if (!orders || orders.length === 0) {
     return (
-      <View className="flex-1 items-center justify-center bg-background px-6">
-        <Ionicons name="receipt-outline" size={80} color="#9CA3AF" />
-        <Text className="text-text-primary font-semibold text-xl mt-4">
-          No orders yet
-        </Text>
-        <Text className="text-text-secondary text-center mt-2">
-          Your order history will appear here
-        </Text>
-      </View>
+      <EmptyState
+        icon="receipt-outline"
+        title="No orders yet"
+        description="Your order history will appear here"
+        actionLabel="Start Shopping"
+        actionHref="/(user)/menu"
+      />
     );
   }
 
   return (
     <View className="flex-1 bg-white">
-    <FlatList
-      data={orders}
-      keyExtractor={(item) => item.id.toString()}
-      renderItem={({ item }) => <OrderListItem order={item} />}
-      showsVerticalScrollIndicator={false}
-      // columnWrapperStyle={{ gap: 10, paddingHorizontal: 10 }}
-      contentContainerStyle={{ paddingBottom: 100, gap: 16 }}
-      ListHeaderComponent={<GradientHeader title="Orders" />}
-      
-      stickyHeaderIndices={[0]} // make the gradient sticky
-    />
+      <FlatList
+        data={orders}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => <OrderListItem order={item} />}
+        showsVerticalScrollIndicator={false}
+        // columnWrapperStyle={{ gap: 10, paddingHorizontal: 10 }}
+        contentContainerStyle={{ paddingBottom: 100, gap: 16 }}
+        ListHeaderComponent={<GradientHeader title="Orders" />}
+        stickyHeaderIndices={[0]} // make the gradient sticky
+      />
     </View>
   );
 }

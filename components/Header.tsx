@@ -2,13 +2,7 @@ import { useLocationContext } from "@/providers/LocationProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import {
-  Image,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Image, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 type Props = {
   onPress: () => void;
@@ -16,11 +10,7 @@ type Props = {
   onSearchChange: (text: string) => void;
 };
 
-export default function Header({
-  onPress,
-  searchText,
-  onSearchChange,
-}: Props) {
+export default function Header({ onPress, searchText, onSearchChange }: Props) {
   const { selectedAddress } = useLocationContext();
 
   return (
@@ -35,9 +25,7 @@ export default function Header({
             source={require("../assets/images/brand_logo.png")}
             className="w-10 h-10 rounded-full"
           />
-          <Text className="text-blue-700 font-bold text-xl">
-            BRAND NAME
-          </Text>
+          <Text className="text-blue-700 font-bold text-xl">BRAND NAME</Text>
         </View>
 
         <View className="flex-row items-center gap-4">
@@ -45,12 +33,9 @@ export default function Header({
             <Ionicons name="notifications-outline" size={24} />
           </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={() => router.push("/(user)/wishList")}
-          >
+          <TouchableOpacity onPress={() => router.push("/(user)/wishList")}>
             <Ionicons name="heart-outline" size={24} />
           </TouchableOpacity>
-
         </View>
       </View>
 
@@ -69,14 +54,20 @@ export default function Header({
       {/* 🔍 Search */}
       <View className="flex-row items-center bg-white rounded-full mt-4 px-4 py-2">
         <Ionicons name="search-outline" size={20} color="gray" />
+
         <TextInput
           value={searchText}
           onChangeText={onSearchChange}
-          placeholder='Try "running shoes"'
+          placeholder='Try "curd"'
           className="flex-1 px-3 text-base"
         />
-        <Ionicons name="mic-outline" size={22} color="gray" />
-        <Ionicons name="scan-outline" size={22} color="gray" className="ml-3" />
+
+        {/* ❌ Clear button */}
+        {searchText.length > 0 && (
+          <TouchableOpacity onPress={() => onSearchChange("")} hitSlop={10}>
+            <Ionicons name="close-circle" size={20} color="#9CA3AF" />
+          </TouchableOpacity>
+        )}
       </View>
     </LinearGradient>
   );

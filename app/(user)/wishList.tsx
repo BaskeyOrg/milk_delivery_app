@@ -1,5 +1,6 @@
 import { useRemoveFromWishlist, useWishlist } from "@/api/wishlist";
 import { Product, ProductVariant } from "@/assets/data/types";
+import EmptyState from "@/components/EmptyState";
 import GradientHeader from "@/components/GradientHeader";
 import { defaultImage } from "@/components/ProductListItem";
 import RemoteImage from "@/components/RemoteImage";
@@ -63,7 +64,13 @@ export default function WishlistScreen() {
       <GradientHeader title="Wishlist" />
 
       {wishlist.length === 0 ? (
-        <EmptyState />
+         <EmptyState
+          icon="heart-outline"
+          title="Your wishlist is empty"
+          description="Start adding products you love"
+          actionLabel="Go to Menu"
+          actionHref="/(user)/menu"
+        />
       ) : (
         <ScrollView
           contentContainerStyle={{
@@ -141,37 +148,6 @@ export default function WishlistScreen() {
           </View>
         </ScrollView>
       )}
-    </View>
-  );
-}
-
-/* ---------------- EMPTY STATE ---------------- */
-
-function EmptyState() {
-  const router = useRouter();
-
-  return (
-    <View className="flex-1 items-center justify-center px-6">
-      <Ionicons name="heart-outline" size={80} color="#9CA3AF" />
-
-      <Text className="text-text-primary font-semibold text-xl mt-4">
-        Your wishlist is empty
-      </Text>
-
-      <Text className="text-text-secondary text-center mt-2">
-        Start adding products you love
-      </Text>
-
-      <TouchableOpacity
-        onPress={() => router.push("/(user)/menu")}
-        activeOpacity={0.85}
-        className="mt-6 rounded-full px-8 py-4 flex-row items-center bg-primary"
-      >
-        <Ionicons name="apps" size={22} color="#121212" />
-        <Text className="ml-2 font-bold text-base text-inverse">
-          Go to Menu
-        </Text>
-      </TouchableOpacity>
     </View>
   );
 }

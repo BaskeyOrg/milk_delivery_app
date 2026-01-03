@@ -11,6 +11,7 @@ import {
 
 import { Tables } from "@/assets/data/types";
 import CartListItem from "@/components/CartListItems";
+import EmptyState from "@/components/EmptyState";
 import GradientHeader from "@/components/GradientHeader";
 import LocationModal from "@/components/Location/LocationModal";
 import OrderSummeryFooter from "@/components/OrderSummeryFooter";
@@ -45,33 +46,25 @@ export default function CartScreen() {
     checkout(selectedAddress as Tables<"addresses">);
   };
 
-  if (!items.length) {
-    return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <Ionicons name="cart-outline" size={80} color="#9CA3AF" />
-        <Text className="text-text-primary font-semibold text-xl mt-4">
-          Your cart is empty
-        </Text>
+if (!items.length) {
+  return (
+    <View className="flex-1 bg-background">
+      <GradientHeader title="Cart" />
 
-        <Text className="text-text-secondary text-center mt-2">
-          Looks like you haven’t added anything yet
-        </Text>
-
-        <View className="mt-6">
-          <TouchableOpacity
-            onPress={() => router.push("/(user)/menu")}
-            className="rounded-full px-8 py-4 flex-row items-center bg-primary"
-            activeOpacity={0.85}
-          >
-            <Ionicons name="apps" size={22} color="#121212" />
-            <Text className="font-bold text-lg ml-2 text-background">
-              Go to Menu
-            </Text>
-          </TouchableOpacity>
-        </View>
+      {/* Empty content fills remaining space */}
+      <View className="flex-1">
+        <EmptyState
+          icon="cart-outline"
+          title="Your cart is empty"
+          description="Looks like you haven’t added anything yet"
+          actionLabel="Go to Menu"
+          actionHref="/(user)/menu"
+        />
       </View>
-    );
-  }
+    </View>
+  );
+}
+
 
   return (
     <View className="flex-1 bg-background">
