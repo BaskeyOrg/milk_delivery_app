@@ -33,13 +33,20 @@ export default function OrdersScreen() {
 
   if (!orders || orders.length === 0) {
     return (
-      <EmptyState
-        icon="receipt-outline"
-        title="No orders yet"
-        description="Your order history will appear here"
-        actionLabel="Start Shopping"
-        actionHref="/(user)/menu"
-      />
+      <View className="flex-1 bg-background">
+        <GradientHeader title="Orders" />
+
+        {/* Empty content fills remaining space */}
+        <View className="flex-1">
+          <EmptyState
+            icon="receipt-outline"
+            title="No orders yet"
+            description="Your order history will appear here"
+            actionLabel="Start Shopping"
+            actionHref="/(user)/menu"
+          />
+        </View>
+      </View>
     );
   }
 

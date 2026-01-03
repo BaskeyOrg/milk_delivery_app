@@ -43,8 +43,6 @@ const MENU_ITEMS: readonly MenuItem[] = [
   },
 ];
 
-
-
 /* -------------------------------------------------------------------------- */
 /*                               MENU CARD                                    */
 /* -------------------------------------------------------------------------- */
@@ -113,7 +111,7 @@ export default function ProfileScreen() {
                 path={profile?.avatar_url ?? undefined}
                 fallback={defaultImage}
                 className="w-20 h-20 rounded-full"
-              />              
+              />
 
               <View className="flex-1 ml-4">
                 <Text className="text-text-primary text-2xl font-bold mb-1">
@@ -122,6 +120,20 @@ export default function ProfileScreen() {
                 <Text className="text-text-secondary text-sm">
                   @{profile?.username || "username"}
                 </Text>
+                {profile?.group === "ADMIN" && (
+                  <View className="self-start bg-red-100 px-3 py-1 rounded-full mt-1">
+                    <Text className="text-red-600 text-xs font-semibold">
+                      ADMIN
+                    </Text>
+                  </View>
+                )}
+                {profile?.group === "DELIVERY" && (
+                  <View className="self-start bg-blue-100 px-3 py-1 rounded-full mt-1">
+                    <Text className="text-blue-600 text-xs font-semibold">
+                      DELIVERY MANAGER
+                    </Text>
+                  </View>
+                )}
               </View>
             </View>
           </View>
@@ -159,6 +171,25 @@ export default function ProfileScreen() {
                 <Ionicons name="shield-outline" size={22} color="#F59E0B" />
                 <Text className="text-text-primary font-semibold ml-3">
                   Admin Panel
+                </Text>
+              </View>
+
+              <Ionicons name="chevron-forward" size={20} color="#666" />
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* ================= DELIVERY ================= */}
+        {profile?.group === "DELIVERY" && (
+          <View className="mx-6 mb-3 bg-black/5 rounded-2xl p-4">
+            <TouchableOpacity
+              onPress={() => router.push("/(delivery)")}
+              className="flex-row items-center justify-between py-2"
+            >
+              <View className="flex-row items-center">
+                <Ionicons name="shield-outline" size={22} color="#F59E0B" />
+                <Text className="text-text-primary font-semibold ml-3">
+                  Delivery Panel
                 </Text>
               </View>
 
