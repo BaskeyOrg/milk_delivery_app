@@ -36,22 +36,14 @@ const MENU_ITEMS: readonly MenuItem[] = [
   },
   {
     id: 2,
-    icon: "list-outline",
-    title: "Orders",
-    color: "#10B981",
-    action: "/(user)/orders",
-  },
-];
-
-const MENU_ITEMS_TWO: readonly MenuItem[] = [
-  {
-    id: 3,
     icon: "heart-outline",
     title: "Wishlist",
     color: "#EF4444",
     action: "/(user)/wishList",
   },
 ];
+
+
 
 /* -------------------------------------------------------------------------- */
 /*                               MENU CARD                                    */
@@ -146,7 +138,7 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        <View className="mx-6 mb-3">
+        {/* <View className="mx-6 mb-3">
           <View className="flex-row flex-wrap -mx-2">
             {MENU_ITEMS_TWO.map((item) => (
               <View key={item.id} className="w-1/2 px-2 mb-3">
@@ -154,7 +146,7 @@ export default function ProfileScreen() {
               </View>
             ))}
           </View>
-        </View>
+        </View> */}
 
         {/* ================= ADMIN ================= */}
         {profile?.group === "ADMIN" && (
