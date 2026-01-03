@@ -1,5 +1,5 @@
 import { Tables } from "@/assets/data/types";
-import { Link, useSegments } from "expo-router";
+import { useSegments } from "expo-router";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { defaultImage } from "./ProductListItem";
@@ -24,14 +24,14 @@ const OrderItemListDelivery = ({ items }: OrderItemListItemProps) => {
             <View className="flex-row items-center">
               {/* Product Image */}
               <View className="relative">
-                  <Pressable>
-                    <RemoteImage
-                      path={product?.image ?? undefined}
-                      fallback={defaultImage}
-                      resizeMode="cover"
-                      className="w-24 h-24 rounded-2xl bg-surface-muted"
-                    />
-                  </Pressable>
+                <Pressable>
+                  <RemoteImage
+                    path={product?.image ?? undefined}
+                    fallback={defaultImage}
+                    resizeMode="cover"
+                    className="w-24 h-24 rounded-2xl bg-surface-muted"
+                  />
+                </Pressable>
 
                 {/* Quantity badge */}
                 <View className="absolute top-2 right-2 bg-primary rounded-full px-2 py-0.5">
@@ -44,16 +44,14 @@ const OrderItemListDelivery = ({ items }: OrderItemListItemProps) => {
               <View className="flex-1 ml-4 justify-between">
                 {/* Product Name */}
                 <View>
-                  <Link href={`/${segments[0]}/menu/${product?.id ?? ""}`} asChild>
-                    <Pressable>
-                      <Text
-                        className="text-text-primary font-bold text-lg"
-                        numberOfLines={2}
-                      >
-                        {product?.name ?? "Unknown Product"}
-                      </Text>
-                    </Pressable>
-                  </Link>
+                  <Pressable>
+                    <Text
+                      className="text-text-primary font-bold text-lg"
+                      numberOfLines={2}
+                    >
+                      {product?.name ?? "Unknown Product"}
+                    </Text>
+                  </Pressable>
 
                   {/* Price + Size */}
                   <View className="mt-2">
