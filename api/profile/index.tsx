@@ -2,10 +2,12 @@ import { InsertTables, UpdateTables } from "@/assets/data/types";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/providers/AuthProvider";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { decode } from "base64-arraybuffer";
+import { randomUUID } from "expo-crypto";
+import * as FileSystem from "expo-file-system/legacy";
 
-// ------------------------------
-// Fetch My Profile
-// ------------------------------
+/* ---------------- FETCH PROFILE ---------------- */
+
 export const useMyProfile = () => {
   const { session } = useAuth();
   const userId = session?.user.id;
@@ -18,94 +20,89 @@ export const useMyProfile = () => {
 
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, username, full_name, phone, avatar_url, website, group, expo_push_token")
+        .select("*")
         .eq("id", userId)
         .single();
 
-      if (error) {
-        throw new Error(error.message);
-      }
-
+      if (error) throw error;
       return data;
     },
   });
 };
 
-// NEW: Add this to your profile API file
-export const useMyAddresses = () => {
-  const { session } = useAuth();
-  const userId = session?.user.id;
+/* ---------------- AVATAR SIGNED URL ---------------- */
 
-  return useQuery({
-    queryKey: ["addresses", userId],
-    enabled: !!userId,
-    queryFn: async () => {
-      // 1. Add a guard check to satisfy TypeScript
-      if (!userId) {
-        throw new Error("User ID is required to fetch addresses");
-      }
+export const getAvatarSignedUrl = async (path: string) => {
+  const { data, error } = await supabase.storage
+    .from("avatars")
+    .createSignedUrl(path, 60 * 60);
 
-      const { data, error } = await supabase
-        .from("addresses")
-        .select("*")
-        // Now userId is guaranteed to be a string here
-        .eq("user_id", userId);
-
-      if (error) throw new Error(error.message);
-      return data;
-    },
-  });
+  if (error) throw error;
+  return data.signedUrl;
 };
 
-// ------------------------------
-// Update Profile
-// ------------------------------
+/* ---------------- AVATAR UPLOAD ---------------- */
+
+export const uploadAvatar = async (
+  fileUri: string,
+  userId: string
+): Promise<string> => {
+  const base64 = await FileSystem.readAsStringAsync(fileUri, {
+    encoding: "base64",
+  });
+
+  const filePath = `${userId}/${randomUUID()}.png`;
+
+  const { data, error } = await supabase.storage
+    .from("avatars")
+    .upload(filePath, decode(base64), {
+      contentType: "image/png",
+      upsert: true,
+    });
+
+  if (error) throw error;
+  return data.path;
+};
+
+/* ---------------- UPDATE PROFILE ---------------- */
+
 export const useUpdateProfile = () => {
   const queryClient = useQueryClient();
   const { session } = useAuth();
   const userId = session?.user.id;
 
   return useMutation({
-    async mutationFn(updatedFields: UpdateTables<"profiles">) {
+    mutationFn: async (payload: UpdateTables<"profiles">) => {
       if (!userId) throw new Error("User not authenticated");
-
-      const updates = {
-        ...updatedFields,
-        id: userId,
-        updated_at: new Date().toISOString(),
-      };
 
       const { data, error } = await supabase
         .from("profiles")
-        .update(updates)
+        .update({
+          ...payload,
+          updated_at: new Date().toISOString(),
+        })
         .eq("id", userId)
         .select()
         .single();
 
-      if (error) throw new Error(error.message);
-
+      if (error) throw error;
       return data;
     },
 
-    async onSuccess() {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["profile"] });
-    },
-
-    onError(error) {
-      console.log("Profile update error:", error);
     },
   });
 };
 
-// ------------------------------
-// Create Profile if missing (optional)
-// ------------------------------
+/* ---------------- CREATE PROFILE (OPTIONAL) ---------------- */
+
 export const useCreateProfile = () => {
   const { session } = useAuth();
   const userId = session?.user.id;
 
   return useMutation({
-    async mutationFn(newData: InsertTables<"profiles">) {
+    mutationFn: async (newData: InsertTables<"profiles">) => {
       if (!userId) throw new Error("User not authenticated");
 
       const { data, error } = await supabase
@@ -114,11 +111,8 @@ export const useCreateProfile = () => {
         .select()
         .single();
 
-      if (error) throw new Error(error.message);
-
+      if (error) throw error;
       return data;
     },
   });
 };
-
-
