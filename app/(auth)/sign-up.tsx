@@ -105,7 +105,7 @@ export default function SignUpScreen() {
 
             {/* HERO IMAGE */}
             <Image
-              source={require("../../assets/images/auth-image.png")}
+              source={require("../../assets/images/auth-milk-image.png")}
               style={{ width: 260, height: 260 }}
               resizeMode="contain"
             />
