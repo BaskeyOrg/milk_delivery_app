@@ -1,7 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
 import {
   Alert,
   Modal,
@@ -13,13 +12,18 @@ import {
   View,
 } from "react-native";
 
-import { Tables } from "@/assets/data/types";
-import { supabase } from "@/lib/supabase";
+import {
+  Address,
+  useDeleteAddress,
+  useUserAddresses,
+} from "@/api/addresses";
+import { formatPhone } from "@/lib/utils";
 import { useAuth } from "@/providers/AuthProvider";
 import { useLocationContext } from "@/providers/LocationProvider";
-import { formatPhone } from "@/lib/utils";
 
-type Address = Tables<"addresses">;
+/* -------------------------------------------
+   COMPONENT
+-------------------------------------------- */
 
 export default function LocationModal({
   visible,
@@ -31,39 +35,26 @@ export default function LocationModal({
   const router = useRouter();
   const { session } = useAuth();
 
-  const [addresses, setAddresses] = useState<Address[]>([]);
-  const [loading, setLoading] = useState(false);
-
   const { setCurrentLocation, setSelectedAddress } = useLocationContext();
 
-  /* ---------------- FETCH SAVED ADDRESSES ---------------- */
+  /* -------------------------------------------
+     REACT QUERY
+  -------------------------------------------- */
 
-  useEffect(() => {
-    if (!visible || !session) return;
+  const {
+    data: addresses = [],
+    isLoading,
+  } = useUserAddresses(session?.user.id, visible);
 
-    const fetchAddresses = async () => {
-      setLoading(true);
+  const deleteAddress = useDeleteAddress();
 
-      const { data, error } = await supabase
-        .from("addresses")
-        .select("*")
-        .eq("user_id", session.user.id)
-        .order("created_at", { ascending: false });
-
-      if (!error && data) {
-        setAddresses(data); // now TypeScript is happy
-      }
-
-      setLoading(false);
-    };
-
-    fetchAddresses();
-  }, [visible, session]);
-
-  /* ---------------- HANDLERS ---------------- */
+  /* -------------------------------------------
+     HANDLERS
+  -------------------------------------------- */
 
   const handleUseCurrentLocation = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
+
     if (status !== "granted") {
       Alert.alert("Permission Denied", "Location permission is required.");
       return;
@@ -83,9 +74,6 @@ export default function LocationModal({
     onClose();
   };
 
-  // const formatPhone = (phone: string) =>
-  //   phone.replace(/\D/g, "").replace(/(\d{5})(\d{5})/, "$1 $2");
-
   const handleSelectAddress = (addr: Address) => {
     if (addr.latitude == null || addr.longitude == null) {
       Alert.alert(
@@ -94,7 +82,12 @@ export default function LocationModal({
       );
       return;
     }
-    setCurrentLocation({ latitude: addr.latitude, longitude: addr.longitude });
+
+    setCurrentLocation({
+      latitude: addr.latitude,
+      longitude: addr.longitude,
+    });
+
     setSelectedAddress({
       id: addr.id,
       name: addr.name,
@@ -104,10 +97,28 @@ export default function LocationModal({
       latitude: addr.latitude,
       longitude: addr.longitude,
     });
+
     onClose();
   };
 
-  /* ---------------- UI ---------------- */
+  const handleDeleteAddress = (addr: Address) => {
+    Alert.alert(
+      "Delete address",
+      "Are you sure you want to delete this address?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => deleteAddress.mutate(addr.id),
+        },
+      ]
+    );
+  };
+
+  /* -------------------------------------------
+     UI
+  -------------------------------------------- */
 
   return (
     <Modal
@@ -121,7 +132,7 @@ export default function LocationModal({
         <View className="flex-1 justify-end bg-black/40">
           <TouchableWithoutFeedback>
             <View className="bg-background rounded-t-3xl p-6 relative">
-              {/* Floating Close Button */}
+              {/* Close Button */}
               <Pressable
                 onPress={onClose}
                 className="absolute -top-14 self-center bg-background rounded-full p-3 shadow-lg"
@@ -129,20 +140,12 @@ export default function LocationModal({
                 <Ionicons name="close" size={22} color="#666" />
               </Pressable>
 
-              {/* Title */}
               <Text className="text-xl font-bold text-text-primary mb-4">
                 Choose delivery location
               </Text>
 
-              {/* Search Placeholder */}
-              <View className="bg-background-muted rounded-xl px-4 py-3 mb-4">
-                <Text className="text-text-secondary">
-                  🔍 Search location (coming soon)
-                </Text>
-              </View>
-
-              {/* ✅ SAVED ADDRESSES (ADDED ONLY) */}
-              {addresses.length > 0 && (
+              {/* Saved Addresses */}
+              {!isLoading && addresses.length > 0 && (
                 <>
                   <Text className="text-text-secondary mb-2">
                     Your saved addresses
@@ -159,27 +162,42 @@ export default function LocationModal({
                         onPress={() => handleSelectAddress(addr)}
                         className="bg-background-subtle rounded-xl p-4 mb-3"
                       >
-                        <Text className="font-semibold text-text-primary">
-                          {addr.name}
-                        </Text>
+                        <View className="flex-row justify-between items-start">
+                          <View className="flex-1 pr-3">
+                            <Text className="font-semibold text-text-primary">
+                              {addr.name}
+                            </Text>
 
-                        <Text
-                          numberOfLines={2}
-                          className="text-text-secondary text-sm mt-1"
-                        >
-                          {addr.flat}, {addr.area}
-                        </Text>
+                            <Text
+                              numberOfLines={2}
+                              className="text-text-secondary text-sm mt-1"
+                            >
+                              {addr.flat}, {addr.area}
+                            </Text>
 
-                        <Text className="text-text-secondary text-sm mt-1">
-                          Phone number: {formatPhone(addr.phone)}
-                        </Text>
+                            <Text className="text-text-secondary text-sm mt-1">
+                              Phone number: {formatPhone(addr.phone)}
+                            </Text>
+                          </View>
+
+                          {/* Delete Button */}
+                          <Pressable
+                            onPress={() => handleDeleteAddress(addr)}
+                          >
+                            <Ionicons
+                              name="trash-outline"
+                              size={20}
+                              color="#EF4444"
+                            />
+                          </Pressable>
+                        </View>
                       </TouchableOpacity>
                     ))}
                   </ScrollView>
                 </>
               )}
 
-              {/* 🔹 OLD BUTTON — UNCHANGED */}
+              {/* Current Location */}
               <TouchableOpacity
                 onPress={handleUseCurrentLocation}
                 className="flex-row items-center justify-between py-4"

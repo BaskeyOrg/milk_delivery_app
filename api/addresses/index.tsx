@@ -1,154 +1,98 @@
-// api/addresses/index.tsx
-import { InsertTables, UpdateTables } from "@/assets/data/types";
+import { InsertTables, Tables } from "@/assets/data/types";
 import { supabase } from "@/lib/supabase";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-/* -------------------- LIST -------------------- */
-export const useAddressList = (userId: string) => {
+export type Address = Tables<"addresses">;
+export type InsertAddress = InsertTables<"addresses">;
+
+
+/* ----------------------------------
+   FETCH USER ADDRESSES (NOT DELETED)
+----------------------------------- */
+
+export const useUserAddresses = (userId?: string, enabled = true) => {
   return useQuery({
     queryKey: ["addresses", userId],
-    enabled: !!userId,
+    enabled: !!userId && enabled,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("addresses")
         .select("*")
-        .eq("user_id", userId)
-        .eq("deleted", false) // ✅ IMPORTANT
-        .order("is_default", { ascending: false })
+        .eq("user_id", userId!)
+        .eq("deleted", false)
         .order("created_at", { ascending: false });
 
       if (error) throw new Error(error.message);
-      return data ?? [];
+
+      return data as Address[];
     },
   });
 };
 
-/* -------------------- DELETE -------------------- */
-export const useDeleteAddress = (userId: string) => {
+/* ----------------------------------
+   DELETE ADDRESS (SMART DELETE)
+----------------------------------- */
+
+export const useDeleteAddress = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    async mutationFn(addressId: number) {
-      // 1️⃣ Check if linked to orders
-      const { data, error } = await supabase
+    mutationFn: async (addressId: number) => {
+      // 1️⃣ Check if address is linked with any order
+      const { data: orders, error: orderError } = await supabase
         .from("orders")
         .select("id")
         .eq("address_id", addressId)
         .limit(1);
 
-      if (error) throw new Error(error.message);
+      if (orderError) throw new Error(orderError.message);
 
-      const isLinked = (data?.length ?? 0) > 0;
-
-      // 2️⃣ If linked → SOFT DELETE
-      if (isLinked) {
-        const { error: updateError } = await supabase
+      if (orders && orders.length > 0) {
+        // 2️⃣ SOFT DELETE
+        const { error } = await supabase
           .from("addresses")
           .update({ deleted: true })
           .eq("id", addressId);
 
-        if (updateError) throw new Error(updateError.message);
-      }
-      // 3️⃣ If NOT linked → HARD DELETE
-      else {
-        const { error: deleteError } = await supabase
+        if (error) throw new Error(error.message);
+      } else {
+        // 3️⃣ HARD DELETE
+        const { error } = await supabase
           .from("addresses")
           .delete()
           .eq("id", addressId);
 
-        if (deleteError) throw new Error(deleteError.message);
+        if (error) throw new Error(error.message);
       }
-
-      return addressId;
     },
 
-    // ✅ Optimistic UI update
-    onMutate(addressId) {
-      queryClient.setQueryData<any[]>(
-        ["addresses", userId],
-        (old) => old?.filter((a) => a.id !== addressId) ?? []
-      );
-    },
+    onSuccess: (_, addressId) => {
+      // 🔥 Refresh address list everywhere
+      queryClient.invalidateQueries({ queryKey: ["addresses"] });
 
-    onSettled() {
-      queryClient.invalidateQueries({
-        queryKey: ["addresses", userId],
-      });
+      // Optional: also refresh orders if needed
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
     },
   });
 };
 
-/* -------------------- GET BY ID -------------------- */
-export const useAddressById = (id?: number) => {
-  return useQuery({
-    queryKey: ["address", id],
-    enabled: !!id,
-    queryFn: async () => {
+export const useInsertAddress = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: InsertAddress) => {
       const { data, error } = await supabase
         .from("addresses")
-        .select("*")
-        .eq("id", id!)
+        .insert(payload)
+        .select()
         .single();
 
-      if (error) throw error;
+      if (error) throw new Error(error.message);
       return data;
     },
-  });
-};
 
-/* -------------------- CREATE -------------------- */
-export const useCreateAddress = (userId: string) => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    async mutationFn(payload: InsertTables<"addresses">) {
-      // Reset default if needed
-      if (payload.is_default) {
-        await supabase
-          .from("addresses")
-          .update({ is_default: false })
-          .eq("user_id", userId);
-      }
-
-      const { error } = await supabase.from("addresses").insert(payload);
-      if (error) throw error;
-    },
-
-    onSuccess() {
-      queryClient.invalidateQueries({ queryKey: ["addresses", userId] });
-    },
-  });
-};
-
-/* -------------------- UPDATE -------------------- */
-export const useUpdateAddress = (userId: string) => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    async mutationFn({
-      id,
-      data,
-    }: {
-      id: number;
-      data: UpdateTables<"addresses">;
-    }) {
-      if (data.is_default) {
-        await supabase
-          .from("addresses")
-          .update({ is_default: false })
-          .eq("user_id", userId);
-      }
-
-      const { error } = await supabase
-        .from("addresses")
-        .update(data)
-        .eq("id", id);
-
-      if (error) throw error;
-    },
-
-    onSuccess() {
-      queryClient.invalidateQueries({ queryKey: ["addresses", userId] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["addresses"] });
     },
   });
 };

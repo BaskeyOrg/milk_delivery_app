@@ -13,7 +13,7 @@ import {
   View,
 } from "react-native";
 
-import { supabase } from "@/lib/supabase";
+import { useInsertAddress } from "@/api/addresses";
 import { useAuth } from "@/providers/AuthProvider";
 import { useLocationContext } from "@/providers/LocationProvider";
 
@@ -50,15 +50,15 @@ export default function AddressFormModal({
   /* ---------------- VALIDATION STATE ---------------- */
 
   const [submitAttempted, setSubmitAttempted] = useState(false);
+  const insertAddress = useInsertAddress();
 
   const flatError = submitAttempted && !flat.trim();
   const nameError = submitAttempted && !name.trim();
-  const phoneError =
-    submitAttempted && !/^[0-9]{10}$/.test(phone.trim());
+  const phoneError = submitAttempted && !/^[0-9]{10}$/.test(phone.trim());
 
   /* ---------------- SAVE ---------------- */
 
-  const handleSave = async () => {
+  const handleSave = () => {
     setSubmitAttempted(true);
 
     if (!session) {
@@ -66,45 +66,54 @@ export default function AddressFormModal({
       return;
     }
 
-    if (!flat.trim() || !name.trim() || !/^[0-9]{10}$/.test(phone.trim())) {
-      return;
-    }
+    if (flatError || nameError || phoneError) return;
 
     if (!selectedAddress?.area) {
       Alert.alert("Area / locality is required");
       return;
     }
 
-try {
-  setLoading(true);
+    insertAddress.mutate(
+      {
+        user_id: session.user.id,
+        order_for: orderFor,
+        address_type: addressType,
+        flat,
+        floor: floor || null,
+        landmark: landmark || null,
+        area: selectedAddress.area,
+        name,
+        phone,
+        is_default: false,
+        latitude,
+        longitude,
+        deleted: false,
+      },
+      {
+        onSuccess: (data) => {
+          if (data.latitude == null || data.longitude == null) {
+            Alert.alert("Error", "Location coordinates missing");
+            return;
+          }
 
-  const { error } = await supabase.from("addresses").insert({
-    user_id: session.user.id,
-    order_for: orderFor,
-    address_type: addressType,
-    flat,
-    floor: floor || null,
-    landmark: landmark || null,
-    area: selectedAddress?.area,
-    name,
-    phone,
-    is_default: false,
-    latitude,
-    longitude,
-  });
+          setSelectedAddress({
+            id: data.id,
+            name: data.name,
+            phone: data.phone,
+            flat: data.flat,
+            area: data.area,
+            latitude: data.latitude,
+            longitude: data.longitude,
+          });
 
-  if (error) throw error;
-
-  setSelectedAddress(selectedAddress); // 🔥 update context
-  onClose();
-  router.replace("/(user)/menu"); // 🔥 redirect
-
-} catch (err: any) {
-  Alert.alert("Error", err.message);
-} finally {
-  setLoading(false);
-}
-
+          onClose();
+          router.replace("/(user)/menu");
+        },
+        onError: (err: any) => {
+          Alert.alert("Error", err.message);
+        },
+      }
+    );
   };
 
   return (
@@ -163,9 +172,7 @@ try {
                       key={type}
                       label={type}
                       active={addressType === type}
-                      onPress={() =>
-                        setAddressType(type as typeof addressType)
-                      }
+                      onPress={() => setAddressType(type as typeof addressType)}
                     />
                   ))}
                 </View>
@@ -229,7 +236,6 @@ try {
                   error={phoneError}
                   errorText="Phone number must be 10 digits"
                 />
-
               </ScrollView>
 
               {/* FOOTER */}
@@ -335,9 +341,7 @@ function Input({
         }`}
       />
       {error && (
-        <Text className="text-red-500 text-xs mt-1 ml-1">
-          {errorText}
-        </Text>
+        <Text className="text-red-500 text-xs mt-1 ml-1">{errorText}</Text>
       )}
     </View>
   );

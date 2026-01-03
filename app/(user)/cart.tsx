@@ -37,6 +37,7 @@ export default function CartScreen() {
     !!selectedAddress?.area && !!selectedAddress?.name && !isCheckingOut;
 
   const handleCheckout = () => {
+    if (!canCheckout) return;
     if (!selectedAddress) {
       setLocationModalVisible(true);
       return;
@@ -115,10 +116,7 @@ export default function CartScreen() {
 
         <TouchableOpacity
           disabled={!canCheckout}
-          onPress={() => {
-            if (!canCheckout) return; // 🛡️ extra safety
-            handleCheckout();
-          }}
+          onPress={handleCheckout}
           activeOpacity={0.9}
           className={`rounded-full py-5 flex-row items-center justify-center ${
             canCheckout ? "bg-primary" : "bg-surface-elevated"
