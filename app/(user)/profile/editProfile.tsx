@@ -21,23 +21,25 @@ import {
   View,
 } from "react-native";
 
-/* ---------------- CONSTANTS ---------------- */
+/* ---------------- REGEX ---------------- */
 
 const phoneRegex = /^[0-9]{10}$/;
 const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
-const defaultAvatar = require("@/assets/images/user-avatar.png"); // Adjust relative path
+const defaultAvatar = require("@/assets/images/user-avatar.png");
+
+/* ---------------- COMPONENT ---------------- */
 
 export default function EditProfile() {
   const router = useRouter();
   const { session } = useAuth();
-
   const userId = session?.user.id ?? "";
+
+  const { mutateAsync: updateProfile } = useUpdateProfile();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const { mutateAsync: updateProfile } = useUpdateProfile();
 
+  const [avatarUri, setAvatarUri] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     full_name: "",
@@ -45,7 +47,7 @@ export default function EditProfile() {
     phone: "",
     website: "",
     group: "",
-    avatar_url: "" as string | null,
+    avatar_url: null as string | null, // storage PATH or file://
   });
 
   /* ---------------- FETCH PROFILE ---------------- */
@@ -54,7 +56,7 @@ export default function EditProfile() {
     if (!userId) return;
 
     (async () => {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
@@ -67,7 +69,7 @@ export default function EditProfile() {
           phone: data.phone ?? "",
           website: data.website ?? "",
           group: data.group ?? "",
-          avatar_url: data.avatar_url ?? "",
+          avatar_url: data.avatar_url ?? null,
         });
       }
 
@@ -75,32 +77,47 @@ export default function EditProfile() {
     })();
   }, [userId]);
 
-  const update = (k: keyof typeof form, v: string | null) =>
-    setForm((p) => ({ ...p, [k]: v }));
+  /* ---------------- AVATAR PREVIEW ---------------- */
+
+  useEffect(() => {
+    if (!form.avatar_url) {
+      setAvatarUri(null);
+      return;
+    }
+
+    // Local image
+    if (form.avatar_url.startsWith("file://")) {
+      setAvatarUri(form.avatar_url);
+      return;
+    }
+
+    (async () => {
+      const { data, error } = await supabase.storage
+        .from("avatars")
+        .createSignedUrl(form.avatar_url, 60 * 60);
+
+      if (!error) setAvatarUri(data.signedUrl);
+    })();
+  }, [form.avatar_url]);
 
   /* ---------------- VALIDATION ---------------- */
 
-  const errors = useMemo(
-    () => ({
-      full_name: !form.full_name.trim(),
-      username: !!form.username && !usernameRegex.test(form.username),
-      phone: !!form.phone && !phoneRegex.test(form.phone),
-      website: !!form.website && !form.website.startsWith("http"),
-    }),
-    [form]
-  );
+  const validation = useMemo(() => {
+    return {
+      fullName: form.full_name.trim().length > 0,
+      username: form.username.length === 0 || usernameRegex.test(form.username),
+      phone: form.phone.length === 0 || phoneRegex.test(form.phone),
+      website: form.website.length === 0 || form.website.startsWith("http"),
+    };
+  }, [form]);
 
-  const isValid = !Object.values(errors).some(Boolean);
+  const isFormValid =
+    validation.fullName && validation.username && validation.phone;
 
-  /* ---------------- UI HELPERS ---------------- */
-
-  const inputClass = (error?: boolean) =>
-    [
-      "rounded-2xl px-4 py-4 text-base",
-      "bg-surface text-text-primary",
-      "border",
-      error && submitted ? "border-accent-error" : "border-border",
-    ].join(" ");
+  const inputClass = (invalid: boolean) =>
+    `border rounded-full px-5 py-4 bg-white text-black ${
+      invalid ? "border-red-500" : "border-gray-300"
+    }`;
 
   /* ---------------- IMAGE PICKER ---------------- */
 
@@ -117,6 +134,8 @@ export default function EditProfile() {
     }
   };
 
+  /* ---------------- IMAGE UPLOAD ---------------- */
+
   const uploadImage = async () => {
     if (!form.avatar_url?.startsWith("file://")) return form.avatar_url;
 
@@ -124,12 +143,13 @@ export default function EditProfile() {
       encoding: "base64",
     });
 
-    const filePath = `${randomUUID()}.png`;
+    const filePath = `${userId}/${randomUUID()}.png`;
 
     const { data, error } = await supabase.storage
       .from("avatars")
       .upload(filePath, decode(base64), {
         contentType: "image/png",
+        upsert: true,
       });
 
     if (error) throw error;
@@ -138,19 +158,25 @@ export default function EditProfile() {
 
   /* ---------------- SAVE ---------------- */
 
-const handleSave = async () => {
-  setSubmitted(true);
-  if (!isValid || saving) return;
+  const handleSave = async () => {
+    if (!isFormValid || saving) return;
 
-  setSaving(true);
-  try {
-    await updateProfile(form);
-    router.back();
-  } finally {
-    setSaving(false);
-  }
-};
+    setSaving(true);
+    try {
+      const avatarPath = await uploadImage();
 
+      await updateProfile({
+        ...form,
+        avatar_url: avatarPath,
+      });
+
+      router.back();
+    } catch (e) {
+      console.error("Profile update failed", e);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   /* ---------------- UI ---------------- */
 
@@ -167,111 +193,94 @@ const handleSave = async () => {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       className="flex-1 bg-background"
     >
-      {/* Gradient Header */}
       <GradientHeader title="Edit Profile" />
 
       <ScrollView
         className="flex-1 px-4"
-        contentContainerStyle={{ paddingBottom: 48 }}
         keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingBottom: 48 }}
       >
-        {/* Avatar */}
-        <TouchableOpacity
-          onPress={pickImage}
-          className="self-center mt-6 relative"
-        >
+        {/* AVATAR */}
+        <TouchableOpacity onPress={pickImage} className="self-center my-6">
           <Image
-            source={
-              form.avatar_url
-                ? { uri: form.avatar_url }
-                : defaultAvatar
-            }
-            className="w-28 h-28 rounded-full bg-surface"
+            source={avatarUri ? { uri: avatarUri } : defaultAvatar}
+            className="w-28 h-28 rounded-full bg-gray-200"
           />
-          
-          <View className="absolute bottom-0 right-0 bg-primary rounded-full p-2">
+          <View className="absolute bottom-0 right-0 bg-primary p-2 rounded-full">
             <Ionicons name="pencil" size={18} color="white" />
           </View>
         </TouchableOpacity>
 
-        {/* Full Name */}
+        {/* FULL NAME */}
         <TextInput
-          placeholder="Full name"
-          placeholderTextColor="#9CA3AF"
           value={form.full_name}
-          onChangeText={(v) => update("full_name", v)}
-          className={inputClass(errors.full_name)}
+          onChangeText={(v) => setForm((p) => ({ ...p, full_name: v }))}
+          placeholder="Full name"
+          className={inputClass(!validation.fullName)}
         />
-
-        {/* Username */}
-        <TextInput
-          placeholder="Username"
-          placeholderTextColor="#9CA3AF"
-          autoCapitalize="none"
-          value={form.username}
-          onChangeText={(v) => update("username", v)}
-          className={`${inputClass(errors.username)} mt-4`}
-        />
-        {errors.username && submitted && (
-          <Text className="text-accent-error text-xs mt-1 ml-2">
-            Username must be 3–20 characters (letters, numbers, _)
+        {!validation.fullName && (
+          <Text className="text-red-500 text-xs ml-3 mt-1">
+            Full name is required
           </Text>
         )}
 
-        {/* Phone */}
+        {/* USERNAME */}
         <TextInput
+          value={form.username}
+          onChangeText={(v) => setForm((p) => ({ ...p, username: v }))}
+          placeholder="Username"
+          autoCapitalize="none"
+          className={`${inputClass(!validation.username)} mt-4`}
+        />
+        {form.username.length > 0 && !validation.username && (
+          <Text className="text-red-500 text-xs ml-3 mt-1">
+            3–20 characters, letters/numbers/_
+          </Text>
+        )}
+
+        {/* PHONE */}
+        <TextInput
+          value={form.phone}
+          onChangeText={(v) => setForm((p) => ({ ...p, phone: v }))}
           placeholder="Mobile number"
-          placeholderTextColor="#9CA3AF"
           keyboardType="number-pad"
           maxLength={10}
-          value={form.phone}
-          onChangeText={(v) => update("phone", v)}
-          className={`${inputClass(errors.phone)} mt-4`}
+          className={`${inputClass(!validation.phone)} mt-4`}
         />
-        {errors.phone && submitted && (
-          <Text className="text-accent-error text-xs mt-1 ml-2">
-            Enter a valid 10-digit phone number
+        {form.phone.length > 0 && !validation.phone && (
+          <Text className="text-red-500 text-xs ml-3 mt-1">
+            Enter a valid 10-digit number
           </Text>
         )}
 
-        {/* Website */}
+        {/* WEBSITE */}
         <TextInput
-          placeholder="Website (https://...)"
-          placeholderTextColor="#9CA3AF"
-          autoCapitalize="none"
           value={form.website}
-          onChangeText={(v) => update("website", v)}
-          className={`${inputClass(errors.website)} mt-4`}
+          onChangeText={(v) => setForm((p) => ({ ...p, website: v }))}
+          placeholder="Website"
+          autoCapitalize="none"
+          className="border rounded-full px-5 py-4 bg-white text-black border-gray-300 mt-4"
+
+          // className={`${inputClass(!validation.website)} mt-4`}
         />
-        {errors.website && submitted && (
-          <Text className="text-accent-error text-xs mt-1 ml-2">
-            Website must start with http or https
+        {/* {form.website.length > 0 && !validation.website && (
+          <Text className="text-red-500 text-xs ml-3 mt-1">
+            Must start with http or https
           </Text>
-        )}
+        )} */}
 
-        {/* Group (read-only) */}
-        <View className="mt-4">
-          <Text className="mb-2 text-text-secondary text-sm">Account type</Text>
-          <View className="rounded-2xl px-4 py-4 bg-surface border border-border">
-            <Text className="text-text-primary font-medium">
-              {form.group || "User"}
-            </Text>
-          </View>
-        </View>
-
-        {/* Save Button */}
+        {/* SAVE */}
         <TouchableOpacity
           onPress={handleSave}
-          disabled={saving}
-          activeOpacity={0.9}
-          className={`mt-8 rounded-full py-5 ${
-            saving ? "bg-surface" : "bg-primary"
+          disabled={!isFormValid || saving}
+          className={`mt-8 rounded-full py-4 ${
+            !isFormValid || saving ? "bg-gray-300" : "bg-primary"
           }`}
         >
           {saving ? (
-            <ActivityIndicator color="#ffffff" />
+            <ActivityIndicator color="#fff" />
           ) : (
-            <Text className="text-center text-on-primary font-bold text-lg">
+            <Text className="text-white text-center font-semibold text-lg">
               Save Profile
             </Text>
           )}
