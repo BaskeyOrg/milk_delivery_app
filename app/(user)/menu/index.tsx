@@ -61,7 +61,7 @@ export default function MenuScreen() {
         renderItem={({ item }) => <ProductListItem product={item} />}
         keyExtractor={(item) => item.id.toString()}
         numColumns={2}
-        columnWrapperStyle={{ gap: 10, paddingHorizontal: 10 }}
+        columnWrapperStyle={{ gap: 16, paddingHorizontal: 24 }}
         contentContainerStyle={{
           paddingBottom: 120,
           flexGrow: filteredProducts.length === 0 ? 1 : 0,
@@ -91,15 +91,8 @@ export default function MenuScreen() {
         visible={locationModalVisible}
         onClose={() => {
           setLocationModalVisible(false);
-          // setAddressFormVisible(true); // ➜ open address form after location
         }}
       />
-
-      {/* 🏠 Address form modal */}
-      {/* <AddressFormModal
-        visible={addressFormVisible}
-        onClose={() => setAddressFormVisible(false)}
-      /> */}
     </View>
   );
 }

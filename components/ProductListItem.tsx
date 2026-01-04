@@ -19,7 +19,7 @@ import {
 import RemoteImage from "./RemoteImage";
 
 export const defaultImage =
-  "https://notjustdev-dummy.s3.us-east-2.amazonaws.com/food/default.png";
+  "https://www.kamadhenumilk.in/wp-content/uploads/elementor/thumbs/Farm-fresh-milk-Chennai-r5ni4su2acfr784lm42m7xq9nvv53mt9b8rq2y51kc.jpg";
 
 type ProductListItemProps = {
   product: Tables<"products"> & { variants: ProductVariant[] };
@@ -47,7 +47,7 @@ export default function ProductListItem({ product }: ProductListItemProps) {
   return (
     <Link href={`/${segments[0]}/menu/${product.id}`} asChild>
       <Pressable
-        className="rounded-2xl overflow-hidden mb-3 m-1 bg-background-subtle"
+        className="rounded-2xl overflow-hidden mb-3 mt-2 bg-background-subtle"
         style={{ width: "48%" }}
       >
         <View className="relative">
