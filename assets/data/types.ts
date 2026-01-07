@@ -13,13 +13,6 @@ export type Enums<T extends keyof Database['public']['Enums']> =
   Database['public']['Enums'][T];
 
 
-// export type Product = {
-//   id: number;
-//   image: string | null;
-//   name: string;
-//   price: number;
-// };
-
 /** Product Variant */
 export type ProductVariant = {
   label: string;
@@ -30,11 +23,6 @@ export type ProductVariant = {
 export type Product = Omit<Tables<"products">, "variants"> & {
   variants: ProductVariant[];
 };
-
-// export type InsertOrderItem = InsertTables<"order_items">;
-// export type InsertOrder = InsertTables<"orders">;
-// export type UpdateOrder = UpdateTables<"orders">;
-
 
 export type CartItem = {
   id: string;
@@ -78,8 +66,3 @@ export type OrderItem = {
   size: ProductVariant;
   quantity: number;
 };
-
-// export type Profile = {
-//   id: string;
-//   group: string;
-// };

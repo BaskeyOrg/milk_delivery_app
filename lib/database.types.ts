@@ -128,6 +128,7 @@ export type Database = {
           id: number
           status: string
           status_updated_at: string | null
+          subscription_id: number | null
           total: number
           user_id: string | null
         }
@@ -137,6 +138,7 @@ export type Database = {
           id?: number
           status?: string
           status_updated_at?: string | null
+          subscription_id?: number | null
           total?: number
           user_id?: string | null
         }
@@ -146,6 +148,7 @@ export type Database = {
           id?: number
           status?: string
           status_updated_at?: string | null
+          subscription_id?: number | null
           total?: number
           user_id?: string | null
         }
@@ -155,6 +158,13 @@ export type Database = {
             columns: ["address_id"]
             isOneToOne: false
             referencedRelation: "addresses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
             referencedColumns: ["id"]
           },
           {
@@ -228,6 +238,83 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
+      }
+      subscription_items: {
+        Row: {
+          id: number
+          product_id: number
+          quantity: number
+          subscription_id: number
+          variant_label: string
+          variant_price: number
+        }
+        Insert: {
+          id?: never
+          product_id: number
+          quantity: number
+          subscription_id: number
+          variant_label: string
+          variant_price: number
+        }
+        Update: {
+          id?: never
+          product_id?: number
+          quantity?: number
+          subscription_id?: number
+          variant_label?: string
+          variant_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_items_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          created_at: string | null
+          delivery_time: string | null
+          id: number
+          plan_type: string
+          start_date: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          delivery_time?: string | null
+          id?: never
+          plan_type: string
+          start_date: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          delivery_time?: string | null
+          id?: never
+          plan_type?: string
+          start_date?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       wishlist: {
         Row: {

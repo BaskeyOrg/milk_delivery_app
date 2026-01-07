@@ -1,49 +1,30 @@
-import { UpdateTables } from "@/assets/data/types";
-import { Tables } from "@/lib/database.types";
+import { InsertTables, Tables, UpdateTables } from "@/assets/data/types";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/providers/AuthProvider";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 /* ---------------- TYPES ---------------- */
 
-export type BaseOrder = Tables<"orders">;
+export type OrdersInsert = InsertTables<"orders">;
 
-export type OrderWithItems = BaseOrder & {
+export type OrderWithItems = Tables<"orders"> & {
   order_items: (Tables<"order_items"> & {
-    products: Tables<"products"> | null;
+    products: Tables<"products">;
   })[];
+
   addresses: Tables<"addresses"> | null;
+
+  subscription: Tables<"subscriptions"> | null;
 };
 
-
-/* ---------------- ADMIN ORDERS ---------------- */
-
-export const useAdminOrderList = ({ archived = false }) => {
-  const statuses = archived ? ["Delivered"] : ["New", "Cancelled", "Delivering"];
-
-  return useQuery<Tables<"orders">[], Error>({
-    queryKey: ["orders", { archived }],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*")
-        .in("status", statuses)
-        .order("created_at", { ascending: false });
-
-      if (error) throw new Error(error.message);
-      return data ?? [];
-    },
-  });
-};
-
-/* ---------------- USER ORDERS ---------------- */
+/* ---------------- USER ORDERS LIST ---------------- */
 
 export const useMyOrderList = () => {
   const { session } = useAuth();
   const userId = session?.user.id;
 
   return useQuery<OrderWithItems[], Error>({
-    queryKey: ["orders", { user_id: userId }],
+    queryKey: ["orders", userId],
     enabled: !!userId,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -51,7 +32,11 @@ export const useMyOrderList = () => {
         .select(
           `
           *,
-          order_items (*, products (*))
+          order_items (
+            *,
+            products (*)
+          ),
+          subscription:subscriptions (*)
         `
         )
         .eq("user_id", userId!)
@@ -65,10 +50,10 @@ export const useMyOrderList = () => {
 
 /* ---------------- ORDER DETAILS ---------------- */
 
-export const useOrderDetails = (id: number) => {
+export const useOrderDetails = (orderId: number) => {
   return useQuery<OrderWithItems, Error>({
-    queryKey: ["orders", id],
-    enabled: !!id,
+    queryKey: ["order", orderId],
+    enabled: !!orderId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")
@@ -79,25 +64,19 @@ export const useOrderDetails = (id: number) => {
           order_items (
             *,
             products (*)
-          )
+          ),
+          subscription:subscriptions (*)
         `
         )
-        .eq("id", id)
+        .eq("id", orderId)
         .single();
 
-      if (error) {
-        console.error("❌ Order details fetch error:", error);
-        throw error;
-      }
-
-      if (!data) {
-        throw new Error("Order not found");
-      }
-
+      if (error) throw new Error(error.message);
       return data as OrderWithItems;
     },
   });
 };
+
 /* ---------------- UPDATE ORDER ---------------- */
 
 export const useUpdateOrder = () => {
@@ -111,16 +90,9 @@ export const useUpdateOrder = () => {
       id: number;
       updatedFields: UpdateTables<"orders">;
     }) => {
-      const finalFields = {
-        ...updatedFields,
-        ...(updatedFields.status && {
-          status_updated_at: new Date().toISOString(),
-        }),
-      };
-
       const { data, error } = await supabase
         .from("orders")
-        .update(finalFields)
+        .update(updatedFields)
         .eq("id", id)
         .select()
         .single();
@@ -130,7 +102,7 @@ export const useUpdateOrder = () => {
     },
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
-      queryClient.invalidateQueries({ queryKey: ["orders", id] });
+      queryClient.invalidateQueries({ queryKey: ["order", id] });
     },
   });
 };
@@ -142,32 +114,22 @@ export const useInsertOrder = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      total,
-      address_id,
-    }: {
-      total: number;
-      address_id?: number | null;
-    }) => {
-      if (!session?.user) {
-        throw new Error("User not authenticated");
-      }
+    mutationFn: async (order: OrdersInsert) => {
+      if (!session?.user.id) throw new Error("Not authenticated");
 
       const { data, error } = await supabase
         .from("orders")
         .insert({
+          ...order,
           user_id: session.user.id,
-          total,
-          address_id: address_id ?? null,
           status: "New",
         })
         .select()
         .single();
 
-      if (error) throw new Error(error.message);
+      if (error) throw error;
       return data;
     },
-
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
     },

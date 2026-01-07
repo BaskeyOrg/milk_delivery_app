@@ -18,16 +18,29 @@ const statusColorMap: Record<string, { bg: string; text: string }> = {
   cancelled: { bg: "bg-accent-error/15", text: "text-accent-error" },
 };
 
+type OrderWithSubscription = OrderWithItems & {
+  subscription_orders: {
+    delivery_date: string | null;
+    order_id: number;
+    subscription_id: number;
+  }[];
+};
+
+function hasSubscriptionOrders(
+  order: BaseOrder | OrderWithItems
+): order is OrderWithSubscription {
+  return Array.isArray((order as OrderWithItems).subscription_orders);
+}
+
 export default function OrderListItem({ order }: Props) {
   const segments = useSegments();
   const status =
-    statusColorMap[order.status?.toLowerCase() ?? "new"] ??
-    statusColorMap.new;
+    statusColorMap[order.status?.toLowerCase() ?? "new"] ?? statusColorMap.new;
 
   const items =
-  "order_items" in order && Array.isArray(order.order_items)
-    ? order.order_items
-    : [];
+    "order_items" in order && Array.isArray(order.order_items)
+      ? order.order_items
+      : [];
 
   return (
     <View className="rounded-3xl p-5 bg-black/5 mx-3">
@@ -49,13 +62,20 @@ export default function OrderListItem({ order }: Props) {
               </Text>
             </View>
             <View className={`px-3 py-1.5 rounded-full ${status.bg}`}>
-              <Text className={`text-xs font-semibold capitalize ${status.text}`}>
+              <Text
+                className={`text-xs font-semibold capitalize ${status.text}`}
+              >
                 {order.status}
               </Text>
             </View>
           </View>
         </Pressable>
       </Link>
+      {hasSubscriptionOrders(order) && order.subscription_orders.length > 0 && (
+        <View className="bg-primary px-2 py-1 rounded-full">
+          <Text className="text-xs text-white">Subscription</Text>
+        </View>
+      )}
 
       {/* Items */}
       {items.length > 0 && (

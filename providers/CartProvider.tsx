@@ -1,29 +1,41 @@
+// providers/CartProvider.tsx
 import { useInsertOrderItems } from "@/api/order-items";
 import { useInsertOrder } from "@/api/orders";
-import { CartItem, ProductVariant, Tables } from "@/assets/data/types";
+import { Tables } from "@/assets/data/types";
+import { supabase } from "@/lib/supabase";
 import { randomUUID } from "expo-crypto";
 import { useRouter } from "expo-router";
-import {
-  PropsWithChildren,
-  createContext,
-  useContext,
-  useMemo,
-  useState,
-} from "react";
+import { PropsWithChildren, createContext, useContext, useMemo, useState } from "react";
+import { useAuth } from "./AuthProvider";
 
-type Product = Tables<"products">;
+export type Product = Tables<"products">;
+
+export type ProductVariant = {
+  label: string;
+  price: number;
+};
+
+export type CartItem = {
+  id: string;
+  product_id: number;
+  product: Product;
+  size: ProductVariant;
+  quantity: number;
+};
+
+export type SubscriptionData = {
+  plan: "weekly" | "monthly";
+  startDate: string;
+  deliveryTime: "morning" | "evening";
+};
 
 type CartType = {
   items: CartItem[];
-  addItem: (
-    product: Product,
-    size: ProductVariant,
-    quantity?: number
-  ) => void;
+  addItem: (product: Product, size: ProductVariant, quantity?: number) => void;
   updateQuantity: (itemId: string, amount: -1 | 1) => void;
   removeItem: (itemId: string) => void;
   total: number;
-  checkout: (address: Tables<"addresses">) => void;
+  checkout: (address: Tables<"addresses">, subscription?: SubscriptionData | null) => void;
   isCheckingOut: boolean;
 };
 
@@ -37,25 +49,19 @@ const CartContext = createContext<CartType>({
   isCheckingOut: false,
 });
 
-const CartProvider = ({ children }: PropsWithChildren) => {
+export const CartProvider = ({ children }: PropsWithChildren) => {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
-
   const router = useRouter();
+  const { profile } = useAuth();
 
-  const { mutate: insertOrder } = useInsertOrder();
-  const { mutate: insertOrderItems } = useInsertOrderItems();
+  const { mutateAsync: insertOrder } = useInsertOrder();
+  const { mutateAsync: insertOrderItems } = useInsertOrderItems();
 
   /* ---------------- ADD ITEM ---------------- */
-  const addItem = (
-    product: Product,
-    size: ProductVariant,
-    quantity = 1
-  ) => {
+  const addItem = (product: Product, size: ProductVariant, quantity = 1) => {
     const existingItem = items.find(
-      (item) =>
-        item.product_id === product.id &&
-        item.size.label === size.label
+      (item) => item.product_id === product.id && item.size.label === size.label
     );
 
     if (existingItem) {
@@ -86,9 +92,7 @@ const CartProvider = ({ children }: PropsWithChildren) => {
     setItems((prev) =>
       prev
         .map((item) =>
-          item.id === itemId
-            ? { ...item, quantity: item.quantity + amount }
-            : item
+          item.id === itemId ? { ...item, quantity: item.quantity + amount } : item
         )
         .filter((item) => item.quantity > 0)
     );
@@ -101,57 +105,82 @@ const CartProvider = ({ children }: PropsWithChildren) => {
 
   /* ---------------- TOTAL ---------------- */
   const total = useMemo(
-    () =>
-      items.reduce(
-        (sum, item) => sum + item.size.price * item.quantity,
-        0
-      ),
+    () => items.reduce((sum, item) => sum + item.size.price * item.quantity, 0),
     [items]
   );
 
   const clearCart = () => setItems([]);
 
   /* ---------------- CHECKOUT ---------------- */
-  const checkout = (address: Tables<"addresses">) => {
-    if (!items.length || isCheckingOut) return;
+const checkout = async (
+  address: Tables<"addresses">,
+  subscription?: SubscriptionData | null
+) => {
+  if (!items.length || isCheckingOut || !profile) return;
 
-    setIsCheckingOut(true);
+  setIsCheckingOut(true);
 
-    insertOrder(
-      {
-        total,
-        address_id: address.id,
-      },
-      {
-        onSuccess: saveOrderItems,
-        onError() {
-          setIsCheckingOut(false);
-        },
-      }
+  try {
+    let subscriptionId: number | null = null;
+
+    // 1️⃣ Insert subscription
+    if (subscription) {
+      const { data, error } = await supabase
+        .from("subscriptions")
+        .insert({
+          plan_type: subscription.plan,
+          start_date: subscription.startDate,
+          delivery_time: subscription.deliveryTime,
+          user_id: profile.id,
+        })
+        .select("id")
+        .single();
+
+      if (error) throw error;
+      subscriptionId = data.id;
+    }
+
+    // 2️⃣ Calculate totals
+    const dailyTotal = items.reduce(
+      (sum, item) => sum + item.size.price * item.quantity,
+      0
     );
-  };
 
-  /* ---------------- SAVE ORDER ITEMS ---------------- */
-  const saveOrderItems = (order: Tables<"orders">) => {
-    const orderItems = items.map((item) => ({
-      order_id: order.id,
-      product_id: item.product_id,
-      quantity: item.quantity,
-      variant_label: item.size.label,
-      variant_price: item.size.price,
-    }));
+    const finalTotal = subscription
+      ? subscription.plan === "weekly"
+        ? dailyTotal * 7
+        : dailyTotal * 30
+      : dailyTotal;
 
-    insertOrderItems(orderItems, {
-      onSuccess() {
-        clearCart();
-        setIsCheckingOut(false);
-        router.replace(`/(user)/orders/${order.id}`);
-      },
-      onError() {
-        setIsCheckingOut(false);
-      },
+    // 3️⃣ Insert order
+    const order = await insertOrder({
+      total: finalTotal,
+      address_id: address.id,
+      subscription_id: subscriptionId,
     });
-  };
+
+    if (!order?.id) throw new Error("Order ID missing");
+
+    // 4️⃣ Insert order items
+    await insertOrderItems(
+      items.map((item) => ({
+        order_id: order.id,
+        product_id: item.product_id,
+        quantity: item.quantity,
+        variant_label: item.size.label,
+        variant_price: item.size.price,
+      }))
+    );
+
+    clearCart();
+    router.replace(`/(user)/orders/${order.id}`);
+  } catch (err) {
+    console.error("Checkout failed:", err);
+  } finally {
+    setIsCheckingOut(false);
+  }
+};
+
 
   return (
     <CartContext.Provider

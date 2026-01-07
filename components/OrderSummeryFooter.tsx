@@ -1,51 +1,102 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Text, View } from "react-native";
 
-type OrderBillFooterProps = {
+export type SubscriptionPlan = "weekly" | "monthly" | null;
+export type DeliveryTime = "morning" | "evening" | null;
+
+export type OrderBillFooterProps = {
   itemsTotal: number;
   deliveryCharge?: number;
+  subscriptionPlan?: SubscriptionPlan;
+  startDate?: string | null;
+  deliveryTime?: DeliveryTime;
+};
+
+const PLAN_DAYS: Record<Exclude<SubscriptionPlan, null>, number> = {
+  weekly: 7,
+  monthly: 30,
 };
 
 const OrderSummeryFooter = ({
   itemsTotal,
   deliveryCharge = 0,
+  subscriptionPlan = null,
+  startDate = null,
+  deliveryTime = null,
 }: OrderBillFooterProps) => {
-  const grandTotal = itemsTotal + deliveryCharge;
+  const subscriptionDays = subscriptionPlan
+    ? PLAN_DAYS[subscriptionPlan]
+    : 1;
+
+  const subscriptionItemsTotal = useMemo(
+    () => itemsTotal * subscriptionDays,
+    [itemsTotal, subscriptionDays]
+  );
+
+  const grandTotal = subscriptionItemsTotal + deliveryCharge;
 
   return (
-    <View className="bg-background-card
-    rounded-3xl p-5
-    bg-black/5">
+    <View className="bg-background-card rounded-3xl p-5 bg-black/5">
       {/* Header */}
-      <View className="flex-row items-center mb-4">
-        {/* <Ionicons name="receipt-outline" size={20} color="#4F46E5" /> */}
-        <Text className="text-text-primary text-xl font-bold">
-          Summary
-        </Text>
-      </View>
+      <Text className="text-text-primary text-xl font-bold mb-4">
+        Summary
+      </Text>
 
       <View className="space-y-3">
-        {/* Items total */}
-        <View className="flex-row justify-between items-center">
-          <Text className="text-text-secondary text-base">Items Total</Text>
-          <Text className="text-text-primary font-bold text-base">
-            ₹ {itemsTotal.toFixed(2)}
+        {/* Items */}
+        <View className="flex-row justify-between">
+          <Text className="text-text-secondary">
+            Items Total (per day)
           </Text>
+          <Text className="font-bold">₹ {itemsTotal.toFixed(2)}</Text>
         </View>
+
+        {/* Subscription info */}
+        {subscriptionPlan && (
+          <>
+            <View className="flex-row justify-between">
+              <Text className="text-text-secondary">Plan</Text>
+              <Text className="font-bold capitalize">{subscriptionPlan}</Text>
+            </View>
+
+            <View className="flex-row justify-between">
+              <Text className="text-text-secondary">Duration</Text>
+              <Text className="font-bold">{subscriptionDays} days</Text>
+            </View>
+
+            <View className="flex-row justify-between">
+              <Text className="text-text-secondary">
+                Items × {subscriptionDays} days
+              </Text>
+              <Text className="font-bold">
+                ₹ {subscriptionItemsTotal.toFixed(2)}
+              </Text>
+            </View>
+
+            {startDate && (
+              <View className="flex-row justify-between">
+                <Text className="text-text-secondary">Start Date</Text>
+                <Text className="font-bold">{startDate}</Text>
+              </View>
+            )}
+
+            {deliveryTime && (
+              <View className="flex-row justify-between">
+                <Text className="text-text-secondary">Delivery Time</Text>
+                <Text className="font-bold capitalize">{deliveryTime}</Text>
+              </View>
+            )}
+          </>
+        )}
 
         {/* Delivery */}
-        <View className="flex-row justify-between items-center">
-          <Text className="text-text-secondary text-base">Delivery</Text>
-          <Text className="text-text-primary font-bold text-base">
-            ₹ {deliveryCharge.toFixed(2)}
-          </Text>
+        <View className="flex-row justify-between">
+          <Text className="text-text-secondary">Delivery</Text>
+          <Text className="font-bold">₹ {deliveryCharge.toFixed(2)}</Text>
         </View>
 
-        {/* Divider */}
-        {/* <View className="border-t border-background-lighter  my-3" /> */}
-
-        {/* Grand total */}
-        <View className="flex-row justify-between items-center mt-3">
+        {/* Total */}
+        <View className="flex-row justify-between mt-3">
           <Text className="text-text-primary font-bold text-lg">Total</Text>
           <Text className="text-primary font-bold text-2xl">
             ₹ {grandTotal.toFixed(2)}

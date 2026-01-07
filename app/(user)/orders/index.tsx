@@ -12,14 +12,16 @@ export default function OrdersScreen() {
     return (
       <View className="flex-1 items-center justify-center bg-background">
         <ActivityIndicator size="large" color="#43ce4e" />
-        <Text className="text-text-secondary mt-4">Loading orders...</Text>
+        <Text className="mt-3 text-text-secondary">
+          Loading orders...
+        </Text>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View className="flex-1 items-center justify-center bg-background px-6">
+      <View className="flex-1 items-center justify-center bg-background">
         <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
         <Text className="text-text-primary font-semibold text-xl mt-4">
           Failed to load orders Order-index
@@ -55,12 +57,12 @@ export default function OrdersScreen() {
       <FlatList
         data={orders}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => <OrderListItem order={item} />}
-        showsVerticalScrollIndicator={false}
-        // columnWrapperStyle={{ gap: 10, paddingHorizontal: 10 }}
-        contentContainerStyle={{ paddingBottom: 100, gap: 16 }}
+        renderItem={({ item }) => (
+          <OrderListItem order={item} />
+        )}
+        contentContainerStyle={{ paddingBottom: 120, gap: 12 }}
         ListHeaderComponent={<GradientHeader title="Orders" />}
-        stickyHeaderIndices={[0]} // make the gradient sticky
+        stickyHeaderIndices={[0]}
       />
     </View>
   );

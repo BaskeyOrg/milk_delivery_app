@@ -131,7 +131,7 @@ export default function ProductDetailsScreen() {
           <TouchableOpacity
             disabled={!selectedVariant}
             onPress={addToCart}
-            className={`px-8 py-4 rounded-full flex-row items-center ${
+            className={`px-5 py-3 rounded-full flex-row items-center ${
               selectedVariant ? "bg-primary" : "bg-gray-400"
             }`}
           >
