@@ -57,11 +57,6 @@ export default function OrderDetailsScreen() {
   /* ---------------- ORDER SUMMARY ---------------- */
 
   const isSubscribed = Boolean(order.subscription);
-
-  // Items total
-  // const total = order.total ?? 0;
-
-  // Delivery charge (same as Cart)
   const deliveryCharge = 0;
 
   // Narrow DB strings → UI unions (same idea as Cart state)
