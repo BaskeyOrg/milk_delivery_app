@@ -6,6 +6,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 /* ---------------- TYPES ---------------- */
 
 export type OrdersInsert = InsertTables<"orders">;
+export type BaseOrder = Tables<"orders"> & {
+  addresses?: Tables<"addresses"> | null;
+};
+
 
 export type OrderWithItems = Tables<"orders"> & {
   order_items: (Tables<"order_items"> & {
@@ -15,6 +19,26 @@ export type OrderWithItems = Tables<"orders"> & {
   addresses: Tables<"addresses"> | null;
 
   subscription: Tables<"subscriptions"> | null;
+};
+
+/* ---------------- ADMIN ORDERS ---------------- */
+
+export const useAdminOrderList = ({ archived = false }) => {
+  const statuses = archived ? ["Delivered"] : ["New", "Cancelled", "Delivering"];
+
+  return useQuery<Tables<"orders">[], Error>({
+    queryKey: ["orders", { archived }],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*")
+        .in("status", statuses)
+        .order("created_at", { ascending: false });
+
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
+  });
 };
 
 /* ---------------- USER ORDERS LIST ---------------- */

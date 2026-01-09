@@ -3,8 +3,8 @@ import { useUpdateOrderSubscription } from "@/api/orders/subscription";
 import OrderAddressCard from "@/components/Address/OrderAddressCard";
 import GradientHeader from "@/components/GradientHeader";
 import OrderItemList from "@/components/OrderItemListItem";
-import OrderSubscriptionDetailsCard from "@/components/subscription/OrderSubscriptionDetailsCard";
 import OrderSummeryFooter from "@/components/OrderSummeryFooter";
+import OrderSubscriptionDetailsCard from "@/components/subscription/OrderSubscriptionDetailsCard";
 import PauseVacationModal from "@/components/subscription/PauseVacationModal";
 import SkipDayModal from "@/components/subscription/SkipDayModal";
 import { useLocalSearchParams } from "expo-router";
@@ -16,6 +16,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
+export type Plan = "weekly" | "monthly";
+export type DeliveryTime = "morning" | "evening";
 
 export default function OrderDetailsScreen() {
   const { id: idParam } = useLocalSearchParams();
@@ -51,6 +54,38 @@ export default function OrderDetailsScreen() {
       </View>
     );
   }
+  /* ---------------- ORDER SUMMARY ---------------- */
+
+  const isSubscribed = Boolean(order.subscription);
+
+  // Items total
+  // const total = order.total ?? 0;
+
+  // Delivery charge (same as Cart)
+  const deliveryCharge = 0;
+
+  // Narrow DB strings → UI unions (same idea as Cart state)
+  const plan: Plan | null =
+    order.subscription?.plan_type === "weekly" ||
+    order.subscription?.plan_type === "monthly"
+      ? order.subscription.plan_type
+      : null;
+
+  const deliveryTime: DeliveryTime | null =
+    order.subscription?.delivery_time === "morning" ||
+    order.subscription?.delivery_time === "evening"
+      ? order.subscription.delivery_time
+      : null;
+
+  const itemsTotal = isSubscribed
+    ? plan === "weekly"
+      ? order.total / 7
+      : plan === "monthly"
+        ? order.total / 30
+        : order.total
+    : order.total;
+
+  const startDate = order.subscription?.start_date ?? null;
 
   return (
     <View className="flex-1 bg-background">
@@ -93,8 +128,13 @@ export default function OrderDetailsScreen() {
         )}
 
         <OrderItemList items={order.order_items ?? []} />
-
-        <OrderSummeryFooter itemsTotal={order.total} deliveryCharge={0} />
+        <OrderSummeryFooter
+          itemsTotal={itemsTotal}
+          deliveryCharge={deliveryCharge}
+          subscriptionPlan={isSubscribed ? plan : null}
+          startDate={isSubscribed ? startDate : null}
+          deliveryTime={isSubscribed ? deliveryTime : null}
+        />
       </ScrollView>
       <PauseVacationModal
         visible={pauseOpen}

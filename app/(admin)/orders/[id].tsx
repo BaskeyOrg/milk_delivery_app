@@ -1,8 +1,12 @@
 import { useOrderDetails, useUpdateOrder } from "@/api/orders";
+import { Plan } from "@/app/(user)/orders/[id]";
 import { OrderStatusList, statusColors } from "@/assets/data/types";
 import OrderAddressCard from "@/components/Address/OrderAddressCard";
 import OrderItemList from "@/components/OrderItemListItem";
-import OrderBillFooter from "@/components/OrderSummeryFooter";
+import OrderSummeryFooter, {
+  DeliveryTime,
+} from "@/components/OrderSummeryFooter";
+import OrderSubscriptionDetailsCard from "@/components/subscription/OrderSubscriptionDetailsCard";
 import { notifyUserAboutOrderUpdate } from "@/lib/notifications";
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams } from "expo-router";
@@ -55,6 +59,33 @@ export default function AdminOrderDetailScreen() {
     );
   }
 
+  /* ---------------- ORDER SUMMARY ---------------- */
+
+  const isSubscribed = Boolean(order.subscription);
+
+  // Narrow DB strings → UI unions
+  const plan: Plan | null =
+    order.subscription?.plan_type === "weekly" ||
+    order.subscription?.plan_type === "monthly"
+      ? order.subscription.plan_type
+      : null;
+
+  const deliveryTime: DeliveryTime | null =
+    order.subscription?.delivery_time === "morning" ||
+    order.subscription?.delivery_time === "evening"
+      ? order.subscription.delivery_time
+      : null;
+
+  const startDate = order.subscription?.start_date ?? null;
+
+  // Fix multiplied DB total → per-day total
+  const itemsTotal =
+    isSubscribed && plan
+      ? plan === "weekly"
+        ? order.total / 7
+        : order.total / 30
+      : order.total;
+
   return (
     <View className="flex-1 bg-background">
       <Stack.Screen options={{ title: `Order #${order.id}` }} />
@@ -65,6 +96,11 @@ export default function AdminOrderDetailScreen() {
       >
         {/* ✅ Delivery Address (shared component) */}
         {order.addresses && <OrderAddressCard address={order.addresses} />}
+        <Text>{order.subscription?.delivery_time}</Text>
+
+        { order.subscription && 
+         <OrderSubscriptionDetailsCard subscription={order.subscription} />
+        }
         {/* 📞 Call Customer (ADMIN ONLY) */}
         {order.addresses?.phone && (
           <Pressable
@@ -157,9 +193,12 @@ export default function AdminOrderDetailScreen() {
         </View>
 
         {/* ✅ Order Summary Footer (shared component) */}
-        <OrderBillFooter
-          itemsTotal={order.total}
+        <OrderSummeryFooter
+          itemsTotal={itemsTotal}
           deliveryCharge={deliveryCharge}
+          subscriptionPlan={isSubscribed ? plan : null}
+          startDate={isSubscribed ? startDate : null}
+          deliveryTime={isSubscribed ? deliveryTime : null}
         />
       </ScrollView>
     </View>

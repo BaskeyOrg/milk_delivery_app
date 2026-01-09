@@ -14,10 +14,8 @@ import { formatDate } from "@/lib/date-format";
 import { formatPhone } from "@/lib/utils";
 import { useCart } from "@/providers/CartProvider";
 import { useLocationContext } from "@/providers/LocationProvider";
+import { DeliveryTime, Plan } from "./orders/[id]";
 
-/* ---------------- TYPES ---------------- */
-type Plan = "weekly" | "monthly";
-type DeliveryTime = "morning" | "evening";
 
 const today = new Date().toISOString().split("T")[0];
 // Calculate tomorrow
