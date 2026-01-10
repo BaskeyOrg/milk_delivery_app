@@ -7,7 +7,10 @@ import OrderSummeryFooter from "@/components/OrderSummeryFooter";
 import OrderSubscriptionDetailsCard from "@/components/subscription/OrderSubscriptionDetailsCard";
 import PauseVacationModal from "@/components/subscription/PauseVacationModal";
 import SkipDayModal from "@/components/subscription/SkipDayModal";
+import { generateBillHTML } from "@/utils/billTemplate";
+import * as Print from "expo-print";
 import { useLocalSearchParams } from "expo-router";
+import * as Sharing from "expo-sharing";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -22,11 +25,14 @@ export type DeliveryTime = "morning" | "evening";
 
 export default function OrderDetailsScreen() {
   const { id: idParam } = useLocalSearchParams();
+
   const [pauseOpen, setPauseOpen] = useState(false);
   const [skipOpen, setSkipOpen] = useState(false);
+  const [generatingBill, setGeneratingBill] = useState(false);
 
   const id = Array.isArray(idParam) ? Number(idParam[0]) : Number(idParam);
 
+  /* ---------------- INVALID ID ---------------- */
   if (!id || isNaN(id)) {
     return (
       <View className="flex-1 justify-center items-center bg-background">
@@ -35,10 +41,13 @@ export default function OrderDetailsScreen() {
     );
   }
 
+  /* ---------------- FETCH ORDER ---------------- */
   const { data: order, isLoading, error } = useOrderDetails(id);
 
+  // keeps subscription state in sync (pause / skip)
   useUpdateOrderSubscription(id);
 
+  /* ---------------- LOADING ---------------- */
   if (isLoading) {
     return (
       <View className="flex-1 justify-center items-center bg-background">
@@ -47,19 +56,21 @@ export default function OrderDetailsScreen() {
     );
   }
 
+  /* ---------------- ERROR ---------------- */
   if (error || !order) {
     return (
       <View className="flex-1 justify-center items-center bg-background">
-        <Text className="text-accent-error text-lg">Failed to fetch order</Text>
+        <Text className="text-accent-error text-lg">
+          Failed to fetch order
+        </Text>
       </View>
     );
   }
-  /* ---------------- ORDER SUMMARY ---------------- */
 
+  /* ---------------- ORDER LOGIC ---------------- */
   const isSubscribed = Boolean(order.subscription);
   const deliveryCharge = 0;
 
-  // Narrow DB strings → UI unions (same idea as Cart state)
   const plan: Plan | null =
     order.subscription?.plan_type === "weekly" ||
     order.subscription?.plan_type === "monthly"
@@ -76,12 +87,37 @@ export default function OrderDetailsScreen() {
     ? plan === "weekly"
       ? order.total / 7
       : plan === "monthly"
-        ? order.total / 30
-        : order.total
+      ? order.total / 30
+      : order.total
     : order.total;
 
   const startDate = order.subscription?.start_date ?? null;
 
+  /* ---------------- BILL GENERATION ---------------- */
+  const handleGenerateBill = async () => {
+    try {
+      setGeneratingBill(true);
+
+      const html = generateBillHTML({
+        order,
+        itemsTotal,
+        deliveryCharge,
+      });
+
+      const { uri } = await Print.printToFileAsync({ html });
+
+      await Sharing.shareAsync(uri, {
+        mimeType: "application/pdf",
+        dialogTitle: "Order Bill",
+      });
+    } catch (err) {
+      console.error("Bill generation failed", err);
+    } finally {
+      setGeneratingBill(false);
+    }
+  };
+
+  /* ---------------- UI ---------------- */
   return (
     <View className="flex-1 bg-background">
       <GradientHeader title={`Order #${order.id}`} />
@@ -89,17 +125,37 @@ export default function OrderDetailsScreen() {
       <ScrollView
         contentContainerStyle={{
           paddingBottom: 140,
-          gap: 16,
           paddingHorizontal: 16,
+          gap: 16,
         }}
       >
-        {order.addresses && <OrderAddressCard address={order.addresses} />}
+        {/* ADDRESS */}
+        {order.addresses && (
+          <OrderAddressCard address={order.addresses} />
+        )}
+        {/* GENERATE BILL */}
+            <TouchableOpacity
+              disabled={generatingBill}
+              onPress={handleGenerateBill}
+              className={`py-3 rounded-lg ${
+                generatingBill ? "bg-gray-400" : "bg-green-600"
+              }`}
+            >
+              <Text className="text-white text-center font-semibold">
+                {generatingBill ? "Generating Bill..." : "Generate Bill"}
+              </Text>
+            </TouchableOpacity>
 
-        {/* ✅ SUBSCRIPTION DETAILS */}
+        {/* SUBSCRIPTION */}
         {order.subscription && (
           <>
-            <OrderSubscriptionDetailsCard subscription={order.subscription} />
+            <OrderSubscriptionDetailsCard
+              subscription={order.subscription}
+            />
 
+            
+
+            {/* SUBSCRIPTION ACTIONS */}
             <View className="gap-3">
               <TouchableOpacity
                 onPress={() => setPauseOpen(true)}
@@ -122,7 +178,10 @@ export default function OrderDetailsScreen() {
           </>
         )}
 
+        {/* ITEMS */}
         <OrderItemList items={order.order_items ?? []} />
+
+        {/* SUMMARY */}
         <OrderSummeryFooter
           itemsTotal={itemsTotal}
           deliveryCharge={deliveryCharge}
@@ -131,10 +190,12 @@ export default function OrderDetailsScreen() {
           deliveryTime={isSubscribed ? deliveryTime : null}
         />
       </ScrollView>
+
+      {/* MODALS */}
       <PauseVacationModal
         visible={pauseOpen}
         onClose={() => setPauseOpen(false)}
-        subscriptionId={order?.subscription?.id}
+        subscriptionId={order.subscription?.id}
       />
 
       <SkipDayModal

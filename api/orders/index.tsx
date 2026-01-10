@@ -85,6 +85,7 @@ export const useOrderDetails = (orderId: number) => {
           `
           *,
           addresses (*),
+          profiles (*),
           order_items (
             *,
             products (*)
@@ -100,6 +101,7 @@ export const useOrderDetails = (orderId: number) => {
     },
   });
 };
+
 
 /* ---------------- UPDATE ORDER ---------------- */
 
