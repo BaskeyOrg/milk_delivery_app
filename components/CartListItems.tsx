@@ -3,7 +3,7 @@ import { AntDesign, Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { ActivityIndicator, Modal, Pressable, Text, View } from "react-native";
 import { useCart } from "../providers/CartProvider";
-import { defaultImage } from "./ProductListItem";
+import { defaultImage } from "@/utils/branding";
 import RemoteImage from "./RemoteImage";
 
 type CartListItemProps = {

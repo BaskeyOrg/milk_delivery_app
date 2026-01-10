@@ -1,8 +1,8 @@
 import GradientHeader from "@/components/GradientHeader";
-import { defaultImage } from "@/components/ProductListItem";
 import RemoteProfileImage from "@/components/RemoteProfileImage";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/providers/AuthProvider";
+import { defaultImage } from "@/utils/branding";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";

@@ -17,9 +17,8 @@ import {
   View,
 } from "react-native";
 import RemoteImage from "./RemoteImage";
+import { defaultImage } from "@/utils/branding";
 
-export const defaultImage =
-  "https://www.kamadhenumilk.in/wp-content/uploads/elementor/thumbs/Farm-fresh-milk-Chennai-r5ni4su2acfr784lm42m7xq9nvv53mt9b8rq2y51kc.jpg";
 
 type ProductListItemProps = {
   product: Tables<"products"> & { variants: ProductVariant[] };

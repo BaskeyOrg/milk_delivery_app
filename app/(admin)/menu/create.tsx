@@ -5,7 +5,7 @@ import {
   useUpdateProduct,
 } from "@/api/products";
 import Button from "@/components/Button";
-import { defaultImage } from "@/components/ProductListItem";
+import { defaultImage } from "@/utils/branding";
 import RemoteImage from "@/components/RemoteImage";
 import { supabase } from "@/lib/supabase";
 import { decode } from "base64-arraybuffer";

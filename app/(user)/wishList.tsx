@@ -2,7 +2,7 @@ import { useRemoveFromWishlist, useWishlist } from "@/api/wishlist";
 import { Product, ProductVariant } from "@/assets/data/types";
 import EmptyState from "@/components/EmptyState";
 import GradientHeader from "@/components/GradientHeader";
-import { defaultImage } from "@/components/ProductListItem";
+import { defaultImage } from "@/utils/branding";
 import RemoteImage from "@/components/RemoteImage";
 import { useAuth } from "@/providers/AuthProvider";
 import { useCart } from "@/providers/CartProvider";

@@ -2,7 +2,7 @@ import { Tables } from "@/assets/data/types";
 import { Link, useSegments } from "expo-router";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import { defaultImage } from "./ProductListItem";
+import { defaultImage } from "@/utils/branding";
 import RemoteImage from "./RemoteImage";
 
 type OrderItemListItemProps = {

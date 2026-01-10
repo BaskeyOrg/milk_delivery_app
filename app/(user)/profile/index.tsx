@@ -1,6 +1,6 @@
 import { useMyProfile } from "@/api/profile";
 import GradientHeader from "@/components/GradientHeader";
-import { defaultImage } from "@/components/ProductListItem";
+import { defaultImage } from "@/utils/branding";
 import RemoteProfileImage from "@/components/RemoteProfileImage";
 import { supabase } from "@/lib/supabase";
 import { Ionicons } from "@expo/vector-icons";

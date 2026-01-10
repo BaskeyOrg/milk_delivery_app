@@ -1,5 +1,5 @@
 import { useProduct } from "@/api/products";
-import { defaultImage } from "@/components/ProductListItem";
+import { defaultImage } from "@/utils/branding";
 import RemoteImage from "@/components/RemoteImage";
 import Colors from "@/constants/Colors";
 import { FontAwesome } from "@expo/vector-icons";

@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { Link, useSegments } from "expo-router";
 import { Pressable, ScrollView, Text, View } from "react-native";
-import { defaultImage } from "./ProductListItem";
+import { defaultImage } from "@/utils/branding";
 import RemoteImage from "./RemoteImage";
 
 dayjs.extend(relativeTime);

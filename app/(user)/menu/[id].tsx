@@ -1,6 +1,6 @@
 import { useProduct } from "@/api/products";
 import OverlayHeader from "@/components/OverlayHeader";
-import { defaultImage } from "@/components/ProductListItem";
+import { defaultImage } from "@/utils/branding";
 import RemoteImage from "@/components/RemoteImage";
 import { useCart } from "@/providers/CartProvider";
 import { Ionicons } from "@expo/vector-icons";
