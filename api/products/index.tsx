@@ -51,6 +51,7 @@ export const useInsertProduct = () => {
     mutationFn: async (data: {
       name: string;
       image?: string | null;
+      description?: string | null;
       variants: ProductVariant[];
     }) => {
       const { data: product, error } = await supabase
@@ -58,6 +59,7 @@ export const useInsertProduct = () => {
         .insert({
           name: data.name,
           image: data.image,
+          description: data.description,
           variants: data.variants,
           price: null, // legacy column
         })
@@ -83,6 +85,7 @@ export const useUpdateProduct = () => {
       id: number;
       name: string;
       image?: string | null;
+      description?: string | null;
       variants: ProductVariant[];
     }) => {
       const { data: product, error } = await supabase
@@ -90,6 +93,7 @@ export const useUpdateProduct = () => {
         .update({
           name: data.name,
           image: data.image,
+          description: data.description,
           variants: data.variants,
         })
         .eq("id", data.id)

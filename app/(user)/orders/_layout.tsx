@@ -8,7 +8,8 @@ export default function Orderlayout() {
         headerShown: false,
       }}
     >
-      <Stack.Screen name="index" options={{ title: 'Orders' }} />
+      <Stack.Screen name="index" />
+      <Stack.Screen name="[id]" />
     </Stack>
   );
 }

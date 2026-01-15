@@ -1,8 +1,8 @@
 import { useProduct } from "@/api/products";
 import OverlayHeader from "@/components/OverlayHeader";
-import { defaultImage } from "@/utils/branding";
 import RemoteImage from "@/components/RemoteImage";
 import { useCart } from "@/providers/CartProvider";
+import { defaultImage } from "@/utils/branding";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
@@ -108,10 +108,18 @@ export default function ProductDetailsScreen() {
           </View>
 
           {/* DESCRIPTION */}
-          {/* <Text className="font-semibold mb-2">Description</Text>
-          <View className="flex-row gap-3 mb-6">
-            {product.description || ""}
-          </View> */}
+          {product.description && (
+            <View>
+              <Text className="font-semibold mb-2">Description</Text>
+              <View className=" mb-6">
+                {product.description.split("\n").map((line, index) => (
+                  <Text key={index} className="text-text-secondary">
+                    {line}
+                  </Text>
+                ))}
+              </View>
+            </View>
+          )}
         </View>
       </ScrollView>
 

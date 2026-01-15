@@ -5,9 +5,10 @@ import {
   useUpdateProduct,
 } from "@/api/products";
 import Button from "@/components/Button";
-import { defaultImage } from "@/utils/branding";
 import RemoteImage from "@/components/RemoteImage";
 import { supabase } from "@/lib/supabase";
+import { defaultImage } from "@/utils/branding";
+import { Ionicons } from "@expo/vector-icons";
 import { decode } from "base64-arraybuffer";
 import { randomUUID } from "expo-crypto";
 import * as FileSystem from "expo-file-system/legacy";
@@ -15,7 +16,6 @@ import * as ImagePicker from "expo-image-picker";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Image,
   KeyboardAvoidingView,
@@ -23,7 +23,8 @@ import {
   ScrollView,
   Text,
   TextInput,
-  View,
+  TouchableOpacity,
+  View
 } from "react-native";
 
 type Variant = {
@@ -40,6 +41,8 @@ export default function CreateProductScreen() {
   ]);
   const [image, setImage] = useState<string | null>(null);
   const [error, setError] = useState("");
+
+  const [description, setDescription] = useState("");
 
   const { id: idString } = useLocalSearchParams();
   const id = Number(typeof idString === "string" ? idString : idString?.[0]);
@@ -60,6 +63,20 @@ export default function CreateProductScreen() {
     if (updatingProduct) {
       setName(updatingProduct.name);
       setImage(updatingProduct.image);
+      setVariants(
+        updatingProduct.variants.map((v: any) => ({
+          label: v.label,
+          price: v.price.toString(),
+        }))
+      );
+    }
+  }, [updatingProduct]);
+
+  useEffect(() => {
+    if (updatingProduct) {
+      setName(updatingProduct.name);
+      setImage(updatingProduct.image);
+      setDescription(updatingProduct.description ?? "");
       setVariants(
         updatingProduct.variants.map((v: any) => ({
           label: v.label,
@@ -148,6 +165,7 @@ export default function CreateProductScreen() {
       const payload = {
         name,
         image: imagePath,
+        description: description.trim() || null,
         variants: variants.map((v) => ({
           label: v.label,
           price: Number(v.price),
@@ -178,20 +196,30 @@ export default function CreateProductScreen() {
   };
 
   /* ---------------- UI ---------------- */
-  return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1 }}
+return (
+  <KeyboardAvoidingView
+    style={{ flex: 1 }}
+    behavior={Platform.OS === "ios" ? "padding" : "height"}
+    keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
+  >
+    <ScrollView
+      keyboardShouldPersistTaps="handled"
+      style={{ backgroundColor: "white" }}
+      contentContainerStyle={{
+        flexGrow: 1,
+        paddingBottom: 140,
+        backgroundColor: "white"
+      }}
     >
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <Stack.Screen
-          options={{
-            title: isUpdating ? "Update Product" : "Create Product",
-          }}
-        />
+      <Stack.Screen
+        options={{
+          title: isUpdating ? "Update Product" : "Create Product",
+        }}
+      />
 
-        <View className="flex-1 items-center px-6 bg-white">
-          {/* IMAGE */}
+      <View className="flex-1 px-6 bg-white">
+        {/* IMAGE */}
+        <View className="self-center">
           {isUpdating ? (
             <RemoteImage
               path={image ?? undefined}
@@ -207,73 +235,92 @@ export default function CreateProductScreen() {
 
           <Text
             onPress={pickImage}
-            className="text-primary font-semibold mt-3 mb-6"
+            className="text-primary font-semibold mt-3 mb-6 text-center"
           >
             Change product image
           </Text>
+        </View>
 
-          {/* NAME */}
-          <Text className="text-sm mb-1">Product name</Text>
-          <TextInput
-            value={name}
-            onChangeText={setName}
-            placeholder="Product name"
-            className="border rounded-full px-5 py-3 mb-4 w-full"
-          />
+        {/* NAME */}
+        <Text className="text-sm mb-1">Product name</Text>
+        <TextInput
+          value={name}
+          onChangeText={setName}
+          placeholder="Product name"
+          className="border rounded-full px-5 py-3 mb-4 w-full"
+        />
 
-          {/* VARIANTS */}
-          <Text className="text-lg font-bold mb-3 self-start">Variants</Text>
+        {/* DESCRIPTION */}
+        <Text className="text-sm mb-1">Description</Text>
+        <TextInput
+          value={description}
+          onChangeText={setDescription}
+          placeholder="Product description"
+          multiline
+          textAlignVertical="top"
+          className="border rounded-2xl px-5 py-4 mb-6 w-full h-32"
+        />
 
-          {variants.map((variant, index) => (
-            <View
-              key={index}
-              className="flex-row items-center gap-3 mb-3 w-full"
+        {/* VARIANTS */}
+        <Text className="text-lg font-bold mb-3">Variants</Text>
+
+        {variants.map((variant, index) => (
+          <View key={index} className="flex-row items-center gap-3 mb-3">
+            <TextInput
+              value={variant.label}
+              onChangeText={(text) => {
+                const copy = [...variants];
+                copy[index].label = text;
+                setVariants(copy);
+              }}
+              placeholder="Quantity (e.g. 500ml)"
+              className="flex-1 border rounded-full px-4 py-3"
+            />
+
+            <TextInput
+              value={variant.price}
+              onChangeText={(text) => {
+                const copy = [...variants];
+                copy[index].price = text;
+                setVariants(copy);
+              }}
+              placeholder="Price"
+              keyboardType="numeric"
+              className="w-24 border rounded-full px-4 py-3"
+            />
+
+            <Text
+              onPress={() => confirmRemoveVariant(index)}
+              className="px-3 py-2 text-lg font-bold text-red-500"
             >
-              <TextInput
-                value={variant.label}
-                onChangeText={(text) => {
-                  const copy = [...variants];
-                  copy[index].label = text;
-                  setVariants(copy);
-                }}
-                placeholder="Quantity (e.g. 500ml)"
-                className="flex-1 border rounded-full px-4 py-3"
-              />
+              ✕
+            </Text>
+          </View>
+        ))}
 
-              <TextInput
-                value={variant.price}
-                onChangeText={(text) => {
-                  const copy = [...variants];
-                  copy[index].price = text;
-                  setVariants(copy);
-                }}
-                placeholder="Price"
-                keyboardType="numeric"
-                className="w-24 border rounded-full px-4 py-3"
-              />
+        <Text
+          onPress={addVariant}
+          className="text-primary font-semibold mb-6"
+        >
+          + Add variant
+        </Text>
 
-              <Text
-                onPress={() => confirmRemoveVariant(index)}
-                className={`px-3 py-2 text-lg font-bold ${
-                  variants.length === 1 || isSubmitting
-                    ? "text-gray-300"
-                    : "text-red-500"
-                }`}
-              >
-                ✕
+        {!!error && (
+          <Text className="text-red-500 text-center mb-3">{error}</Text>
+        )}
+
+        {/* ACTIONS */}
+        <View className="flex-row justify-end gap-3 mt-4">
+          {isUpdating && (
+            <TouchableOpacity
+              onPress={confirmDelete}
+              className="px-6 py-4 flex-row items-center"
+            >
+              <Ionicons name="trash-outline" size={20} color="#EF4444" />
+              <Text className="text-red-500 text-base font-semibold ml-2">
+                Delete
               </Text>
-            </View>
-          ))}
-
-          <Text
-            onPress={addVariant}
-            className="text-primary font-semibold mb-6 self-start"
-          >
-            + Add variant
-          </Text>
-
-          {!!error && (
-            <Text className="text-red-500 text-center mb-3">{error}</Text>
+            </TouchableOpacity>
           )}
 
           <Button
@@ -281,23 +328,10 @@ export default function CreateProductScreen() {
             onPress={onSubmit}
             disabled={!isFormValid || isSubmitting}
           />
-
-          {isUpdating && (
-            <View className="mt-6 items-center">
-              {isDeleting ? (
-                <ActivityIndicator color="red" />
-              ) : (
-                <Text
-                  onPress={confirmDelete}
-                  className="text-red-500 font-semibold"
-                >
-                  Delete Product
-                </Text>
-              )}
-            </View>
-          )}
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
-  );
+      </View>
+    </ScrollView>
+  </KeyboardAvoidingView>
+);
+
 }

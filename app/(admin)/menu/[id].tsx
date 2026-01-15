@@ -1,11 +1,17 @@
 import { useProduct } from "@/api/products";
-import { defaultImage } from "@/utils/branding";
 import RemoteImage from "@/components/RemoteImage";
 import Colors from "@/constants/Colors";
+import { defaultImage } from "@/utils/branding";
 import { FontAwesome } from "@expo/vector-icons";
 import { Link, Stack, useLocalSearchParams } from "expo-router";
 import React from "react";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 
 export default function ProductDetailsScreen() {
   const { id: isString } = useLocalSearchParams();
@@ -25,24 +31,27 @@ export default function ProductDetailsScreen() {
   /* ---------------- ERROR ---------------- */
   if (error) {
     return (
-      <View className="flex-1 items-center justify-center">
+      <View className="flex-1 items-center justify-center bg-white dark:bg-black">
         <Text className="text-red-500">{error.message}</Text>
       </View>
     );
   }
 
+  /* ---------------- NOT FOUND ---------------- */
   if (!product) {
     return (
-      <View className="flex-1 items-center justify-center bg-white dark:bg-black">
-        <Text className="text-gray-500 dark:text-gray-400">
-          Product not found
-        </Text>
+      <View className="flex-1 items-center justify-center bg-white">
+        <Text className="text-gray-500">Product not found</Text>
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-white dark:bg-black px-4">
+    <ScrollView
+      className="flex-1 bg-bleck/5 px-4"
+      contentContainerStyle={{ paddingBottom: 100 }}
+      showsVerticalScrollIndicator={false}
+    >
       <Stack.Screen
         options={{
           title: "Menu",
@@ -69,7 +78,7 @@ export default function ProductDetailsScreen() {
         />
       </View>
 
-      {/* DETAILS */}
+      {/* DETAILS CARD */}
       <View className="mt-6 bg-white rounded-3xl p-5 shadow-sm">
         <Text className="text-2xl font-bold">{product.name}</Text>
 
@@ -87,7 +96,25 @@ export default function ProductDetailsScreen() {
             </View>
           ))}
         </View>
+
+        {/* DESCRIPTION */}
+        {!!product.description && (
+          <View className="mt-6">
+            <Text className="text-lg font-semibold mb-2">Description</Text>
+
+            <View className="gap-2">
+              {product.description
+                .split("\n")
+                .filter(Boolean)
+                .map((line, index) => (
+                  <Text key={index} className="text-base text-gray-600">
+                    {line}
+                  </Text>
+                ))}
+            </View>
+          </View>
+        )}
       </View>
-    </View>
+    </ScrollView>
   );
 }
