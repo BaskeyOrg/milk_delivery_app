@@ -1,57 +1,62 @@
+import { Tables } from "@/assets/data/types";
 import { supabase } from "@/lib/supabase";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-export const usePauseSubscription = () => {
+export const usePauseSubscriptionDays = () => {
   const qc = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
       subscriptionId,
-      from,
-      to,
+      dates,
+      reason,
     }: {
       subscriptionId: number;
-      from: string;
-      to: string;
+      dates: string[]; // YYYY-MM-DD[]
+      reason?: string;
     }) => {
+      if (!dates.length) return;
+
+      const rows = dates.map((date) => ({
+        subscription_id: subscriptionId,
+        pause_date: date,
+        reason: reason ?? null,
+      }));
+
       const { error } = await supabase
         .from("subscription_pauses")
-        .insert({
-          subscription_id: subscriptionId,
-          pause_from: from,
-          pause_to: to,
-        });
+        .insert(rows);
 
       if (error) throw error;
     },
-    onSuccess: () => {
+
+    onSuccess: (_, { subscriptionId }) => {
       qc.invalidateQueries({ queryKey: ["orders"] });
+      qc.invalidateQueries({
+        queryKey: ["subscription-pauses", subscriptionId],
+      });
     },
   });
 };
 
-export const useSkipDeliveryDay = () => {
-  const qc = useQueryClient();
 
-  return useMutation({
-    mutationFn: async ({
-      subscriptionId,
-      date,
-    }: {
-      subscriptionId: number;
-      date: string;
-    }) => {
-      const { error } = await supabase
-        .from("subscription_skip_days")
-        .insert({
-          subscription_id: subscriptionId,
-          skip_date: date,
-        });
+/* ============================
+   GET PAUSED DAYS
+   ============================ */
+export const useSubscriptionPauses = (subscriptionId?: number) => {
+  return useQuery<Tables<"subscription_pauses">[], Error>({
+    queryKey: ["subscription-pauses", subscriptionId],
+    enabled: !!subscriptionId,
+
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("subscription_pauses")
+        .select("*")
+        .eq("subscription_id", subscriptionId!)
+        .order("pause_date", { ascending: true });
 
       if (error) throw error;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["orders"] });
+      return data ?? [];
     },
   });
 };

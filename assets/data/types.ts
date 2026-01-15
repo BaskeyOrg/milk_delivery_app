@@ -66,3 +66,11 @@ export type OrderItem = {
   size: ProductVariant;
   quantity: number;
 };
+
+export type SubscriptionPause = {
+  id: number;
+  subscription_id: number;
+  pause_date: string; // yyyy-mm-dd
+  reason?: string | null;
+  created_at?: string;
+};

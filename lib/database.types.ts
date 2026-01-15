@@ -281,6 +281,38 @@ export type Database = {
           },
         ]
       }
+      subscription_pauses: {
+        Row: {
+          created_at: string | null
+          id: number
+          pause_date: string
+          reason: string | null
+          subscription_id: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: never
+          pause_date: string
+          reason?: string | null
+          subscription_id: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: never
+          pause_date?: string
+          reason?: string | null
+          subscription_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_pauses_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           created_at: string | null

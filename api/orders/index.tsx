@@ -1,7 +1,7 @@
 import { InsertTables, Tables, UpdateTables } from "@/assets/data/types";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/providers/AuthProvider";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, UseQueryOptions } from "@tanstack/react-query";
 
 /* ---------------- TYPES ---------------- */
 
@@ -74,7 +74,13 @@ export const useMyOrderList = () => {
 
 /* ---------------- ORDER DETAILS ---------------- */
 
-export const useOrderDetails = (orderId: number) => {
+export const useOrderDetails = (
+  orderId: number,
+  options?: Omit<
+    UseQueryOptions<OrderWithItems, Error>,
+    "queryKey" | "queryFn"
+  >
+) => {
   return useQuery<OrderWithItems, Error>({
     queryKey: ["order", orderId],
     enabled: !!orderId,
@@ -99,9 +105,9 @@ export const useOrderDetails = (orderId: number) => {
       if (error) throw new Error(error.message);
       return data as OrderWithItems;
     },
+    ...options,
   });
 };
-
 
 /* ---------------- UPDATE ORDER ---------------- */
 

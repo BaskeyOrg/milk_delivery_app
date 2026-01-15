@@ -1,7 +1,8 @@
+import { useSubscriptionPauses } from "@/api/subscription";
 import { Tables } from "@/assets/data/types";
-import { formatDate } from "@/lib/date-format";
+import { formatDate, formatFriendlyDate } from "@/lib/date-format";
 import { Ionicons } from "@expo/vector-icons";
-import { Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 
 type Props = {
   subscription: Tables<"subscriptions">;
@@ -44,7 +45,6 @@ export default function OrderSubscriptionDetailsCard({ subscription }: Props) {
   );
 
   /* ---------------- SUBSCRIPTION STATE ---------------- */
-
   let badgeText = "";
   let badgeStyle = "bg-green-600";
 
@@ -64,6 +64,9 @@ export default function OrderSubscriptionDetailsCard({ subscription }: Props) {
     subscription.plan_type === "weekly"
       ? "Weekly Subscription"
       : "Monthly Subscription";
+
+  /* ---------------- FETCH SKIPPED DAYS ---------------- */
+  const { data: pausedDays } = useSubscriptionPauses(subscription.id);
 
   return (
     <View className="bg-green-50 border border-green-200 rounded-xl p-4 gap-2 relative">
@@ -104,6 +107,28 @@ export default function OrderSubscriptionDetailsCard({ subscription }: Props) {
           {subscription.delivery_time}
         </Text>
       </View>
+
+      {/* SKIPPED DAYS */}
+      {pausedDays && pausedDays.length > 0 && (
+        <View className="mt-3">
+          <Text className="text-text-secondary font-semibold mb-1">
+            Skipped Days
+          </Text>
+          <ScrollView horizontal className="flex-row gap-2">
+            {pausedDays.map((p) => (
+              <View
+                key={p.id}
+                className="bg-red-100 border border-red-300 rounded-lg px-2 py-1 mr-2"
+              >
+                <Text className="text-red-600 text-sm">
+                  {formatFriendlyDate(p.pause_date)}
+                  {p.reason ? ` - ${p.reason}` : ""}
+                </Text>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+      )}
     </View>
   );
 }

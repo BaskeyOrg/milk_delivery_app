@@ -5,13 +5,13 @@ import GradientHeader from "@/components/GradientHeader";
 import OrderItemList from "@/components/OrderItemListItem";
 import OrderSummeryFooter from "@/components/OrderSummeryFooter";
 import OrderSubscriptionDetailsCard from "@/components/subscription/OrderSubscriptionDetailsCard";
-import PauseVacationModal from "@/components/subscription/PauseVacationModal";
-import SkipDayModal from "@/components/subscription/SkipDayModal";
+import SkipDeliveryModal from "@/components/subscription/SkipDeliveryModal";
+import { getSubscriptionEndDate } from "@/lib/date-format";
 import { generateBillHTML } from "@/utils/billTemplate";
 import * as Print from "expo-print";
 import { useLocalSearchParams } from "expo-router";
 import * as Sharing from "expo-sharing";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -24,77 +24,58 @@ export type Plan = "weekly" | "monthly";
 export type DeliveryTime = "morning" | "evening";
 
 export default function OrderDetailsScreen() {
-  const { id: idParam } = useLocalSearchParams();
+  /* ---------------- PARAMS ---------------- */
+  const { id } = useLocalSearchParams<{ id?: string }>();
+  const orderId = Number(id);
 
-  const [pauseOpen, setPauseOpen] = useState(false);
+  /* ---------------- LOCAL STATE ---------------- */
   const [skipOpen, setSkipOpen] = useState(false);
+
   const [generatingBill, setGeneratingBill] = useState(false);
 
-  const id = Array.isArray(idParam) ? Number(idParam[0]) : Number(idParam);
+  /* ---------------- DATA ---------------- */
+  const { data: order, isLoading, error } = useOrderDetails(orderId);
 
-  /* ---------------- INVALID ID ---------------- */
-  if (!id || isNaN(id)) {
-    return (
-      <View className="flex-1 justify-center items-center bg-background">
-        <Text className="text-accent-error text-lg">Invalid Order ID</Text>
-      </View>
-    );
-  }
+  useUpdateOrderSubscription(orderId);
 
-  /* ---------------- FETCH ORDER ---------------- */
-  const { data: order, isLoading, error } = useOrderDetails(id);
-
-  // keeps subscription state in sync (pause / skip)
-  useUpdateOrderSubscription(id);
-
-  /* ---------------- LOADING ---------------- */
-  if (isLoading) {
-    return (
-      <View className="flex-1 justify-center items-center bg-background">
-        <ActivityIndicator size="large" color="#43ce4e" />
-      </View>
-    );
-  }
-
-  /* ---------------- ERROR ---------------- */
-  if (error || !order) {
-    return (
-      <View className="flex-1 justify-center items-center bg-background">
-        <Text className="text-accent-error text-lg">
-          Failed to fetch order
-        </Text>
-      </View>
-    );
-  }
-
-  /* ---------------- ORDER LOGIC ---------------- */
-  const isSubscribed = Boolean(order.subscription);
-  const deliveryCharge = 0;
+  /* ---------------- SAFE DERIVED VALUES ---------------- */
+  const subscription = order?.subscription ?? null;
+  const isSubscribed = Boolean(subscription);
 
   const plan: Plan | null =
-    order.subscription?.plan_type === "weekly" ||
-    order.subscription?.plan_type === "monthly"
-      ? order.subscription.plan_type
+    subscription?.plan_type === "weekly" ||
+    subscription?.plan_type === "monthly"
+      ? subscription.plan_type
       : null;
 
   const deliveryTime: DeliveryTime | null =
-    order.subscription?.delivery_time === "morning" ||
-    order.subscription?.delivery_time === "evening"
-      ? order.subscription.delivery_time
+    subscription?.delivery_time === "morning" ||
+    subscription?.delivery_time === "evening"
+      ? subscription.delivery_time
       : null;
 
-  const itemsTotal = isSubscribed
-    ? plan === "weekly"
-      ? order.total / 7
-      : plan === "monthly"
-      ? order.total / 30
-      : order.total
-    : order.total;
+  const startDate = subscription?.start_date ?? null;
+  const endDate =
+    isSubscribed && startDate && plan
+      ? getSubscriptionEndDate(startDate, plan)
+      : null;
 
-  const startDate = order.subscription?.start_date ?? null;
+  const deliveryCharge = 0;
 
-  /* ---------------- BILL GENERATION ---------------- */
+  const itemsTotal = useMemo(() => {
+    if (!order) return 0;
+    if (!isSubscribed || !plan) return order.total;
+
+    if (plan === "weekly") return order.total / 7;
+    if (plan === "monthly") return order.total / 30;
+
+    return order.total;
+  }, [order, isSubscribed, plan]);
+
+  /* ---------------- BILL ---------------- */
   const handleGenerateBill = async () => {
+    if (!order) return;
+
     try {
       setGeneratingBill(true);
 
@@ -106,18 +87,43 @@ export default function OrderDetailsScreen() {
 
       const { uri } = await Print.printToFileAsync({ html });
 
-      await Sharing.shareAsync(uri, {
-        mimeType: "application/pdf",
-        dialogTitle: "Order Bill",
-      });
-    } catch (err) {
-      console.error("Bill generation failed", err);
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri, {
+          mimeType: "application/pdf",
+          dialogTitle: "Order Bill",
+        });
+      }
     } finally {
       setGeneratingBill(false);
     }
   };
 
-  /* ---------------- UI ---------------- */
+  /* ---------------- UI STATES ---------------- */
+  if (!orderId || Number.isNaN(orderId)) {
+    return (
+      <View className="flex-1 justify-center items-center bg-background">
+        <Text className="text-accent-error text-lg">Invalid Order ID</Text>
+      </View>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <View className="flex-1 justify-center items-center bg-background">
+        <ActivityIndicator size="large" color="#43ce4e" />
+      </View>
+    );
+  }
+
+  if (error || !order) {
+    return (
+      <View className="flex-1 justify-center items-center bg-background">
+        <Text className="text-accent-error text-lg">Failed to fetch order</Text>
+      </View>
+    );
+  }
+
+  /* ---------------- MAIN UI ---------------- */
   return (
     <View className="flex-1 bg-background">
       <GradientHeader title={`Order #${order.id}`} />
@@ -129,59 +135,37 @@ export default function OrderDetailsScreen() {
           gap: 16,
         }}
       >
-        {/* ADDRESS */}
-        {order.addresses && (
-          <OrderAddressCard address={order.addresses} />
-        )}
-        {/* GENERATE BILL */}
+        {order.addresses && <OrderAddressCard address={order.addresses} />}
+
+        <TouchableOpacity
+          disabled={generatingBill}
+          onPress={handleGenerateBill}
+          className={`py-3 rounded-lg ${
+            generatingBill ? "bg-gray-400" : "bg-green-600"
+          }`}
+        >
+          <Text className="text-white text-center font-semibold">
+            {generatingBill ? "Generating Bill..." : "Generate Bill"}
+          </Text>
+        </TouchableOpacity>
+
+        {subscription && (
+          <>
+            <OrderSubscriptionDetailsCard subscription={subscription} />
+
             <TouchableOpacity
-              disabled={generatingBill}
-              onPress={handleGenerateBill}
-              className={`py-3 rounded-lg ${
-                generatingBill ? "bg-gray-400" : "bg-green-600"
-              }`}
+              onPress={() => setSkipOpen(true)}
+              className="bg-red-500 py-3 rounded-lg"
             >
               <Text className="text-white text-center font-semibold">
-                {generatingBill ? "Generating Bill..." : "Generate Bill"}
+                Skip Delivery Day
               </Text>
             </TouchableOpacity>
-
-        {/* SUBSCRIPTION */}
-        {order.subscription && (
-          <>
-            <OrderSubscriptionDetailsCard
-              subscription={order.subscription}
-            />
-
-            
-
-            {/* SUBSCRIPTION ACTIONS */}
-            <View className="gap-3">
-              <TouchableOpacity
-                onPress={() => setPauseOpen(true)}
-                className="bg-yellow-500 py-3 rounded-lg"
-              >
-                <Text className="text-white text-center font-semibold">
-                  Pause Subscription
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() => setSkipOpen(true)}
-                className="bg-red-500 py-3 rounded-lg"
-              >
-                <Text className="text-white text-center font-semibold">
-                  Skip Subscription
-                </Text>
-              </TouchableOpacity>
-            </View>
           </>
         )}
 
-        {/* ITEMS */}
         <OrderItemList items={order.order_items ?? []} />
 
-        {/* SUMMARY */}
         <OrderSummeryFooter
           itemsTotal={itemsTotal}
           deliveryCharge={deliveryCharge}
@@ -191,18 +175,15 @@ export default function OrderDetailsScreen() {
         />
       </ScrollView>
 
-      {/* MODALS */}
-      <PauseVacationModal
-        visible={pauseOpen}
-        onClose={() => setPauseOpen(false)}
-        subscriptionId={order.subscription?.id}
-      />
-
-      <SkipDayModal
-        visible={skipOpen}
-        onClose={() => setSkipOpen(false)}
-        subscriptionId={order?.subscription?.id}
-      />
+      {subscription && (
+        <SkipDeliveryModal
+          visible={skipOpen}
+          onClose={() => setSkipOpen(false)}
+          subscriptionId={subscription.id}
+          startDate={subscription.start_date}
+          endDate={endDate}
+        />
+      )}
     </View>
   );
 }
