@@ -67,6 +67,12 @@ export default function CartScreen() {
   };
 
   useEffect(() => {
+  if (items.length === 0) {
+    resetSubscription();
+  }
+}, [items.length]);
+
+  useEffect(() => {
     if (!selectedAddress) setLocationModalVisible(true);
   }, [selectedAddress]);
 
@@ -177,8 +183,6 @@ export default function CartScreen() {
               itemsTotal={total}
               deliveryCharge={deliveryCharge}
               subscriptionPlan={isSubscribed ? plan : null}
-              startDate={isSubscribed ? startDate : null}
-              deliveryTime={isSubscribed ? deliveryTime : null}
             />
           </>
         }

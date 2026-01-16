@@ -1,4 +1,5 @@
 import { useLocationContext } from "@/providers/LocationProvider";
+import { BRANDING } from "@/utils/branding";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -22,10 +23,10 @@ export default function Header({ onPress, searchText, onSearchChange }: Props) {
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center gap-2">
           <Image
-            source={require("../assets/images/brand_logo.png")}
+            source={{ uri: BRANDING.logo }}
             className="w-10 h-10 rounded-full"
           />
-          <Text className="text-blue-700 font-bold text-xl">BRAND NAME</Text>
+          <Text className="font-bold text-xl">{BRANDING.name}</Text>
         </View>
 
         <View className="flex-row items-center gap-4">
@@ -52,7 +53,7 @@ export default function Header({ onPress, searchText, onSearchChange }: Props) {
       </TouchableOpacity>
 
       {/* 🔍 Search */}
-      <View className="flex-row items-center bg-white rounded-full mt-4 px-4 py-2">
+      <View className="flex-row items-center bg-white rounded-full mt-4 px-4">
         <Ionicons name="search-outline" size={20} color="gray" />
 
         <TextInput
@@ -65,7 +66,7 @@ export default function Header({ onPress, searchText, onSearchChange }: Props) {
         {/* ❌ Clear button */}
         {searchText.length > 0 && (
           <TouchableOpacity onPress={() => onSearchChange("")} hitSlop={10}>
-            <Ionicons name="close-circle" size={20} color="#9CA3AF" />
+            <Ionicons name="close-circle" size={16} color="#9CA3AF" />
           </TouchableOpacity>
         )}
       </View>

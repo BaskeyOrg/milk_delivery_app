@@ -33,31 +33,20 @@ list of products:
   }
 }
 
-Available delivary addresses:
-[
-  "Adyar",
-  "Alwarpet",
-  "Anna Nagar",
-  "Besant Nagar",
-  "Chepauk",
-  "Gopalapuram",
-  "Kottivakkam",
-  "Kotturpuram",
-  "Koyambedu",
-  "Mandaveli",
-  "Mylapore",
-  "Mogappair",
-  "MRC Nagar",
-  "Nandanam",
-  "Palavakkam",
-  "Perungudi",
-  "RA Puram",
-  "Royapettah",
-  "Santhome",
-  "T.Nagar",
-  "Teynampet",
-  "Thiruvanmiyur",
-  "West Mambalam"
-]
-   
+# deploy to expo
+✅ SOLUTION 3 (Nuclear but works)
+
+Recreate git metadata inside container:
+
+rm -rf .git
+git init
+git config --global protocol.file.allow always
+git config --global --add safe.directory /app/reactnative/milk_delivery_app
+git add .
+git commit -m "Fresh git repo for EAS"
+
+
+Then:
+
+eas build -p android --profile preview
    

@@ -12,11 +12,7 @@ import {
   View,
 } from "react-native";
 
-import {
-  Address,
-  useDeleteAddress,
-  useUserAddresses,
-} from "@/api/addresses";
+import { Address, useDeleteAddress, useUserAddresses } from "@/api/addresses";
 import { formatPhone } from "@/lib/utils";
 import { useAuth } from "@/providers/AuthProvider";
 import { useLocationContext } from "@/providers/LocationProvider";
@@ -41,10 +37,10 @@ export default function LocationModal({
      REACT QUERY
   -------------------------------------------- */
 
-  const {
-    data: addresses = [],
-    isLoading,
-  } = useUserAddresses(session?.user.id, visible);
+  const { data: addresses = [], isLoading } = useUserAddresses(
+    session?.user.id,
+    visible
+  );
 
   const deleteAddress = useDeleteAddress();
 
@@ -53,25 +49,39 @@ export default function LocationModal({
   -------------------------------------------- */
 
   const handleUseCurrentLocation = async () => {
-    const { status } = await Location.requestForegroundPermissionsAsync();
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
 
-    if (status !== "granted") {
-      Alert.alert("Permission Denied", "Location permission is required.");
-      return;
+      if (status !== "granted") {
+        Alert.alert("Permission Denied", "Location permission is required.");
+        return;
+      }
+
+      const enabled = await Location.hasServicesEnabledAsync();
+      if (!enabled) {
+        Alert.alert("Location Disabled", "Please enable GPS");
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
+      const { latitude, longitude } = location.coords;
+
+      router.push({
+        pathname: "/locationMap",
+        params: {
+          lat: latitude.toString(),
+          lng: longitude.toString(),
+        },
+      });
+
+      onClose();
+    } catch (err) {
+      Alert.alert("Location Error", "Unable to fetch current location");
+      console.error(err);
     }
-
-    const location = await Location.getCurrentPositionAsync({});
-    const { latitude, longitude } = location.coords;
-
-    router.push({
-      pathname: "/locationMap",
-      params: {
-        lat: latitude.toString(),
-        lng: longitude.toString(),
-      },
-    });
-
-    onClose();
   };
 
   const handleSelectAddress = (addr: Address) => {
@@ -181,9 +191,7 @@ export default function LocationModal({
                           </View>
 
                           {/* Delete Button */}
-                          <Pressable
-                            onPress={() => handleDeleteAddress(addr)}
-                          >
+                          <Pressable onPress={() => handleDeleteAddress(addr)}>
                             <Ionicons
                               name="trash-outline"
                               size={20}

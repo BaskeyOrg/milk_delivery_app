@@ -23,7 +23,6 @@ import {
 } from "react-native";
 
 /* ---------------- REGEX ---------------- */
-
 const phoneRegex = /^[0-9]{10}$/;
 const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
 const websiteRegex =
@@ -31,8 +30,24 @@ const websiteRegex =
 
 const defaultAvatar = require("@/assets/images/user-avatar.png");
 
-/* ---------------- COMPONENT ---------------- */
+/* ---------------- HELPERS ---------------- */
+function generateUsername(fullName: string) {
+  return fullName
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_") // replace spaces with _
+    .replace(/[^a-z0-9_]/g, "") // remove invalid characters
+    .slice(0, 20); // max 20 chars
+}
 
+/* ---------------- LABEL COMPONENT ---------------- */
+const InputLabel = ({ children }: { children: string }) => (
+  <Text className="ml-2 mt-2 mb-2 text-lg text-text-secondary font-medium">
+    {children}
+  </Text>
+);
+
+/* ---------------- COMPONENT ---------------- */
 export default function EditProfile() {
   const router = useRouter();
   const { session } = useAuth();
@@ -43,6 +58,7 @@ export default function EditProfile() {
 
   const [saving, setSaving] = useState(false);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
+  const [isUsernameEdited, setIsUsernameEdited] = useState(false);
 
   const [form, setForm] = useState({
     full_name: "",
@@ -53,7 +69,6 @@ export default function EditProfile() {
   });
 
   /* ---------------- INIT FORM ---------------- */
-
   useEffect(() => {
     if (!profile) return;
 
@@ -67,7 +82,6 @@ export default function EditProfile() {
   }, [profile]);
 
   /* ---------------- AVATAR PREVIEW ---------------- */
-
   useEffect(() => {
     if (!form.avatar_url) {
       setAvatarUri(null);
@@ -82,8 +96,14 @@ export default function EditProfile() {
     getAvatarSignedUrl(form.avatar_url).then(setAvatarUri);
   }, [form.avatar_url]);
 
-  /* ---------------- VALIDATION ---------------- */
+  /* ---------------- USERNAME AUTO-GENERATION ---------------- */
+  useEffect(() => {
+    if (!isUsernameEdited && form.full_name) {
+      setForm((p) => ({ ...p, username: generateUsername(p.full_name) }));
+    }
+  }, [form.full_name, isUsernameEdited]);
 
+  /* ---------------- VALIDATION ---------------- */
   const errors = useMemo(() => {
     return {
       full_name:
@@ -111,7 +131,6 @@ export default function EditProfile() {
   const isFormValid = Object.values(errors).every((e) => e === null);
 
   /* ---------------- IMAGE PICKER ---------------- */
-
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -126,7 +145,6 @@ export default function EditProfile() {
   };
 
   /* ---------------- SAVE ---------------- */
-
   const handleSave = async () => {
     if (!isFormValid || saving) return;
 
@@ -149,8 +167,7 @@ export default function EditProfile() {
     }
   };
 
-  /* ---------------- UI ---------------- */
-
+  /* ---------------- LOADING ---------------- */
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center">
@@ -159,6 +176,7 @@ export default function EditProfile() {
     );
   }
 
+  /* ---------------- UI ---------------- */
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -179,29 +197,36 @@ export default function EditProfile() {
         </TouchableOpacity>
 
         {/* Full Name */}
+        <InputLabel>Full Name</InputLabel>
         <TextInput
-          placeholder="Full name"
+          placeholder="Enter your full name"
           value={form.full_name}
-          onChangeText={(v) =>
-            setForm((p) => ({ ...p, full_name: v }))
-          }
-          className="border rounded-full px-5 py-4 bg-white"
+          onChangeText={(v) => setForm((p) => ({ ...p, full_name: v }))}
+          className="border border-gray-300 rounded-full px-5  bg-white"
         />
         {errors.full_name && (
-          <Text className="text-red-500 text-xs ml-4 mt-1">
+          <Text className="text-red-500 text-xs ml-4">
             {errors.full_name}
           </Text>
         )}
 
         {/* Username */}
+        <InputLabel>Username</InputLabel>
         <TextInput
-          placeholder="Username"
+          placeholder="Choose a username"
           value={form.username}
-          onChangeText={(v) =>
-            setForm((p) => ({ ...p, username: v }))
-          }
-          className="border rounded-full px-5 py-4 bg-white mt-4"
+          onChangeText={(v) => {
+            setForm((p) => ({ ...p, username: v }));
+            setIsUsernameEdited(true);
+          }}
+          autoCapitalize="none"
+          className="border border-gray-300 rounded-full px-5  "
         />
+        {!isUsernameEdited && form.full_name && (
+          <Text className="text-gray-400 ml-4 text-xs">
+            Suggested username: {generateUsername(form.full_name)}
+          </Text>
+        )}
         {errors.username && (
           <Text className="text-red-500 text-xs ml-4 mt-1">
             {errors.username}
@@ -209,14 +234,13 @@ export default function EditProfile() {
         )}
 
         {/* Phone */}
+        <InputLabel>Phone Number</InputLabel>
         <TextInput
-          placeholder="Phone number"
+          placeholder="10-digit phone number"
           keyboardType="number-pad"
           value={form.phone}
-          onChangeText={(v) =>
-            setForm((p) => ({ ...p, phone: v }))
-          }
-          className="border rounded-full px-5 py-4 bg-white mt-4"
+          onChangeText={(v) => setForm((p) => ({ ...p, phone: v }))}
+          className="border border-gray-300 rounded-full px-5"
         />
         {errors.phone && (
           <Text className="text-red-500 text-xs ml-4 mt-1">
@@ -225,14 +249,13 @@ export default function EditProfile() {
         )}
 
         {/* Website */}
+        <InputLabel>Website</InputLabel>
         <TextInput
-          placeholder="Website"
+          placeholder="https://example.com"
           value={form.website}
-          onChangeText={(v) =>
-            setForm((p) => ({ ...p, website: v }))
-          }
+          onChangeText={(v) => setForm((p) => ({ ...p, website: v }))}
           autoCapitalize="none"
-          className="border rounded-full px-5 py-4 bg-white mt-4"
+          className="border border-gray-300 rounded-full px-5"
         />
         {errors.website && (
           <Text className="text-red-500 text-xs ml-4 mt-1">
@@ -257,7 +280,7 @@ export default function EditProfile() {
           )}
         </TouchableOpacity>
 
-        <View className="h-10" />
+        {/* <View className="h-10" /> */}
       </ScrollView>
     </KeyboardAvoidingView>
   );
