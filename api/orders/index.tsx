@@ -1,7 +1,12 @@
 import { InsertTables, Tables, UpdateTables } from "@/assets/data/types";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/providers/AuthProvider";
-import { useMutation, useQuery, useQueryClient, UseQueryOptions } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  UseQueryOptions,
+} from "@tanstack/react-query";
 
 /* ---------------- TYPES ---------------- */
 
@@ -9,7 +14,6 @@ export type OrdersInsert = InsertTables<"orders">;
 export type BaseOrder = Tables<"orders"> & {
   addresses?: Tables<"addresses"> | null;
 };
-
 
 export type OrderWithItems = Tables<"orders"> & {
   order_items: (Tables<"order_items"> & {
@@ -23,17 +27,21 @@ export type OrderWithItems = Tables<"orders"> & {
 
 /* ---------------- ADMIN ORDERS ---------------- */
 
-export const useAdminOrderList = ({ archived = false }) => {
-  const statuses = archived ? ["Delivered"] : ["New", "Cancelled", "Delivering"];
-
+export const useAdminOrderList = ({ statuses }: { statuses?: string[] }) => {
   return useQuery<Tables<"orders">[], Error>({
-    queryKey: ["orders", { archived }],
+    queryKey: ["admin-orders", { statuses }],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("orders")
         .select("*")
-        .in("status", statuses)
         .order("created_at", { ascending: false });
+
+      // Apply status filter only if provided
+      if (statuses && statuses.length > 0) {
+        query = query.in("status", statuses);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw new Error(error.message);
       return data ?? [];
@@ -76,10 +84,7 @@ export const useMyOrderList = () => {
 
 export const useOrderDetails = (
   orderId: number,
-  options?: Omit<
-    UseQueryOptions<OrderWithItems, Error>,
-    "queryKey" | "queryFn"
-  >
+  options?: Omit<UseQueryOptions<OrderWithItems, Error>, "queryKey" | "queryFn">
 ) => {
   return useQuery<OrderWithItems, Error>({
     queryKey: ["order", orderId],
