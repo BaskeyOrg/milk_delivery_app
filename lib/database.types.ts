@@ -76,6 +76,53 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          body: string
+          data: Json | null
+          error: string | null
+          id: number
+          recipient_id: string | null
+          sent_at: string | null
+          status: string | null
+          subscription_id: number | null
+          title: string
+          type: string
+        }
+        Insert: {
+          body: string
+          data?: Json | null
+          error?: string | null
+          id?: number
+          recipient_id?: string | null
+          sent_at?: string | null
+          status?: string | null
+          subscription_id?: number | null
+          title: string
+          type: string
+        }
+        Update: {
+          body?: string
+          data?: Json | null
+          error?: string | null
+          id?: number
+          recipient_id?: string | null
+          sent_at?: string | null
+          status?: string | null
+          subscription_id?: number | null
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           created_at: string

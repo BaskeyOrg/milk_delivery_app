@@ -1,7 +1,7 @@
 import { registerForPushNotificationsAsync } from "@/lib/notifications";
 import { supabase } from "@/lib/supabase";
 import * as Notifications from "expo-notifications";
-import React, { PropsWithChildren, useEffect, useRef, useState } from "react";
+import React, { PropsWithChildren, useEffect, useRef } from "react";
 import { useAuth } from "./AuthProvider";
 
 Notifications.setNotificationHandler({
@@ -14,38 +14,33 @@ Notifications.setNotificationHandler({
   }),
 });
 
-export default function NotificationProvider({ children }: PropsWithChildren) {
+export default function NotificationProvider({
+  children,
+}: PropsWithChildren) {
   const { profile } = useAuth();
+  const hasRegistered = useRef(false);
 
-  const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
-  const hasRegistered = useRef(false); // 🔥 prevents infinite loop
-
-  // Run push-token registration once
   useEffect(() => {
-    if (hasRegistered.current) return; // Already ran
+    if (!profile?.id) return;        // ⛔ wait for profile
+    if (hasRegistered.current) return;
+
     hasRegistered.current = true;
 
     registerForPushNotificationsAsync()
       .then(async (token) => {
-        if (!token || token === expoPushToken) return;
+        if (!token) return;
 
-        setExpoPushToken(token);
-
-        // if (profile?.id) {
-        //   await supabase
-        //     .from("profiles")
-        //     .update({ expo_push_token: token })
-        //     .eq("id", profile.id);
-        // }
-        if (profile?.id && profile.expo_push_token !== token) {
+        // 🔁 Update only if changed
+        if (profile.expo_push_token !== token) {
           await supabase
             .from("profiles")
             .update({ expo_push_token: token })
             .eq("id", profile.id);
         }
-
       })
-      .catch((e) => console.warn("Push registration error:", e));
+      .catch((e) => {
+        console.warn("Push registration error:", e);
+      });
 
     const notificationListener =
       Notifications.addNotificationReceivedListener((notification) => {
@@ -54,15 +49,14 @@ export default function NotificationProvider({ children }: PropsWithChildren) {
 
     const responseListener =
       Notifications.addNotificationResponseReceivedListener((response) => {
-        console.log(response);
+        console.log("notification response", response);
       });
 
     return () => {
       notificationListener.remove();
       responseListener.remove();
     };
-  }, [profile?.id]); // only rerun if profile actually loads
+  }, [profile?.id]);
 
   return <>{children}</>;
 }
-

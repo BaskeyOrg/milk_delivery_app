@@ -2,6 +2,7 @@ import {
   usePauseSubscriptionDays,
   useSubscriptionPauses,
 } from "@/api/subscription";
+import { notifyAdminsAboutSkip } from "@/lib/notifications";
 import React, { useMemo, useState } from "react";
 import {
   Modal,
@@ -151,22 +152,31 @@ export default function SkipDeliveryModal({
   };
 
   /* ---------------- SUBMIT ---------------- */
-  const handleConfirm = () => {
-    const dates = Object.keys(selectedDates);
-    if (!dates.length) return;
+const handleConfirm = () => {
+  const dates = Object.keys(selectedDates);
+  if (!dates.length) return;
 
-    mutate(
-      { subscriptionId, dates, reason },
-      {
-        onSuccess: () => {
-          setSelectedDates({});
-          setReason("");
-          setConfirmOpen(false);
-          onClose();
-        },
-      }
-    );
-  };
+  // Pause the subscription days
+  mutate(
+    { subscriptionId, dates, reason },
+    {
+      onSuccess: async () => {
+        // Clear local state
+        setSelectedDates({});
+        setReason("");
+        setConfirmOpen(false);
+        onClose();
+
+        // ✅ Notify admin & delivery
+        try {
+          await notifyAdminsAboutSkip({ subscriptionId, dates, reason });
+        } catch (e) {
+          console.error("Failed to notify admins/delivery", e);
+        }
+      },
+    }
+  );
+};
 
   return (
     <Modal visible={visible} transparent animationType="slide">
