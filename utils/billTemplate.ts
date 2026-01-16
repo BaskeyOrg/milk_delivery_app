@@ -69,25 +69,16 @@ const numberToWords = (amount: number) => {
   const inWords = (num: number): string => {
     if (num === 0) return "Zero";
     if (num < 20) return a[num];
-    if (num < 100)
-      return b[Math.floor(num / 10)] + " " + a[num % 10];
+    if (num < 100) return b[Math.floor(num / 10)] + " " + a[num % 10];
     if (num < 1000)
-      return (
-        a[Math.floor(num / 100)] +
-        " Hundred " +
-        inWords(num % 100)
-      );
+      return a[Math.floor(num / 100)] + " Hundred " + inWords(num % 100);
     if (num < 100000)
       return (
-        inWords(Math.floor(num / 1000)) +
-        " Thousand " +
-        inWords(num % 1000)
+        inWords(Math.floor(num / 1000)) + " Thousand " + inWords(num % 1000)
       );
     if (num < 10000000)
       return (
-        inWords(Math.floor(num / 100000)) +
-        " Lakh " +
-        inWords(num % 100000)
+        inWords(Math.floor(num / 100000)) + " Lakh " + inWords(num % 100000)
       );
     return "";
   };
@@ -106,10 +97,12 @@ export const generateBillHTML = ({
   order,
   itemsTotal,
   deliveryCharge,
+  skippedDates = [], // Array of skipped dates as strings "YYYY-MM-DD"
 }: {
   order: OrderWithRelations;
   itemsTotal: number;
   deliveryCharge: number;
+  skippedDates?: string[];
 }) => {
   const billDate = new Date();
   const orderDate = new Date(order.created_at);
@@ -118,11 +111,12 @@ export const generateBillHTML = ({
   const plan = order.subscription?.plan_type ?? null;
 
   const days =
-    plan && plan in PLAN_DAYS
-      ? PLAN_DAYS[plan as "weekly" | "monthly"]
-      : 1;
+    plan && plan in PLAN_DAYS ? PLAN_DAYS[plan as "weekly" | "monthly"] : 1;
 
-  const subscriptionItemsTotal = itemsTotal * days;
+  const skippedDaysCount = skippedDates.length; // Number of skipped days
+  const effectiveDays = days - skippedDaysCount; // Days to charge
+  const subscriptionItemsTotal = itemsTotal * effectiveDays; // subtotal after skip
+  const skipAmount = itemsTotal * skippedDaysCount; // amount to subtract
   const oneTimeTotal = itemsTotal;
 
   const grandTotal = isSubscribed
@@ -140,86 +134,23 @@ export const generateBillHTML = ({
 <head>
   <meta charset="utf-8" />
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 24px;
-      font-size: 14px;
-      color: #111;
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 2px solid #ddd;
-      padding-bottom: 12px;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .brand img {
-      height: 48px;
-    }
-
-    .brand-name {
-      font-size: 20px;
-      font-weight: bold;
-    }
-
-    .section {
-      margin-top: 20px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-
-    th, td {
-      border: 1px solid #ddd;
-      padding: 8px;
-    }
-
-    th {
-      background: #f5f5f5;
-      text-align: left;
-    }
-
-    .right {
-      text-align: right;
-    }
-
-    .bold {
-      font-weight: bold;
-    }
-
-    .muted {
-      color: #666;
-      font-size: 12px;
-    }
-
-    .footer {
-      margin-top: 50px;
-      display: flex;
-      justify-content: flex-end;
-    }
-
-    .signature {
-      text-align: center;
-    }
-
-    .signature img {
-      height: 50px;
-      margin-bottom: 6px;
-    }
+    body { font-family: Arial, sans-serif; padding: 24px; font-size: 14px; color: #111; }
+    .header { display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #ddd; padding-bottom:12px; }
+    .brand { display:flex; align-items:center; gap:12px; }
+    .brand img { height:48px; }
+    .brand-name { font-size:20px; font-weight:bold; }
+    .section { margin-top:20px; }
+    table { width:100%; border-collapse:collapse; margin-top:10px; }
+    th, td { border:1px solid #ddd; padding:8px; }
+    th { background:#f5f5f5; text-align:left; }
+    .right { text-align:right; }
+    .bold { font-weight:bold; }
+    .muted { color:#666; font-size:12px; }
+    .footer { margin-top:50px; display:flex; justify-content:flex-end; }
+    .signature { text-align:center; }
+    .signature img { height:50px; margin-bottom:6px; }
   </style>
 </head>
-
 <body>
 
   <!-- HEADER -->
@@ -228,7 +159,6 @@ export const generateBillHTML = ({
       <img src="${BRAND_LOGO}" />
       <div class="brand-name">${BRAND_NAME}</div>
     </div>
-
     <div class="muted">
       <div><strong>Order ID:</strong> ${order.id}</div>
       <div><strong>Order Date:</strong> ${orderDate.toDateString()}</div>
@@ -287,8 +217,7 @@ export const generateBillHTML = ({
 
       ${order.order_items
         .map((item) => {
-          const lineTotal =
-            (item.variant_price ?? 0) * item.quantity;
+          const lineTotal = (item.variant_price ?? 0) * item.quantity;
           return `
       <tr>
         <td>${item.products?.name ?? "Unknown Product"}</td>
@@ -296,8 +225,7 @@ export const generateBillHTML = ({
         <td>${item.quantity}</td>
         <td class="right">₹ ${item.variant_price.toFixed(2)}</td>
         <td class="right">₹ ${lineTotal.toFixed(2)}</td>
-      </tr>
-          `;
+      </tr>`;
         })
         .join("")}
     </table>
@@ -316,7 +244,19 @@ export const generateBillHTML = ({
       </tr>
       <tr>
         <td>Items × ${days} days</td>
+        <td class="right bold">₹ ${(itemsTotal * days).toFixed(2)}</td>
+      </tr>
+      <tr>
+        <td>Skipped Days (${skippedDaysCount})</td>
+        <td class="right bold">- ₹ ${skipAmount.toFixed(2)}</td>
+      </tr>
+      <tr>
+        <td>Items × ${effectiveDays} days (after skipped)</td>
         <td class="right bold">₹ ${subscriptionItemsTotal.toFixed(2)}</td>
+      </tr>
+      <tr>
+        <td>Skipped Dates</td>
+        <td class="right bold">${skippedDates.map((d) => new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short" })).join(", ")}</td>
       </tr>
       `
           : `

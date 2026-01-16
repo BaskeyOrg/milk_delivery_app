@@ -1,4 +1,5 @@
 import { useOrderDetails, useUpdateOrder } from "@/api/orders";
+import { useSubscriptionPauses } from "@/api/subscription";
 import { Plan } from "@/app/(user)/orders/[id]";
 import { OrderStatusList, statusColors } from "@/assets/data/types";
 import OrderAddressCard from "@/components/Address/OrderAddressCard";
@@ -33,6 +34,7 @@ export default function AdminOrderDetailScreen() {
 
   const { data: order, isLoading, error } = useOrderDetails(id);
   const { mutate: updateOrder } = useUpdateOrder();
+  const { data: skippedDays } = useSubscriptionPauses(order?.subscription?.id);
 
   /* ---------------- UPDATE STATUS ---------------- */
   const updateOrderStatus = async (status: string) => {
@@ -242,8 +244,7 @@ export default function AdminOrderDetailScreen() {
           itemsTotal={itemsTotal}
           deliveryCharge={deliveryCharge}
           subscriptionPlan={isSubscribed ? plan : null}
-          startDate={isSubscribed ? startDate : null}
-          deliveryTime={isSubscribed ? deliveryTime : null}
+          skippedDaysCount={skippedDays?.length ?? 0} // Pass count of skipped days
         />
       </ScrollView>
     </View>

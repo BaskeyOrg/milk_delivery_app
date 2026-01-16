@@ -1,5 +1,6 @@
 import { useOrderDetails } from "@/api/orders";
 import { useUpdateOrderSubscription } from "@/api/orders/subscription";
+import { useSubscriptionPauses } from "@/api/subscription";
 import OrderAddressCard from "@/components/Address/OrderAddressCard";
 import GradientHeader from "@/components/GradientHeader";
 import OrderItemList from "@/components/OrderItemListItem";
@@ -35,6 +36,7 @@ export default function OrderDetailsScreen() {
 
   /* ---------------- DATA ---------------- */
   const { data: order, isLoading, error } = useOrderDetails(orderId);
+  const { data: skippedDays } = useSubscriptionPauses(order?.subscription?.id);
 
   useUpdateOrderSubscription(orderId);
 
@@ -75,6 +77,7 @@ export default function OrderDetailsScreen() {
   /* ---------------- BILL ---------------- */
   const handleGenerateBill = async () => {
     if (!order) return;
+       const skippedDatesArray = skippedDays?.map((d) => d.pause_date) ?? [];
 
     try {
       setGeneratingBill(true);
@@ -83,6 +86,7 @@ export default function OrderDetailsScreen() {
         order,
         itemsTotal,
         deliveryCharge,
+        skippedDates: skippedDatesArray,
       });
 
       const { uri } = await Print.printToFileAsync({ html });
@@ -170,8 +174,7 @@ export default function OrderDetailsScreen() {
           itemsTotal={itemsTotal}
           deliveryCharge={deliveryCharge}
           subscriptionPlan={isSubscribed ? plan : null}
-          startDate={isSubscribed ? startDate : null}
-          deliveryTime={isSubscribed ? deliveryTime : null}
+          skippedDaysCount={skippedDays?.length ?? 0} // Pass count of skipped days
         />
       </ScrollView>
 

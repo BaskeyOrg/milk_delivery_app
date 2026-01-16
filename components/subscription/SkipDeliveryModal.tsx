@@ -1,9 +1,16 @@
 import {
-    usePauseSubscriptionDays,
-    useSubscriptionPauses,
+  usePauseSubscriptionDays,
+  useSubscriptionPauses,
 } from "@/api/subscription";
 import React, { useMemo, useState } from "react";
-import { Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  Modal,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Calendar } from "react-native-calendars";
 
 type Props = {
@@ -28,9 +35,34 @@ export default function SkipDeliveryModal({
   const { data: pausedDays } = useSubscriptionPauses(subscriptionId);
   const { mutate, isPending } = usePauseSubscriptionDays();
 
+  const today = new Date().toISOString().split("T")[0];
+
   /* ---------------- DISABLED DATES ---------------- */
   const disabledDates = useMemo(() => {
     const map: Record<string, any> = {};
+
+    /* ---------- Disable today ---------- */
+    map[today] = {
+      disabled: true,
+      disableTouchEvent: true,
+    };
+
+    /* ---------- Disable past dates ---------- */
+    if (startDate) {
+      let cursor = new Date(startDate);
+      const todayDate = new Date(today);
+
+      while (cursor < todayDate) {
+        const d = cursor.toISOString().split("T")[0];
+        map[d] = {
+          disabled: true,
+          disableTouchEvent: true,
+        };
+        cursor.setDate(cursor.getDate() + 1);
+      }
+    }
+
+    /* ---------- Disable already paused dates ---------- */
     pausedDays?.forEach((p) => {
       map[p.pause_date] = {
         disabled: true,
@@ -39,18 +71,80 @@ export default function SkipDeliveryModal({
         dotColor: "red",
       };
     });
+
     return map;
-  }, [pausedDays]);
+  }, [pausedDays, startDate, today]);
+
+  const markedDatesMap = useMemo(() => {
+    const map: Record<string, any> = {};
+
+    /* ---------- TODAY ---------- */
+    map[today] = {
+      disabled: true,
+      disableTouchEvent: true,
+    };
+
+    /* ---------- PAST DATES ---------- */
+    if (startDate) {
+      let cursor = new Date(startDate);
+      const todayDate = new Date(today);
+
+      while (cursor < todayDate) {
+        const d = cursor.toISOString().split("T")[0];
+        map[d] = {
+          disabled: true,
+          disableTouchEvent: true,
+        };
+        cursor.setDate(cursor.getDate() + 1);
+      }
+    }
+
+    /* ---------- PAUSED DATES ---------- */
+    pausedDays?.forEach((p) => {
+      map[p.pause_date] = {
+        disabled: true,
+        disableTouchEvent: true,
+        marked: true,
+        dotColor: "red",
+      };
+    });
+
+    /* ---------- START DATE DOT ---------- */
+    if (startDate) {
+      map[startDate] = {
+        ...(map[startDate] ?? {}),
+        marked: true,
+        dotColor: "green",
+      };
+    }
+
+    /* ---------- END DATE DOT ---------- */
+    if (endDate) {
+      map[endDate] = {
+        ...(map[endDate] ?? {}),
+        marked: true,
+        dotColor: "blue",
+      };
+    }
+
+    return map;
+  }, [pausedDays, startDate, endDate, today]);
 
   /* ---------------- TOGGLE DATE ---------------- */
   const onDayPress = (day: any) => {
     const date = day.dateString;
+
+    if (markedDatesMap[date]?.disabled) return;
+
     setSelectedDates((prev) => {
       const copy = { ...prev };
       if (copy[date]) {
         delete copy[date];
       } else {
-        copy[date] = { selected: true, selectedColor: "#ef4444" };
+        copy[date] = {
+          selected: true,
+          selectedColor: "#ef4444",
+        };
       }
       return copy;
     });
@@ -84,7 +178,10 @@ export default function SkipDeliveryModal({
           <Calendar
             minDate={startDate}
             maxDate={endDate ?? undefined}
-            markedDates={{ ...disabledDates, ...selectedDates }}
+            markedDates={{
+              ...markedDatesMap,
+              ...selectedDates,
+            }}
             onDayPress={onDayPress}
           />
 

@@ -8,8 +8,7 @@ export type OrderBillFooterProps = {
   itemsTotal: number;
   deliveryCharge?: number;
   subscriptionPlan?: SubscriptionPlan;
-  startDate?: string | null;
-  deliveryTime?: DeliveryTime;
+  skippedDaysCount?: number;
 };
 
 const PLAN_DAYS: Record<Exclude<SubscriptionPlan, null>, number> = {
@@ -21,69 +20,76 @@ const OrderSummeryFooter = ({
   itemsTotal,
   deliveryCharge = 0,
   subscriptionPlan = null,
-  startDate = null,
-  deliveryTime = null,
+  skippedDaysCount = 0,
 }: OrderBillFooterProps) => {
-  const subscriptionDays = subscriptionPlan
-    ? PLAN_DAYS[subscriptionPlan]
-    : 1;
+  const subscriptionDays = subscriptionPlan ? PLAN_DAYS[subscriptionPlan] : 1;
+  const effectiveDays = subscriptionDays - skippedDaysCount;
+
+  const skipAmount = useMemo(
+    () => itemsTotal * skippedDaysCount,
+    [itemsTotal, skippedDaysCount]
+  );
 
   const subscriptionItemsTotal = useMemo(
-    () => itemsTotal * subscriptionDays,
-    [itemsTotal, subscriptionDays]
+    () => itemsTotal * effectiveDays,
+    [itemsTotal, effectiveDays]
   );
+
+  const totalBeforeDelivery = subscriptionPlan
+    ? itemsTotal * subscriptionDays
+    : itemsTotal;
 
   const grandTotal = subscriptionItemsTotal + deliveryCharge;
 
   return (
     <View className="bg-background-card rounded-3xl p-5 bg-black/5">
-      {/* Header */}
-      <Text className="text-text-primary text-xl font-bold mb-4">
-        Summary
-      </Text>
+      <Text className="text-text-primary text-xl font-bold mb-4">Summary</Text>
 
-      <View className="space-y-3">
-        {/* Items */}
+      <View className="space-y-2">
+        {/* Per day total */}
         <View className="flex-row justify-between">
           <Text className="text-text-secondary">
-            Items Total (per day)
+            Items Total {subscriptionPlan ? "(per day)" : ""}
           </Text>
           <Text className="font-bold">₹ {itemsTotal.toFixed(2)}</Text>
         </View>
 
-        {/* Subscription info */}
         {subscriptionPlan && (
           <>
+            {/* Plan */}
             <View className="flex-row justify-between">
               <Text className="text-text-secondary">Plan</Text>
               <Text className="font-bold capitalize">{subscriptionPlan}</Text>
             </View>
 
-            <View className="flex-row justify-between">
-              <Text className="text-text-secondary">Duration</Text>
-              <Text className="font-bold">{subscriptionDays} days</Text>
-            </View>
-
+            {/* Items × total plan days */}
             <View className="flex-row justify-between">
               <Text className="text-text-secondary">
                 Items × {subscriptionDays} days
               </Text>
               <Text className="font-bold">
-                ₹ {subscriptionItemsTotal.toFixed(2)}
+                ₹ {totalBeforeDelivery.toFixed(2)}
               </Text>
             </View>
 
-            {startDate && (
+            {/* Skipped Days */}
+            {skippedDaysCount > 0 && (
               <View className="flex-row justify-between">
-                <Text className="text-text-secondary">Start Date</Text>
-                <Text className="font-bold">{startDate}</Text>
+                <Text className="text-text-secondary">
+                  Skipped Days ({skippedDaysCount})
+                </Text>
+                <Text className="font-bold">- ₹ {skipAmount.toFixed(2)}</Text>
               </View>
             )}
-
-            {deliveryTime && (
+            {/* Items × effective days */}
+            {skippedDaysCount > 0 && (
               <View className="flex-row justify-between">
-                <Text className="text-text-secondary">Delivery Time</Text>
-                <Text className="font-bold capitalize">{deliveryTime}</Text>
+                <Text className="text-text-secondary">
+                  Items × {effectiveDays} days (after skipped)
+                </Text>
+                <Text className="font-bold">
+                  ₹ {subscriptionItemsTotal.toFixed(2)}
+                </Text>
               </View>
             )}
           </>
@@ -91,12 +97,12 @@ const OrderSummeryFooter = ({
 
         {/* Delivery */}
         <View className="flex-row justify-between">
-          <Text className="text-text-secondary">Delivery</Text>
+          <Text className="text-text-secondary">Delivery Charge</Text>
           <Text className="font-bold">₹ {deliveryCharge.toFixed(2)}</Text>
         </View>
 
-        {/* Total */}
-        <View className="flex-row justify-between mt-3">
+        {/* Grand Total */}
+        <View className="flex-row justify-between mt-2">
           <Text className="text-text-primary font-bold text-lg">Total</Text>
           <Text className="text-primary font-bold text-2xl">
             ₹ {grandTotal.toFixed(2)}
