@@ -3,6 +3,7 @@ import {
   useSubscriptionPauses,
 } from "@/api/subscription";
 import { notifyAdminsAboutSkip } from "@/lib/notifications";
+import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo, useState } from "react";
 import {
   Modal,
@@ -152,38 +153,52 @@ export default function SkipDeliveryModal({
   };
 
   /* ---------------- SUBMIT ---------------- */
-const handleConfirm = () => {
-  const dates = Object.keys(selectedDates);
-  if (!dates.length) return;
+  const handleConfirm = () => {
+    const dates = Object.keys(selectedDates);
+    if (!dates.length) return;
 
-  // Pause the subscription days
-  mutate(
-    { subscriptionId, dates, reason },
-    {
-      onSuccess: async () => {
-        // Clear local state
-        setSelectedDates({});
-        setReason("");
-        setConfirmOpen(false);
-        onClose();
+    // Pause the subscription days
+    mutate(
+      { subscriptionId, dates, reason },
+      {
+        onSuccess: async () => {
+          // Clear local state
+          setSelectedDates({});
+          setReason("");
+          setConfirmOpen(false);
+          onClose();
 
-        // ✅ Notify admin & delivery
-        try {
-          await notifyAdminsAboutSkip({ subscriptionId, dates, reason });
-        } catch (e) {
-          console.error("Failed to notify admins/delivery", e);
-        }
-      },
-    }
-  );
-};
+          // ✅ Notify admin & delivery
+          try {
+            await notifyAdminsAboutSkip({ subscriptionId, dates, reason });
+          } catch (e) {
+            console.error("Failed to notify admins/delivery", e);
+          }
+        },
+      }
+    );
+  };
+
+  /* ---------------- CLOSE HANDLER ---------------- */
+  const handleClose = () => {
+    setSelectedDates({});
+    setReason("");
+    setConfirmOpen(false);
+    onClose();
+  };
 
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View className="flex-1 bg-black/50 justify-end">
         {/* Main modal */}
         <View className="bg-white rounded-t-2xl p-4 gap-4 max-h-[80%]">
-          <Text className="text-lg font-bold">Skip Delivery Days</Text>
+          {/* 🔹 HEADER */}
+          <View className="flex-row items-center justify-between">
+            <Text className="text-lg font-bold">Skip Delivery Days</Text>
+            <TouchableOpacity onPress={handleClose}>
+              <Ionicons name="close" size={20} color="#666" />
+            </TouchableOpacity>
+          </View>
 
           <Calendar
             minDate={startDate}
@@ -224,7 +239,9 @@ const handleConfirm = () => {
               onClose();
             }}
           >
-            <Text className="text-center text-gray-500">Cancel</Text>
+            <Text className="text-center text-gray-500 font-semibold pb-3">
+              Cancel
+            </Text>
           </TouchableOpacity>
         </View>
 

@@ -16,6 +16,7 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { useColorScheme } from "react-native";
+import { NetworkProvider } from "@/providers/NetworkProvider";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -45,6 +46,7 @@ function RootLayoutNav() {
     <ThemeProvider value={colorScheme === "light" ? DarkTheme : DefaultTheme}>
       <AuthProvider>
         <QueryProvider>
+          <NetworkProvider>
           <NotificationProvider>
             <LocationProvider>
               <CartProvider>
@@ -60,6 +62,7 @@ function RootLayoutNav() {
               </CartProvider>
             </LocationProvider>
           </NotificationProvider>
+          </NetworkProvider>
         </QueryProvider>
       </AuthProvider>
     </ThemeProvider>
