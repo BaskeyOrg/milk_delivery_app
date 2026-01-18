@@ -12,9 +12,6 @@ import {
 
 type FilterKey = "all" | "active" | "completed";
 
-const COMPLETED_STATUSES = ["Delivered"];
-const ACTIVE_STATUSES = ["New", "Delivering", "Cancelled"];
-
 export default function AdminOrdersScreen() {
   const [filter, setFilter] = useState<FilterKey>("all");
 

@@ -1,11 +1,11 @@
-import NetInfo, { NetInfoState } from "@react-native-community/netinfo";
+import NetInfo from "@react-native-community/netinfo";
 import { useQueryClient } from "@tanstack/react-query";
 import React, {
-    createContext,
-    useContext,
-    useEffect,
-    useRef,
-    useState,
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
 } from "react";
 
 type NetworkContextType = {
@@ -14,29 +14,27 @@ type NetworkContextType = {
 
 const NetworkContext = createContext<NetworkContextType | null>(null);
 
-export function NetworkProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function NetworkProvider({ children }: { children: React.ReactNode }) {
   const [isConnected, setIsConnected] = useState(true);
   const wasConnected = useRef(true);
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener(
-      (state: NetInfoState) => {
-        const connected = Boolean(state.isConnected);
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      const connected =
+        Boolean(state.isConnected) &&
+        Boolean(state.isInternetReachable);
 
-        // 🔁 Refetch ONLY once when coming back online
-        if (!wasConnected.current && connected) {
-          queryClient.invalidateQueries();
-        }
-
-        wasConnected.current = connected;
-        setIsConnected(connected);
+      // 🔁 Refetch ONLY ONCE when coming back online
+      if (!wasConnected.current && connected) {
+        queryClient.invalidateQueries({
+          refetchType: "active",
+        });
       }
-    );
+
+      wasConnected.current = connected;
+      setIsConnected(connected);
+    });
 
     return unsubscribe;
   }, [queryClient]);

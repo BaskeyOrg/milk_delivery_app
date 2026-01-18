@@ -172,3 +172,37 @@ export const useInsertOrder = () => {
     },
   });
 };
+
+
+/* ---------------- CANCEL ORDER ---------------- */
+
+export const useCancelOrder = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      orderId,
+    }: {
+      orderId: number;
+    }) => {
+      const { data, error } = await supabase
+        .from("orders")
+        .update({
+          status: "Cancelled",
+          status_updated_at: new Date().toISOString(),
+        })
+        .eq("id", orderId)
+        .eq("status", "New") // 🔐 safety check
+        .select()
+        .single();
+
+      if (error) throw new Error(error.message);
+      return data;
+    },
+
+    onSuccess: (_, { orderId }) => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["order", orderId] });
+    },
+  });
+};

@@ -10,13 +10,14 @@ import NotificationProvider from "@/providers/NotificationProvider";
 import QueryProvider from "@/providers/QueryProvider";
 
 import { LocationProvider } from "@/providers/LocationProvider";
+import { NetworkProvider } from "@/providers/NetworkProvider";
 import {
   DarkTheme,
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
 import { useColorScheme } from "react-native";
-import { NetworkProvider } from "@/providers/NetworkProvider";
+import OfflineBanner from "@/components/OfflineBanner";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -47,6 +48,7 @@ function RootLayoutNav() {
       <AuthProvider>
         <QueryProvider>
           <NetworkProvider>
+            <OfflineBanner />
           <NotificationProvider>
             <LocationProvider>
               <CartProvider>

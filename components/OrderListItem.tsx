@@ -12,7 +12,10 @@ type Props = {
   order: BaseOrder | OrderWithItems;
 };
 
-const statusColorMap: Record<string, { bg: string; text: string }> = {
+export const normalizeStatus = (status?: string) =>
+  status?.toLowerCase() ?? "new";
+
+export const statusColorMap: Record<string, { bg: string; text: string }> = {
   new: { bg: "bg-accent-warning/15", text: "text-accent-warning" },
   delivering: { bg: "bg-accent-info/15", text: "text-accent-info" },
   delivered: { bg: "bg-accent-success/15", text: "text-accent-success" },

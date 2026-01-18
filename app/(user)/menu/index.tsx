@@ -12,12 +12,15 @@ import EmptySearchState from "@/components/EmptySearchState";
 import Header from "@/components/Header";
 import LocationModal from "@/components/Location/LocationModal";
 import ProductListItem from "@/components/ProductListItem";
+import { useNetwork } from "@/providers/NetworkProvider";
+import OfflineBanner from "@/components/OfflineBanner";
 // import { useLocationContext } from "@/providers/LocationProvider";
 
 export default function MenuScreen() {
   const { data: products, error, isLoading, refetch } = useProductList();
 
   // const { setSelectedAddress } = useLocationContext();
+  const { isConnected } = useNetwork();
 
   const [refreshing, setRefreshing] = useState(false);
   const [searchText, setSearchText] = useState("");
@@ -40,7 +43,10 @@ export default function MenuScreen() {
       product.name?.toLowerCase().includes(searchText.toLowerCase())
     );
   }, [products, searchText]);
-
+  // 🔴 BLOCK entire screen
+  if (!isConnected) {
+    return <OfflineBanner />;
+  }
 
   if (isLoading) {
     return (

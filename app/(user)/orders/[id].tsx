@@ -1,9 +1,10 @@
-import { useOrderDetails } from "@/api/orders";
+import { useCancelOrder, useOrderDetails } from "@/api/orders";
 import { useUpdateOrderSubscription } from "@/api/orders/subscription";
 import { useSubscriptionPauses } from "@/api/subscription";
 import OrderAddressCard from "@/components/Address/OrderAddressCard";
 import GradientHeader from "@/components/GradientHeader";
 import OrderItemList from "@/components/OrderItemListItem";
+import { normalizeStatus, statusColorMap } from "@/components/OrderListItem";
 import OrderSummeryFooter from "@/components/OrderSummeryFooter";
 import OrderSubscriptionDetailsCard from "@/components/subscription/OrderSubscriptionDetailsCard";
 import SkipDeliveryModal from "@/components/subscription/SkipDeliveryModal";
@@ -15,6 +16,7 @@ import * as Sharing from "expo-sharing";
 import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -37,6 +39,7 @@ export default function OrderDetailsScreen() {
   /* ---------------- DATA ---------------- */
   const { data: order, isLoading, error } = useOrderDetails(orderId);
   const { data: skippedDays } = useSubscriptionPauses(order?.subscription?.id);
+  const { mutate: cancelOrder, isPending: cancelling } = useCancelOrder();
 
   useUpdateOrderSubscription(orderId);
 
@@ -48,12 +51,6 @@ export default function OrderDetailsScreen() {
     subscription?.plan_type === "weekly" ||
     subscription?.plan_type === "monthly"
       ? subscription.plan_type
-      : null;
-
-  const deliveryTime: DeliveryTime | null =
-    subscription?.delivery_time === "morning" ||
-    subscription?.delivery_time === "evening"
-      ? subscription.delivery_time
       : null;
 
   const startDate = subscription?.start_date ?? null;
@@ -74,10 +71,35 @@ export default function OrderDetailsScreen() {
     return order.total;
   }, [order, isSubscribed, plan]);
 
+  const canCancel = order?.status === "New";
+
+  const normalizedStatus = normalizeStatus(order?.status);
+  const statusStyle = statusColorMap[normalizedStatus] ?? statusColorMap.new;
+
+  const handleCancelOrder = () => {
+    if (!order?.id) return;
+    Alert.alert("Cancel Order", "Are you sure you want to cancel this order?", [
+      { text: "No", style: "cancel" },
+      {
+        text: "Yes, Cancel",
+        style: "destructive",
+        onPress: () =>
+          cancelOrder(
+            { orderId: order.id },
+            {
+              onError: (err) => {
+                Alert.alert("Error", err.message);
+              },
+            }
+          ),
+      },
+    ]);
+  };
+
   /* ---------------- BILL ---------------- */
   const handleGenerateBill = async () => {
     if (!order) return;
-       const skippedDatesArray = skippedDays?.map((d) => d.pause_date) ?? [];
+    const skippedDatesArray = skippedDays?.map((d) => d.pause_date) ?? [];
 
     try {
       setGeneratingBill(true);
@@ -139,19 +161,44 @@ export default function OrderDetailsScreen() {
           gap: 16,
         }}
       >
-        {order.addresses && <OrderAddressCard address={order.addresses} />}
+        <View className="flex-row items-center ml-2 mt-2">
+          <Text className="text-gray-500 text-lg mr-1">Order Status :</Text>
 
-        <TouchableOpacity
-          disabled={generatingBill}
-          onPress={handleGenerateBill}
-          className={`py-3 rounded-lg ${
-            generatingBill ? "bg-gray-400" : "bg-green-600"
-          }`}
-        >
-          <Text className="text-white text-center font-semibold">
-            {generatingBill ? "Generating Bill..." : "Generate Bill"}
-          </Text>
-        </TouchableOpacity>
+          <View className={`px-3 py-1 rounded-full ${statusStyle.bg}`}>
+            <Text className={`text-sm font-semibold ${statusStyle.text}`}>
+              {order.status}
+            </Text>
+          </View>
+        </View>
+
+        {order.addresses && <OrderAddressCard address={order.addresses} />}
+        <View className="flex-row gap-3">
+          {/* Cancel Order */}
+          {canCancel && (
+            <TouchableOpacity
+              disabled={cancelling}
+              onPress={handleCancelOrder}
+              className="flex-1 py-3 rounded-lg border border-red-500/40 bg-white"
+            >
+              <Text className="text-red-500/60 text-center font-semibold">
+                {cancelling ? "Cancelling..." : "Cancel Order"}
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Generate Bill */}
+          <TouchableOpacity
+            disabled={generatingBill}
+            onPress={handleGenerateBill}
+            className={`flex-1 py-3 rounded-lg ${
+              generatingBill ? "bg-gray-400" : "bg-green-600"
+            }`}
+          >
+            <Text className="text-white text-center font-semibold">
+              {generatingBill ? "Generating Bill..." : "Generate Bill"}
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         {subscription && (
           <>
@@ -159,9 +206,9 @@ export default function OrderDetailsScreen() {
 
             <TouchableOpacity
               onPress={() => setSkipOpen(true)}
-              className="bg-red-500 py-3 rounded-lg"
+              className="flex-1 py-3 rounded-lg border border-red-500/40 bg-white"
             >
-              <Text className="text-white text-center font-semibold">
+              <Text className="text-red-500/60 text-center font-semibold">
                 Skip Delivery Day
               </Text>
             </TouchableOpacity>

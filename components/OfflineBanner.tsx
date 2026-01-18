@@ -14,7 +14,11 @@ export default function OfflineBanner() {
         No internet connection
       </Text>
 
-      <TouchableOpacity onPress={() => queryClient.invalidateQueries()}>
+      <TouchableOpacity
+        onPress={() =>
+          queryClient.invalidateQueries({ refetchType: "active" })
+        }
+      >
         <Text className="text-white font-bold underline">
           Retry
         </Text>
