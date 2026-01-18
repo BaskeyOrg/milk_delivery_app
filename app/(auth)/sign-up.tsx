@@ -38,15 +38,16 @@ export default function SignUpScreen() {
 
   /* ---------------- PASSWORD RULES ---------------- */
 
-  const passwordRules = useMemo(() => {
-    return {
+  const passwordRules = useMemo(
+    () => ({
       length: password.length >= 8,
       upper: upperCase.test(password),
       lower: lowerCase.test(password),
       number: number.test(password),
       symbol: symbol.test(password),
-    };
-  }, [password]);
+    }),
+    [password]
+  );
 
   const passwordScore = Object.values(passwordRules).filter(Boolean).length;
 
@@ -57,8 +58,8 @@ export default function SignUpScreen() {
     passwordStrength === "Weak"
       ? "bg-red-500"
       : passwordStrength === "Medium"
-      ? "bg-yellow-500"
-      : "bg-green-500";
+        ? "bg-yellow-500"
+        : "bg-green-500";
 
   const isFormValid =
     emailRegex.test(email) &&
@@ -84,16 +85,22 @@ export default function SignUpScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
-      style={{ flex: 1 }}
-    >
-      {/* 🔹 SAME GRADIENT AS SIGN IN */}
+    <View style={{ flex: 1 }}>
+      {/* 🔹 ABSOLUTE GRADIENT BACKGROUND */}
       <LinearGradient
         colors={["#1bcf5aff", "#ffffff", "#f9fafb"]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
+        style={{
+          position: "absolute",
+          inset: 0,
+        }}
+      />
+
+      {/* 🔹 CONTENT */}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
         style={{ flex: 1 }}
       >
         <ScrollView
@@ -121,7 +128,7 @@ export default function SignUpScreen() {
                   autoCapitalize="none"
                   keyboardType="email-address"
                   placeholderTextColor="#9CA3AF"
-                  className={`border rounded-full px-5 py-3 text-black bg-white ${
+                  className={`border rounded-full px-5 py-3 bg-white ${
                     !isEmailValid ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -139,7 +146,7 @@ export default function SignUpScreen() {
                 placeholder="Password"
                 secureTextEntry
                 placeholderTextColor="#9CA3AF"
-                className="border border-gray-300 rounded-full px-5 py-3 text-black bg-white"
+                className="border border-gray-300 rounded-full px-5 py-3 bg-white"
               />
 
               {/* PASSWORD STRENGTH */}
@@ -188,7 +195,7 @@ export default function SignUpScreen() {
                   placeholder="Confirm password"
                   secureTextEntry
                   placeholderTextColor="#9CA3AF"
-                  className={`border rounded-full px-5 py-3 text-black bg-white ${
+                  className={`border rounded-full px-5 py-3 bg-white ${
                     !isPasswordMatch ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -229,7 +236,7 @@ export default function SignUpScreen() {
             </Link>
 
             {/* FOOTER */}
-            <Text className="text-center text-gray-500 text-xs leading-4 mt-6 px-2">
+            <Text className="text-center text-gray-500 text-xs mt-6 px-2">
               By signing up, you agree to our{" "}
               <Text className="text-blue-500">Terms</Text>,{" "}
               <Text className="text-blue-500">Privacy Policy</Text> and{" "}
@@ -237,7 +244,7 @@ export default function SignUpScreen() {
             </Text>
           </View>
         </ScrollView>
-      </LinearGradient>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }

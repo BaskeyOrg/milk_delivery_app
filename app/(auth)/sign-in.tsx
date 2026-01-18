@@ -58,16 +58,22 @@ export default function SignInScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
-      style={{ flex: 1 }}
-    >
-      {/* 🔹 GRADIENT BACKGROUND */}
+    <View style={{ flex: 1 }}>
+      {/* 🔹 ABSOLUTE BACKGROUND */}
       <LinearGradient
         colors={["#1bcf5aff", "#ffffff", "#f9fafb"]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
+        style={{
+          position: "absolute",
+          inset: 0,
+        }}
+      />
+
+      {/* 🔹 CONTENT */}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
         style={{ flex: 1 }}
       >
         <ScrollView
@@ -98,7 +104,7 @@ export default function SignInScreen() {
                   autoCapitalize="none"
                   keyboardType="email-address"
                   placeholderTextColor="#9CA3AF"
-                  className={`border rounded-full px-5 py-3 text-black bg-white ${
+                  className={`border rounded-full px-5 py-3 bg-white ${
                     showEmailError ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -120,7 +126,7 @@ export default function SignInScreen() {
                   placeholder="Password"
                   secureTextEntry
                   placeholderTextColor="#9CA3AF"
-                  className={`border rounded-full px-5 py-3 text-black bg-white ${
+                  className={`border rounded-full px-5 py-3 bg-white ${
                     showPasswordError ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -155,13 +161,13 @@ export default function SignInScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* SIGN UP LINK */}
+            {/* SIGN UP */}
             <Link href="/sign-up" className="mt-6 text-blue-600 font-medium">
               Create an account
             </Link>
 
             {/* FOOTER */}
-            <Text className="text-center text-gray-500 text-xs leading-4 mt-6 px-2">
+            <Text className="text-center text-gray-500 text-xs mt-6 px-2">
               By signing in, you agree to our{" "}
               <Text className="text-blue-500">Terms</Text>,{" "}
               <Text className="text-blue-500">Privacy Policy</Text> and{" "}
@@ -169,7 +175,7 @@ export default function SignInScreen() {
             </Text>
           </View>
         </ScrollView>
-      </LinearGradient>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }

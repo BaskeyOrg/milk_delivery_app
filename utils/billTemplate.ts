@@ -256,7 +256,20 @@ export const generateBillHTML = ({
       </tr>
       <tr>
         <td>Skipped Dates</td>
-        <td class="right bold">${skippedDates.map((d) => new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short" })).join(", ")}</td>
+        <td class="right bold">
+          ${
+            skippedDates?.length > 0
+              ? skippedDates
+                  .map((d) =>
+                    new Date(d).toLocaleDateString("en-GB", {
+                      day: "numeric",
+                      month: "short",
+                    })
+                  )
+                  .join(", ")
+              : "-"
+          }
+        </td>
       </tr>
       `
           : `
