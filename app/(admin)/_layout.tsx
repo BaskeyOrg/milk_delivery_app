@@ -7,7 +7,6 @@ import { BlurView } from "expo-blur";
 import { ActivityIndicator, StyleSheet, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>["name"];
   color: string;
@@ -19,7 +18,7 @@ export default function TabLayout() {
   const colorScheme = useColorScheme();
   const { profile, loading, session } = useAuth();
   const insets = useSafeAreaInsets();
-  
+
   if (loading) {
     return <ActivityIndicator style={{ flex: 1 }} />;
   }
@@ -35,7 +34,7 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "#e4240bff",
+        tabBarActiveTintColor: "#1DB954",
         tabBarInactiveTintColor: "#B3B3B3",
         tabBarStyle: {
           position: "absolute",
@@ -47,7 +46,7 @@ export default function TabLayout() {
           marginBottom: 24 + insets.bottom,
           borderRadius: 24,
           overflow: "hidden",
-
+          elevation: 0,
         },
         tabBarBackground: () => (
           <BlurView
@@ -56,14 +55,15 @@ export default function TabLayout() {
             style={StyleSheet.absoluteFill}
           />
         ),
-        tabBarLabelStyle:{
+        tabBarLabelStyle: {
           fontSize: 10,
-          fontWeight: 600,
+          fontWeight: "600",
+          marginTop: -3,
         },
         headerShown: false,
       }}
     >
-  <Tabs.Screen name="index" options={{ href: null, headerShown: false }} />
+      <Tabs.Screen name="index" options={{ href: null, headerShown: false }} />
       <Tabs.Screen
         name="menu"
         options={{

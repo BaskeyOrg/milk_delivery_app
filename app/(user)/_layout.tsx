@@ -39,7 +39,7 @@ export default function TabLayout() {
           marginBottom: 24 + insets.bottom,
           borderRadius: 24,
           overflow: "hidden",
-
+          elevation: 0,
         },
         tabBarBackground: () => (
           <BlurView
@@ -48,15 +48,16 @@ export default function TabLayout() {
             style={StyleSheet.absoluteFill}
           />
         ),
-        tabBarLabelStyle:{
+        tabBarLabelStyle: {
           fontSize: 10,
-          fontWeight: 600,
+          fontWeight: "600",
+          marginTop: -3,
         },
         headerShown: false,
       }}
     >
       <Tabs.Screen name="index" options={{ href: null }} />
-      <Tabs.Screen name="wishList" options={{href: null }} />
+      <Tabs.Screen name="wishList" options={{ href: null }} />
 
       <Tabs.Screen
         name="menu"
@@ -87,7 +88,9 @@ export default function TabLayout() {
         name="cart"
         options={{
           title: "Cart",
-          tabBarIcon: ({ color }) => <TabBarIcon name="shopping-cart" color={color} />,
+          tabBarIcon: ({ color }) => (
+            <TabBarIcon name="shopping-cart" color={color} />
+          ),
         }}
       />
     </Tabs>
