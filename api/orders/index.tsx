@@ -14,6 +14,13 @@ export type OrdersInsert = InsertTables<"orders">;
 export type BaseOrder = Tables<"orders"> & {
   addresses?: Tables<"addresses"> | null;
 };
+export type AdminOrder = Tables<"orders"> & {
+  subscription:
+    | (Tables<"subscriptions"> & {
+        subscription_pauses: Tables<"subscription_pauses">[];
+      })
+    | null;
+};
 
 export type OrderWithItems = Tables<"orders"> & {
   order_items: (Tables<"order_items"> & {
@@ -28,22 +35,29 @@ export type OrderWithItems = Tables<"orders"> & {
 /* ---------------- ADMIN ORDERS ---------------- */
 
 export const useAdminOrderList = ({ statuses }: { statuses?: string[] }) => {
-  return useQuery<Tables<"orders">[], Error>({
+  return useQuery<AdminOrder[], Error>({
     queryKey: ["admin-orders", { statuses }],
     queryFn: async () => {
       let query = supabase
         .from("orders")
-        .select("*")
+        .select(
+          `
+          *,
+          subscription:subscriptions (
+            *,
+            subscription_pauses (*)
+          )
+        `,
+        )
         .order("created_at", { ascending: false });
 
-      // Apply status filter only if provided
-      if (statuses && statuses.length > 0) {
+      if (statuses?.length) {
         query = query.in("status", statuses);
       }
 
       const { data, error } = await query;
-
       if (error) throw new Error(error.message);
+
       return data ?? [];
     },
   });
@@ -69,7 +83,7 @@ export const useMyOrderList = () => {
             products (*)
           ),
           subscription:subscriptions (*)
-        `
+        `,
         )
         .eq("user_id", userId!)
         .order("created_at", { ascending: false });
@@ -84,7 +98,10 @@ export const useMyOrderList = () => {
 
 export const useOrderDetails = (
   orderId: number,
-  options?: Omit<UseQueryOptions<OrderWithItems, Error>, "queryKey" | "queryFn">
+  options?: Omit<
+    UseQueryOptions<OrderWithItems, Error>,
+    "queryKey" | "queryFn"
+  >,
 ) => {
   return useQuery<OrderWithItems, Error>({
     queryKey: ["order", orderId],
@@ -102,7 +119,7 @@ export const useOrderDetails = (
             products (*)
           ),
           subscription:subscriptions (*)
-        `
+        `,
         )
         .eq("id", orderId)
         .single();
@@ -173,18 +190,13 @@ export const useInsertOrder = () => {
   });
 };
 
-
 /* ---------------- CANCEL ORDER ---------------- */
 
 export const useCancelOrder = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      orderId,
-    }: {
-      orderId: number;
-    }) => {
+    mutationFn: async ({ orderId }: { orderId: number }) => {
       const { data, error } = await supabase
         .from("orders")
         .update({

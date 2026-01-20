@@ -1,5 +1,6 @@
-import { useAdminOrderList } from "@/api/orders";
+import { AdminOrder, useAdminOrderList } from "@/api/orders";
 import { useInsertOrderSubscription } from "@/api/orders/subscription";
+import { Tables } from "@/assets/data/types";
 import OrderListItem from "@/components/OrderListItem";
 import React, { useMemo, useState } from "react";
 import {
@@ -10,7 +11,7 @@ import {
   View,
 } from "react-native";
 
-type FilterKey = "all" | "active" | "completed";
+type FilterKey = "all" | "active" | "completed" | "today";
 
 export default function AdminOrdersScreen() {
   const [filter, setFilter] = useState<FilterKey>("all");
@@ -29,18 +30,43 @@ export default function AdminOrdersScreen() {
 
   useInsertOrderSubscription();
 
+  /* ---------------- DOWNLOAD TODAY DELIVERIES Helpers ---------------- */
+  const todayISO = () => new Date().toISOString().split("T")[0];
+
+  const isPausedToday = (pauses: Tables<"subscription_pauses">[]) =>
+    pauses.some((p) => p.pause_date === todayISO());
+
+  const isSubscriptionActiveToday = (subscription: Tables<"subscriptions">) =>
+    todayISO() >= subscription.start_date;
+
   /* ---------------- FILTER LOGIC ---------------- */
   const filteredOrders = useMemo(() => {
     if (!orders) return [];
 
-    return orders.filter((order) => {
+    return orders.filter((order: AdminOrder) => {
       const status = order.status?.trim() ?? "";
 
-      if (filter === "completed") return COMPLETED_STATUSES.includes(status);
+      if (filter === "completed") {
+        return COMPLETED_STATUSES.includes(status);
+      }
 
-      if (filter === "active") return ACTIVE_STATUSES.includes(status);
+      if (filter === "active") {
+        return ACTIVE_STATUSES.includes(status);
+      }
 
-      return true; // all
+      if (filter === "today") {
+        if (!ACTIVE_STATUSES.includes(status)) return false;
+        if (!order.subscription) return false;
+
+        const pauses = order.subscription.subscription_pauses ?? [];
+
+        if (!isSubscriptionActiveToday(order.subscription)) return false;
+        if (isPausedToday(pauses)) return false;
+
+        return true;
+      }
+
+      return true;
     });
   }, [orders, filter]);
 
@@ -82,6 +108,11 @@ export default function AdminOrdersScreen() {
           label="Completed"
           isActive={filter === "completed"}
           onPress={() => setFilter("completed")}
+        />
+        <FilterButton
+          label="Today"
+          isActive={filter === "today"}
+          onPress={() => setFilter("today")}
         />
       </View>
 
