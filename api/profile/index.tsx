@@ -1,4 +1,4 @@
-import { InsertTables, UpdateTables } from "@/assets/data/types";
+import { InsertTables, Tables, UpdateTables } from "@/assets/data/types";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/providers/AuthProvider";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -113,6 +113,21 @@ export const useCreateProfile = () => {
 
       if (error) throw error;
       return data;
+    },
+  });
+};
+
+export const useAdminUsers = () => {
+  return useQuery({
+    queryKey: ["admin", "users"],
+    queryFn: async (): Promise<Tables<"profiles">[]> => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .order("updated_at", { ascending: false });
+
+      if (error) throw error;
+      return data ?? [];
     },
   });
 };

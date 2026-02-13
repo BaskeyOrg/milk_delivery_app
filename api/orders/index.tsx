@@ -218,3 +218,30 @@ export const useCancelOrder = () => {
     },
   });
 };
+
+/* ---------------- ADMIN: ORDERS BY USER ---------------- */
+
+export const useAdminOrdersByUser = (userId?: string) => {
+  return useQuery<AdminOrder[], Error>({
+    queryKey: ["admin-orders", "user", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select(
+          `
+          *,
+          subscription:subscriptions (
+            *,
+            subscription_pauses (*)
+          )
+        `,
+        )
+        .eq("user_id", userId!)
+        .order("created_at", { ascending: false });
+
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
+  });
+};

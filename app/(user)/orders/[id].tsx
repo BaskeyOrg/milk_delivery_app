@@ -71,6 +71,11 @@ export default function OrderDetailsScreen() {
     return order.total;
   }, [order, isSubscribed, plan]);
 
+  const isSubscriptionExpired = useMemo(() => {
+    if (!endDate) return false;
+    return new Date() > new Date(endDate);
+  }, [endDate]);
+
   const canCancel = order?.status === "New";
 
   const normalizedStatus = normalizeStatus(order?.status);
@@ -90,7 +95,7 @@ export default function OrderDetailsScreen() {
               onError: (err) => {
                 Alert.alert("Error", err.message);
               },
-            }
+            },
           ),
       },
     ]);
@@ -204,14 +209,16 @@ export default function OrderDetailsScreen() {
           <>
             <OrderSubscriptionDetailsCard subscription={subscription} />
 
-            <TouchableOpacity
-              onPress={() => setSkipOpen(true)}
-              className="flex-1 py-3 rounded-lg border border-red-500/40 bg-white"
-            >
-              <Text className="text-red-500/60 text-center font-semibold">
-                Skip Delivery Day
-              </Text>
-            </TouchableOpacity>
+            {!isSubscriptionExpired && (
+              <TouchableOpacity
+                onPress={() => setSkipOpen(true)}
+                className="flex-1 py-3 rounded-lg border border-red-500/40 bg-white"
+              >
+                <Text className="text-red-500/60 text-center font-semibold">
+                  Skip Delivery Day
+                </Text>
+              </TouchableOpacity>
+            )}
           </>
         )}
 
