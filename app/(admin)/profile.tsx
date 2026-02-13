@@ -49,7 +49,21 @@ export default function ProfileScreen() {
           </View>
         </View>
       </View>
+      <View className="mx-6 mb-3 bg-black/5 rounded-2xl p-4">
+        <TouchableOpacity
+          onPress={() => router.push("/(admin)/users")}
+          className="flex-row items-center justify-between py-2"
+        >
+          <View className="flex-row items-center">
+            <Ionicons name="people-outline" size={22} color="#F59E0B" />
+            <Text className="text-text-primary font-semibold ml-3">
+              User list
+            </Text>
+          </View>
 
+          <Ionicons name="chevron-forward" size={20} color="#666" />
+        </TouchableOpacity>
+      </View>
       {/* ================= INFO ================= */}
       <View className="mx-6 mb-4 bg-black/5 rounded-2xl p-4">
         {!!profile?.phone && (
@@ -90,9 +104,7 @@ export default function ProfileScreen() {
         className="mx-6 mb-3 bg-black/5 rounded-2xl py-5 flex-row items-center justify-center border border-red-500/20"
       >
         <Ionicons name="log-out-outline" size={22} color="#EF4444" />
-        <Text className="text-red-500 font-bold text-base ml-2">
-          Sign Out
-        </Text>
+        <Text className="text-red-500 font-bold text-base ml-2">Sign Out</Text>
       </TouchableOpacity>
 
       {/* ================= FOOTER ================= */}

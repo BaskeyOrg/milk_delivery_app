@@ -48,13 +48,41 @@ export default function SignInScreen() {
     setError("");
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      // 1️⃣ Auth sign in
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) setError(error.message);
-    setLoading(false);
+      if (error) throw error;
+
+      const userId = data.user.id;
+
+      // 2️⃣ Fetch profile status
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("is_active")
+        .eq("id", userId)
+        .single();
+
+      if (profileError) {
+        await supabase.auth.signOut();
+        throw new Error("Unable to verify user status");
+      }
+
+      // 3️⃣ Block inactive users
+      if (!profile.is_active) {
+        await supabase.auth.signOut();
+        throw new Error("You are inactive. Contact admin.");
+      }
+
+      // ✅ SUCCESS → router will auto-redirect via auth listener
+    } catch (err: any) {
+      setError(err.message ?? "Sign in failed");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

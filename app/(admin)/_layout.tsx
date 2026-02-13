@@ -64,6 +64,7 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen name="index" options={{ href: null, headerShown: false }} />
+      <Tabs.Screen name="users" options={{ href: null, headerShown: false }} />
       <Tabs.Screen
         name="menu"
         options={{
