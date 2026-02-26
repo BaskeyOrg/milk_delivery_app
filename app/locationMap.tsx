@@ -5,13 +5,13 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useEffect, useRef, useState } from "react";
 import {
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Keyboard,
+    KeyboardAvoidingView,
+    Platform,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 
@@ -35,7 +35,7 @@ export default function LocationMapScreen() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [pin, setPin] = useState(
-    currentLocation ?? { latitude: 13.0397, longitude: 80.2793 }
+    currentLocation ?? { latitude: 13.0397, longitude: 80.2793 },
   );
 
   const [searchText, setSearchText] = useState("");
@@ -43,49 +43,48 @@ export default function LocationMapScreen() {
   const [addressFormVisible, setAddressFormVisible] = useState(false);
 
   /* ✅ SINGLE SOURCE OF TRUTH — PIN ➜ ADDRESS */
-useEffect(() => {
-  let active = true;
+  useEffect(() => {
+    let active = true;
 
-  const updateAddressFromPin = async () => {
-    try {
-      const [geo] = await Location.reverseGeocodeAsync(pin);
-      if (!geo || !active) return;
+    const updateAddressFromPin = async () => {
+      try {
+        const [geo] = await Location.reverseGeocodeAsync(pin);
+        if (!geo || !active) return;
 
-      const label = [
-        geo.name,
-        geo.street,
-        geo.city,
-        geo.district,
-        geo.region,
-        geo.country,
-      ]
-        .filter(Boolean)
-        .join(", ");
+        const label = [
+          geo.name,
+          geo.street,
+          geo.city,
+          geo.district,
+          geo.region,
+          geo.country,
+        ]
+          .filter(Boolean)
+          .join(", ");
 
-      setCurrentLocation(pin);
+        setCurrentLocation(pin);
 
-      setSelectedAddress({
-        id: null,
-        name: "",
-        phone: "",
-        flat: null,
-        area: label || "Selected location",
-        latitude: pin.latitude,
-        longitude: pin.longitude,
-      });
+        setSelectedAddress({
+          id: null,
+          name: "",
+          phone: "",
+          flat: null,
+          area: label || "Selected location",
+          latitude: pin.latitude,
+          longitude: pin.longitude,
+        });
 
-      setLocationLabel(label);
-    } catch {
-      setLocationLabel("Selected location");
-    }
-  };
+        setLocationLabel(label);
+      } catch {
+        setLocationLabel("Selected location");
+      }
+    };
 
-  updateAddressFromPin();
-  return () => {
-    active = false;
-  };
-}, [pin]);
-
+    updateAddressFromPin();
+    return () => {
+      active = false;
+    };
+  }, [pin]);
 
   /* 🔎 Search with suggestions */
   const onSearchChange = (text: string) => {
@@ -125,7 +124,7 @@ useEffect(() => {
               latitude: loc.latitude,
               longitude: loc.longitude,
             };
-          })
+          }),
         );
 
         setSuggestions(detailedResults);
@@ -154,7 +153,7 @@ useEffect(() => {
         latitudeDelta: 0.01,
         longitudeDelta: 0.01,
       },
-      500
+      500,
     );
   };
 
@@ -177,7 +176,7 @@ useEffect(() => {
         latitudeDelta: 0.005,
         longitudeDelta: 0.005,
       },
-      500
+      500,
     );
   };
 
@@ -198,7 +197,7 @@ useEffect(() => {
           <View className="border-t border-surface-border">
             {suggestions.map((item, index) => (
               <TouchableOpacity
-                key={index}
+                key={`${item.latitude}-${item.longitude}`}
                 onPress={() => selectSuggestion(item)}
                 className="px-4 py-3 border-b border-surface-border"
               >
@@ -247,7 +246,7 @@ useEffect(() => {
               Delivering to
             </Text>
             <Text className="text-text-primary font-semibold" numberOfLines={2}>
-               {selectedAddress?.area ?? "Select delivery location"}
+              {selectedAddress?.area ?? "Select delivery location"}
             </Text>
           </View>
 

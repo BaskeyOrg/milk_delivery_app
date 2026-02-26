@@ -107,7 +107,10 @@ export default function ProductDetailsScreen() {
                 .split("\n")
                 .filter(Boolean)
                 .map((line, index) => (
-                  <Text key={index} className="text-base text-gray-600">
+                  <Text
+                    key={`${product.id}-desc-${index}`}
+                    className="text-base text-gray-600"
+                  >
                     {line}
                   </Text>
                 ))}

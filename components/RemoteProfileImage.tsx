@@ -1,3 +1,4 @@
+import logger from "@/lib/logger";
 import { supabase } from "@/lib/supabase";
 import { ComponentProps, useEffect, useState } from "react";
 import { Image } from "react-native";
@@ -7,7 +8,11 @@ type RemoteImageProps = {
   fallback: string;
 } & Omit<ComponentProps<typeof Image>, "source">;
 
-const RemoteProfileImage = ({ path, fallback, ...imageProps }: RemoteImageProps) => {
+const RemoteProfileImage = ({
+  path,
+  fallback,
+  ...imageProps
+}: RemoteImageProps) => {
   const [image, setImage] = useState("");
 
   useEffect(() => {
@@ -19,15 +24,23 @@ const RemoteProfileImage = ({ path, fallback, ...imageProps }: RemoteImageProps)
         .download(path);
 
       if (error) {
-        console.log(error);
+        logger.error("RemoteProfileImage: download error", error);
+        return;
       }
 
-      if (data) {
+      if (!data) {
+        logger.warn("RemoteProfileImage: no data returned for path", path);
+        return;
+      }
+
+      try {
         const fr = new FileReader();
         fr.readAsDataURL(data);
         fr.onload = () => {
           setImage(fr.result as string);
         };
+      } catch (e) {
+        logger.error("RemoteProfileImage: failed to read file data", e);
       }
     })();
   }, [path]);
@@ -39,4 +52,3 @@ const RemoteProfileImage = ({ path, fallback, ...imageProps }: RemoteImageProps)
 };
 
 export default RemoteProfileImage;
-

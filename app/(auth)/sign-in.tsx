@@ -78,8 +78,10 @@ export default function SignInScreen() {
       }
 
       // ✅ SUCCESS → router will auto-redirect via auth listener
-    } catch (err: any) {
-      setError(err.message ?? "Sign in failed");
+    } catch (err: unknown) {
+      const message =
+        (err as Error)?.message ?? String(err ?? "Sign in failed");
+      setError(message);
     } finally {
       setLoading(false);
     }

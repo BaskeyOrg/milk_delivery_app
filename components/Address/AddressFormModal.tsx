@@ -109,10 +109,11 @@ export default function AddressFormModal({
           onClose();
           router.replace("/(user)/menu");
         },
-        onError: (err: any) => {
-          Alert.alert("Error", err.message);
+        onError: (err: unknown) => {
+          const message = (err as Error)?.message ?? String(err);
+          Alert.alert("Error", message);
         },
-      }
+      },
     );
   };
 
@@ -322,7 +323,7 @@ function Input({
   errorText,
 }: {
   label: string;
-  keyboardType?: any;
+  keyboardType?: React.ComponentProps<typeof TextInput>["keyboardType"];
   value?: string;
   onChangeText?: (text: string) => void;
   error?: boolean;

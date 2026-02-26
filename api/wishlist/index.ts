@@ -8,6 +8,18 @@ export type WishlistItem = Tables<"wishlist"> & {
   products: Product;
 };
 
+// Supabase returns a slightly different shape where product.variants is JSON
+type RawWishlistRow = Omit<Tables<"wishlist">, "products"> & {
+  products: {
+    id: number;
+    name: string;
+    image: string | null;
+    variants: unknown; // JSON from DB
+    created_at?: string;
+    description?: string | null;
+  };
+};
+
 /* ---------------- LIST ---------------- */
 
 export const useWishlist = (userId?: string) => {
@@ -29,30 +41,35 @@ export const useWishlist = (userId?: string) => {
             image,
             variants
           )
-        `
+        `,
         )
         .eq("user_id", userId!);
 
       if (error) throw error;
 
       // Map variants from JSON to typed ProductVariant[]
-      return (data ?? []).map((item: any) => ({
-        ...item,
-        products: {
-          ...item.products,
-          variants: (item.products.variants ?? []) as ProductVariant[],
-        },
-      })) as WishlistItem[];
+      return (data ?? []).map((row: RawWishlistRow) => {
+        const products: Product = {
+          id: row.products.id,
+          name: row.products.name,
+          image: row.products.image,
+          created_at: row.products.created_at ?? "",
+          description: row.products.description ?? null,
+          variants: (row.products.variants ?? []) as ProductVariant[],
+        };
+
+        return {
+          ...row,
+          products,
+        } as WishlistItem;
+      });
     },
   });
 };
 
 /* ---------------- CHECK STATUS ---------------- */
 
-export const useWishlistStatus = (
-  userId?: string,
-  productId?: number
-) => {
+export const useWishlistStatus = (userId?: string, productId?: number) => {
   return useQuery({
     queryKey: ["wishlist-status", userId, productId],
     enabled: !!userId && !!productId,

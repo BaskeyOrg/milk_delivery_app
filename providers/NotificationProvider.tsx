@@ -1,3 +1,4 @@
+import logger from "@/lib/logger";
 import { registerForPushNotificationsAsync } from "@/lib/notifications";
 import { supabase } from "@/lib/supabase";
 import * as Notifications from "expo-notifications";
@@ -14,14 +15,12 @@ Notifications.setNotificationHandler({
   }),
 });
 
-export default function NotificationProvider({
-  children,
-}: PropsWithChildren) {
+export default function NotificationProvider({ children }: PropsWithChildren) {
   const { profile } = useAuth();
   const hasRegistered = useRef(false);
 
   useEffect(() => {
-    if (!profile?.id) return;        // ⛔ wait for profile
+    if (!profile?.id) return; // ⛔ wait for profile
     if (hasRegistered.current) return;
 
     hasRegistered.current = true;
@@ -42,19 +41,35 @@ export default function NotificationProvider({
         console.warn("Push registration error:", e);
       });
 
-    const notificationListener =
-      Notifications.addNotificationReceivedListener((notification) => {
-        console.log("notification", notification);
-      });
+    const notificationListener = Notifications.addNotificationReceivedListener(
+      (notification) => {
+        logger.log("notification", notification);
+      },
+    );
 
     const responseListener =
       Notifications.addNotificationResponseReceivedListener((response) => {
-        console.log("notification response", response);
+        logger.log("notification response", response);
       });
 
     return () => {
-      notificationListener.remove();
-      responseListener.remove();
+      try {
+        notificationListener.remove();
+      } catch (e) {
+        logger.error(
+          "NotificationProvider: failed to remove notificationListener",
+          e,
+        );
+      }
+
+      try {
+        responseListener.remove();
+      } catch (e) {
+        logger.error(
+          "NotificationProvider: failed to remove responseListener",
+          e,
+        );
+      }
     };
   }, [profile?.id]);
 

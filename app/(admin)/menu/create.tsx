@@ -5,7 +5,9 @@ import {
   useUpdateProduct,
 } from "@/api/products";
 import Button from "@/components/Button";
+import ConfirmModal from "@/components/modal/ConfirmModal";
 import RemoteImage from "@/components/RemoteImage";
+import logger from "@/lib/logger";
 import { supabase } from "@/lib/supabase";
 import { defaultImage } from "@/utils/branding";
 import { Ionicons } from "@expo/vector-icons";
@@ -24,13 +26,16 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 
 type Variant = {
   label: string;
-  price: string;
+  price: string; // stored in the UI as string, converted to number on submit
 };
+
+const MAX_UPLOAD_BYTES = 2 * 1024 * 1024; // 2 MB
+const ALLOWED_MIME = ["image/png", "image/jpeg", "image/jpg"];
 
 const priceRegex = /^\d+(\.\d{1,2})?$/;
 
@@ -43,6 +48,9 @@ export default function CreateProductScreen() {
   const [error, setError] = useState("");
 
   const [description, setDescription] = useState("");
+
+  const [open, setOpen] = useState(false);
+  const [index, setIndex] = useState<number | null>(null);
 
   const { id: idString } = useLocalSearchParams();
   const id = Number(typeof idString === "string" ? idString : idString?.[0]);
@@ -63,12 +71,20 @@ export default function CreateProductScreen() {
     if (updatingProduct) {
       setName(updatingProduct.name);
       setImage(updatingProduct.image);
-      setVariants(
-        updatingProduct.variants.map((v: any) => ({
-          label: v.label,
-          price: v.price.toString(),
-        }))
-      );
+      const toVariant = (v: unknown): Variant => {
+        const obj = v as Record<string, unknown> | undefined;
+        return {
+          label: typeof obj?.label === "string" ? (obj.label as string) : "",
+          price:
+            typeof obj?.price === "number"
+              ? String(obj.price)
+              : typeof obj?.price === "string"
+                ? (obj.price as string)
+                : "",
+        };
+      };
+
+      setVariants((updatingProduct.variants || []).map(toVariant));
     }
   }, [updatingProduct]);
 
@@ -77,12 +93,20 @@ export default function CreateProductScreen() {
       setName(updatingProduct.name);
       setImage(updatingProduct.image);
       setDescription(updatingProduct.description ?? "");
-      setVariants(
-        updatingProduct.variants.map((v: any) => ({
-          label: v.label,
-          price: v.price.toString(),
-        }))
-      );
+      const toVariant = (v: unknown): Variant => {
+        const obj = v as Record<string, unknown> | undefined;
+        return {
+          label: typeof obj?.label === "string" ? (obj.label as string) : "",
+          price:
+            typeof obj?.price === "number"
+              ? String(obj.price)
+              : typeof obj?.price === "string"
+                ? (obj.price as string)
+                : "",
+        };
+      };
+
+      setVariants((updatingProduct.variants || []).map(toVariant));
     }
   }, [updatingProduct]);
 
@@ -92,7 +116,7 @@ export default function CreateProductScreen() {
   const areVariantsValid =
     variants.length > 0 &&
     variants.every(
-      (v) => v.label.trim().length > 0 && priceRegex.test(v.price)
+      (v) => v.label.trim().length > 0 && priceRegex.test(v.price),
     );
 
   const isFormValid = isNameValid && areVariantsValid;
@@ -106,7 +130,20 @@ export default function CreateProductScreen() {
     });
 
     if (!result.canceled) {
-      setImage(result.assets[0].uri);
+      const file = result.assets[0];
+
+      // Basic client-side validation
+      if (file.fileSize && file.fileSize > MAX_UPLOAD_BYTES) {
+        setError("Selected file is too large (max 2MB)");
+        return;
+      }
+
+      if (file.type && !ALLOWED_MIME.includes(file.type)) {
+        setError("Unsupported file type");
+        return;
+      }
+
+      setImage(file.uri);
     }
   };
 
@@ -125,7 +162,16 @@ export default function CreateProductScreen() {
         contentType: "image/png",
       });
 
-    if (error) throw error;
+    if (error) {
+      logger.error("CreateProduct: upload error", error);
+      throw error;
+    }
+
+    if (!data || !data.path) {
+      logger.error("CreateProduct: upload returned no data", data);
+      throw new Error("Upload failed");
+    }
+
     return data.path;
   };
 
@@ -139,15 +185,9 @@ export default function CreateProductScreen() {
     setVariants((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const confirmRemoveVariant = (index: number) => {
-    Alert.alert("Remove variant?", "This variant will be removed", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Remove",
-        style: "destructive",
-        onPress: () => removeVariant(index),
-      },
-    ]);
+  const confirmRemoveVariant = (i: number) => {
+    setIndex(i);
+    setOpen(true);
   };
 
   /* ---------------- SUBMIT ---------------- */
@@ -196,142 +236,156 @@ export default function CreateProductScreen() {
   };
 
   /* ---------------- UI ---------------- */
-return (
-  <KeyboardAvoidingView
-    style={{ flex: 1 }}
-    behavior={Platform.OS === "ios" ? "padding" : "height"}
-    keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
-  >
-    <ScrollView
-      keyboardShouldPersistTaps="handled"
-      style={{ backgroundColor: "white" }}
-      contentContainerStyle={{
-        flexGrow: 1,
-        paddingBottom: 140,
-        backgroundColor: "white"
-      }}
+  return (
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
     >
-      <Stack.Screen
-        options={{
-          title: isUpdating ? "Update Product" : "Create Product",
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        style={{ backgroundColor: "white" }}
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingBottom: 140,
+          backgroundColor: "white",
         }}
-      />
-
-      <View className="flex-1 px-6 bg-white">
-        {/* IMAGE */}
-        <View className="self-center">
-          {isUpdating ? (
-            <RemoteImage
-              path={image ?? undefined}
-              fallback={defaultImage}
-              className="w-56 h-56 rounded-3xl mt-8"
-            />
-          ) : (
-            <Image
-              source={{ uri: image || defaultImage }}
-              className="w-1/2 aspect-square self-center rounded-lg mt-8"
-            />
-          )}
-
-          <Text
-            onPress={pickImage}
-            className="text-primary font-semibold mt-3 mb-6 text-center"
-          >
-            Change product image
-          </Text>
-        </View>
-
-        {/* NAME */}
-        <Text className="text-sm mb-1">Product name</Text>
-        <TextInput
-          value={name}
-          onChangeText={setName}
-          placeholder="Product name"
-          className="border rounded-full px-5 py-3 mb-4 w-full"
+      >
+        <Stack.Screen
+          options={{
+            title: isUpdating ? "Update Product" : "Create Product",
+          }}
         />
 
-        {/* DESCRIPTION */}
-        <Text className="text-sm mb-1">Description</Text>
-        <TextInput
-          value={description}
-          onChangeText={setDescription}
-          placeholder="Product description"
-          multiline
-          textAlignVertical="top"
-          className="border rounded-2xl px-5 py-4 mb-6 w-full h-32"
-        />
-
-        {/* VARIANTS */}
-        <Text className="text-lg font-bold mb-3">Variants</Text>
-
-        {variants.map((variant, index) => (
-          <View key={index} className="flex-row items-center gap-3 mb-3">
-            <TextInput
-              value={variant.label}
-              onChangeText={(text) => {
-                const copy = [...variants];
-                copy[index].label = text;
-                setVariants(copy);
-              }}
-              placeholder="Quantity (e.g. 500ml)"
-              className="flex-1 border rounded-full px-4 py-3"
-            />
-
-            <TextInput
-              value={variant.price}
-              onChangeText={(text) => {
-                const copy = [...variants];
-                copy[index].price = text;
-                setVariants(copy);
-              }}
-              placeholder="Price"
-              keyboardType="numeric"
-              className="w-24 border rounded-full px-4 py-3"
-            />
+        <View className="flex-1 px-6 bg-white">
+          {/* IMAGE */}
+          <View className="self-center">
+            {isUpdating ? (
+              <RemoteImage
+                path={image ?? undefined}
+                fallback={defaultImage}
+                className="w-56 h-56 rounded-3xl mt-8"
+              />
+            ) : (
+              <Image
+                source={{ uri: image || defaultImage }}
+                className="w-1/2 aspect-square self-center rounded-lg mt-8"
+              />
+            )}
 
             <Text
-              onPress={() => confirmRemoveVariant(index)}
-              className="px-3 py-2 text-lg font-bold text-red-500"
+              onPress={pickImage}
+              className="text-primary font-semibold mt-3 mb-6 text-center"
             >
-              ✕
+              Change product image
             </Text>
           </View>
-        ))}
 
-        <Text
-          onPress={addVariant}
-          className="text-primary font-semibold mb-6"
-        >
-          + Add variant
-        </Text>
+          {/* NAME */}
+          <Text className="text-sm mb-1">Product name</Text>
+          <TextInput
+            value={name}
+            onChangeText={setName}
+            placeholder="Product name"
+            className="border rounded-full px-5 py-3 mb-4 w-full"
+          />
 
-        {!!error && (
-          <Text className="text-red-500 text-center mb-3">{error}</Text>
-        )}
+          {/* DESCRIPTION */}
+          <Text className="text-sm mb-1">Description</Text>
+          <TextInput
+            value={description}
+            onChangeText={setDescription}
+            placeholder="Product description"
+            multiline
+            textAlignVertical="top"
+            className="border rounded-2xl px-5 py-4 mb-6 w-full h-32"
+          />
 
-        {/* ACTIONS */}
-        <View className="flex-row justify-end gap-3 mt-4">
-          {isUpdating && (
-            <TouchableOpacity
-              onPress={confirmDelete}
-              className="px-6 py-4 flex-row items-center"
+          {/* VARIANTS */}
+          <Text className="text-lg font-bold mb-3">Variants</Text>
+
+          {variants.map((variant, index) => (
+            <View
+              key={`${variant.label}-${index}`}
+              className="flex-row items-center gap-3 mb-3"
             >
-              <Ionicons name="trash-outline" size={20} color="#EF4444" />
-              <Text className="text-red-500 text-base font-semibold ml-2">
-                Delete
+              <TextInput
+                value={variant.label}
+                onChangeText={(text) => {
+                  const copy = [...variants];
+                  copy[index].label = text;
+                  setVariants(copy);
+                }}
+                placeholder="Quantity (e.g. 500ml)"
+                className="flex-1 border rounded-full px-4 py-3"
+              />
+
+              <TextInput
+                value={variant.price}
+                onChangeText={(text) => {
+                  const copy = [...variants];
+                  copy[index].price = text;
+                  setVariants(copy);
+                }}
+                placeholder="Price"
+                keyboardType="numeric"
+                className="w-24 border rounded-full px-4 py-3"
+              />
+
+              <Text
+                onPress={() => confirmRemoveVariant(index)}
+                className="px-3 py-2 text-lg font-bold text-red-500"
+              >
+                ✕
               </Text>
-            </TouchableOpacity>
+            </View>
+          ))}
+
+          <Text
+            onPress={addVariant}
+            className="text-primary font-semibold mb-6"
+          >
+            + Add variant
+          </Text>
+
+          {!!error && (
+            <Text className="text-red-500 text-center mb-3">{error}</Text>
           )}
 
-          <Button
-            text={isUpdating ? "Update Product" : "Create Product"}
-            onPress={onSubmit}
-            disabled={!isFormValid || isSubmitting}
-          />
-        </View>
-      </View>
-    </ScrollView>
-  </KeyboardAvoidingView>
-);
+          {/* ACTIONS */}
+          <View className="flex-row justify-end gap-3 mt-4">
+            {isUpdating && (
+              <TouchableOpacity
+                onPress={confirmDelete}
+                className="px-6 py-4 flex-row items-center"
+              >
+                <Ionicons name="trash-outline" size={20} color="#EF4444" />
+                <Text className="text-red-500 text-base font-semibold ml-2">
+                  Delete
+                </Text>
+              </TouchableOpacity>
+            )}
 
+            <Button
+              text={isUpdating ? "Update Product" : "Create Product"}
+              onPress={onSubmit}
+              disabled={!isFormValid || isSubmitting}
+            />
+          </View>
+        </View>
+      </ScrollView>
+      <ConfirmModal
+        visible={open}
+        title="Remove variant?"
+        description="This variant will be removed"
+        destructive
+        confirmText="Remove"
+        onCancel={() => setOpen(false)}
+        onConfirm={() => {
+          if (index !== null) removeVariant(index);
+          setOpen(false);
+        }}
+      />
+    </KeyboardAvoidingView>
+  );
 }

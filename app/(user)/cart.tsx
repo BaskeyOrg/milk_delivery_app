@@ -16,7 +16,6 @@ import { useCart } from "@/providers/CartProvider";
 import { useLocationContext } from "@/providers/LocationProvider";
 import { DeliveryTime, Plan } from "./orders/[id]";
 
-
 const today = new Date().toISOString().split("T")[0];
 // Calculate tomorrow
 const tomorrow = (() => {
@@ -67,10 +66,10 @@ export default function CartScreen() {
   };
 
   useEffect(() => {
-  if (items.length === 0) {
-    resetSubscription();
-  }
-}, [items.length]);
+    if (items.length === 0) {
+      resetSubscription();
+    }
+  }, [items.length]);
 
   useEffect(() => {
     if (!selectedAddress) setLocationModalVisible(true);
@@ -80,9 +79,16 @@ export default function CartScreen() {
     !!selectedAddress?.area && !!selectedAddress?.name && !isCheckingOut;
 
   /* ---------------- CALENDAR RANGE ---------------- */
+  type CalendarMarking = {
+    startingDay?: boolean;
+    endingDay?: boolean;
+    color?: string;
+    textColor?: string;
+  };
+
   const markedDates = useMemo(() => {
     const days = plan === "weekly" ? 7 : 30;
-    const marks: any = {};
+    const marks: Record<string, CalendarMarking> = {};
 
     // Start date (dark)
     marks[startDate] = {
@@ -117,7 +123,7 @@ export default function CartScreen() {
 
     checkout(
       selectedAddress as Tables<"addresses">,
-      isSubscribed ? { plan, startDate, deliveryTime } : null
+      isSubscribed ? { plan, startDate, deliveryTime } : null,
     );
   };
 

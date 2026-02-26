@@ -9,6 +9,7 @@ import CartProvider from "@/providers/CartProvider";
 import NotificationProvider from "@/providers/NotificationProvider";
 import QueryProvider from "@/providers/QueryProvider";
 
+import OfflineBanner from "@/components/OfflineBanner";
 import { LocationProvider } from "@/providers/LocationProvider";
 import { NetworkProvider } from "@/providers/NetworkProvider";
 import {
@@ -17,7 +18,6 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { useColorScheme } from "react-native";
-import OfflineBanner from "@/components/OfflineBanner";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -46,27 +46,38 @@ function RootLayoutNav() {
   return (
     <ThemeProvider value={colorScheme === "light" ? DarkTheme : DefaultTheme}>
       <AuthProvider>
-        <QueryProvider>
-          <NetworkProvider>
-            <OfflineBanner />
-          <NotificationProvider>
-            <LocationProvider>
-              <CartProvider>
-                <Stack
-                  screenOptions={{
-                    headerShown: false,
-                  }}
-                >
-                  <Stack.Screen name="(auth)" />
-                  <Stack.Screen name="(admin)" />
-                  <Stack.Screen name="(user)" />
-                </Stack>
-              </CartProvider>
-            </LocationProvider>
-          </NotificationProvider>
-          </NetworkProvider>
-        </QueryProvider>
+        <InnerNav />
       </AuthProvider>
     </ThemeProvider>
+  );
+}
+
+function InnerNav() {
+  // delay rendering the rest of the app until auth finishes initializing
+  const { loading } = require("@/providers/AuthProvider").useAuth();
+
+  if (loading) return null;
+
+  return (
+    <QueryProvider>
+      <NetworkProvider>
+        <OfflineBanner />
+        <NotificationProvider>
+          <LocationProvider>
+            <CartProvider>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                }}
+              >
+                <Stack.Screen name="(auth)" />
+                <Stack.Screen name="(admin)" />
+                <Stack.Screen name="(user)" />
+              </Stack>
+            </CartProvider>
+          </LocationProvider>
+        </NotificationProvider>
+      </NetworkProvider>
+    </QueryProvider>
   );
 }

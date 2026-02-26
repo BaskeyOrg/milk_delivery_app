@@ -1,4 +1,5 @@
 import { Tables } from "@/assets/data/types";
+import logger from "@/lib/logger";
 import { supabase } from "@/lib/supabase";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -12,7 +13,10 @@ export function useAdminUpdateUser() {
 
   return useMutation({
     mutationFn: async ({ userId, updates }: UpdateUserInput) => {
-      console.log("Updating user:", userId, updates);
+      // Log only non-sensitive metadata
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const meta = { userId, keys: Object.keys(updates || {}) };
+      logger.log("Admin update", meta);
 
       const { data, error } = await supabase
         .from("profiles")
@@ -21,7 +25,7 @@ export function useAdminUpdateUser() {
         .select("*"); // ❗️NO .single()
 
       if (error) {
-        console.error("Update failed:", error);
+        logger.error("Admin update failed", error);
         throw error;
       }
 

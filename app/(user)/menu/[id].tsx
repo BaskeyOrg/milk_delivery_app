@@ -7,12 +7,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Pressable,
+    ScrollView,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 export default function ProductDetailsScreen() {
@@ -113,7 +113,10 @@ export default function ProductDetailsScreen() {
               <Text className="font-semibold mb-2">Description</Text>
               <View className=" mb-6">
                 {product.description.split("\n").map((line, index) => (
-                  <Text key={index} className="text-text-secondary">
+                  <Text
+                    key={`${product.id}-desc-${index}`}
+                    className="text-text-secondary"
+                  >
                     {line}
                   </Text>
                 ))}

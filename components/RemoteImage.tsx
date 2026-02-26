@@ -1,3 +1,4 @@
+import logger from "@/lib/logger";
 import { supabase } from "@/lib/supabase";
 import { ComponentProps, useEffect, useState } from "react";
 import { Image } from "react-native";
@@ -19,15 +20,23 @@ const RemoteImage = ({ path, fallback, ...imageProps }: RemoteImageProps) => {
         .download(path);
 
       if (error) {
-        console.log(error);
+        logger.error("RemoteImage: download error", error);
+        return;
       }
 
-      if (data) {
+      if (!data) {
+        logger.warn("RemoteImage: no data returned for path", path);
+        return;
+      }
+
+      try {
         const fr = new FileReader();
         fr.readAsDataURL(data);
         fr.onload = () => {
           setImage(fr.result as string);
         };
+      } catch (e) {
+        logger.error("RemoteImage: failed to read file data", e);
       }
     })();
   }, [path]);

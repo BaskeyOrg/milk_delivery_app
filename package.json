@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --ext .ts,.tsx --max-warnings=0 || true",
     "mobile": "expo start -c --tunnel",
     "android": "expo start --android",
     "ios": "expo start --ios",
@@ -56,6 +58,11 @@
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.50.0",
+    "eslint-plugin-react": "^7.33.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
     "baseline-browser-mapping": "^2.9.11",
     "react-test-renderer": "19.1.0",
     "typescript": "~5.9.2"

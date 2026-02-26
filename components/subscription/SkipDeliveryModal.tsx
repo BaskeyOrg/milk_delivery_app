@@ -2,6 +2,7 @@ import {
   usePauseSubscriptionDays,
   useSubscriptionPauses,
 } from "@/api/subscription";
+import logger from "@/lib/logger";
 import { notifyAdminsAboutSkip } from "@/lib/notifications";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo, useState } from "react";
@@ -30,7 +31,18 @@ export default function SkipDeliveryModal({
   startDate,
   endDate,
 }: Props) {
-  const [selectedDates, setSelectedDates] = useState<Record<string, any>>({});
+  type MarkedDate = {
+    selected?: boolean;
+    selectedColor?: string;
+    disabled?: boolean;
+    disableTouchEvent?: boolean;
+    marked?: boolean;
+    dotColor?: string;
+  };
+
+  const [selectedDates, setSelectedDates] = useState<
+    Record<string, MarkedDate>
+  >({});
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [reason, setReason] = useState("");
 
@@ -41,7 +53,7 @@ export default function SkipDeliveryModal({
 
   /* ---------------- DISABLED DATES ---------------- */
   const disabledDates = useMemo(() => {
-    const map: Record<string, any> = {};
+    const map: Record<string, MarkedDate> = {};
 
     /* ---------- Disable today ---------- */
     map[today] = {
@@ -78,7 +90,7 @@ export default function SkipDeliveryModal({
   }, [pausedDays, startDate, today]);
 
   const markedDatesMap = useMemo(() => {
-    const map: Record<string, any> = {};
+    const map: Record<string, MarkedDate> = {};
 
     /* ---------- TODAY ---------- */
     map[today] = {
@@ -133,7 +145,7 @@ export default function SkipDeliveryModal({
   }, [pausedDays, startDate, endDate, today]);
 
   /* ---------------- TOGGLE DATE ---------------- */
-  const onDayPress = (day: any) => {
+  const onDayPress = (day: { dateString: string }) => {
     const date = day.dateString;
 
     if (markedDatesMap[date]?.disabled) return;
@@ -172,10 +184,10 @@ export default function SkipDeliveryModal({
           try {
             await notifyAdminsAboutSkip({ subscriptionId, dates, reason });
           } catch (e) {
-            console.error("Failed to notify admins/delivery", e);
+            logger.error("Failed to notify admins/delivery", e);
           }
         },
-      }
+      },
     );
   };
 
