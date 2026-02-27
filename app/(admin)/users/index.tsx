@@ -1,12 +1,12 @@
 import { useAdminUsers } from "@/api/profile";
-import { Tables } from "@/assets/data/types";
+import UserRow from "@/components/UserRow";
 import { router } from "expo-router";
 import {
-    ActivityIndicator,
-    FlatList,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function AdminUsersScreen() {
@@ -56,32 +56,6 @@ export default function AdminUsersScreen() {
           </View>
         }
       />
-    </View>
-  );
-}
-
-/* ---------------- USER ROW ---------------- */
-
-function UserRow({ user }: { user: Tables<"profiles"> }) {
-  return (
-    <View className="p-4 rounded-xl bg-white border border-gray-200">
-      <Text className="text-lg font-semibold">
-        {user.full_name || "Unnamed User"}
-      </Text>
-
-      {user.phone && (
-        <Text className="text-gray-600 mt-1">📞 {user.phone}</Text>
-      )}
-
-      {user.username && (
-        <Text className="text-gray-500 mt-1">@{user.username}</Text>
-      )}
-
-      <View className="flex-row justify-between mt-3">
-        <Text className="text-xs text-gray-400">{user.id.slice(0, 8)}…</Text>
-
-        <Text className="text-xs text-gray-400">Group: {user.group}</Text>
-      </View>
     </View>
   );
 }

@@ -40,6 +40,7 @@ export default function OrderDetailsScreen() {
   const { data: order, isLoading, error } = useOrderDetails(orderId);
   const { data: skippedDays } = useSubscriptionPauses(order?.subscription?.id);
   const { mutate: cancelOrder, isPending: cancelling } = useCancelOrder();
+  const isCancelled = order?.status === "Cancelled";
 
   useUpdateOrderSubscription(orderId);
 
@@ -209,7 +210,7 @@ export default function OrderDetailsScreen() {
           <>
             <OrderSubscriptionDetailsCard subscription={subscription} />
 
-            {!isSubscriptionExpired && (
+            {!isSubscriptionExpired && !isCancelled && (
               <TouchableOpacity
                 onPress={() => setSkipOpen(true)}
                 className="flex-1 py-3 rounded-lg border border-red-500/40 bg-white"

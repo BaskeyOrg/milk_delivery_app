@@ -3,7 +3,8 @@ import { useAdminUpdateUser } from "@/api/profile/admin";
 import { Tables } from "@/assets/data/types";
 import { supabase } from "@/lib/supabase";
 import { useQuery } from "@tanstack/react-query";
-import { useLocalSearchParams } from "expo-router";
+import dayjs from "dayjs";
+import { Link, useLocalSearchParams, useSegments } from "expo-router";
 import {
   ActivityIndicator,
   FlatList,
@@ -38,6 +39,7 @@ export default function AdminUserDetailsScreen() {
   /* ---------------- FETCH USER ORDERS ---------------- */
   const { data: orders, isLoading: ordersLoading } = useAdminOrdersByUser(id);
   const { mutate: updateUser, isPending } = useAdminUpdateUser();
+  const segments = useSegments();
 
   /* ---------------- LOADING ---------------- */
   if (userLoading || ordersLoading) {
@@ -63,31 +65,45 @@ export default function AdminUserDetailsScreen() {
   return (
     <View className="flex-1 bg-background p-4">
       {/* USER INFO */}
-      <View className="bg-white rounded-xl border p-4">
-        <Text className="text-xl font-bold">
-          {user.full_name ?? "Unnamed User"}
-        </Text>
+      <View className="rounded-3xl p-5 bg-black/5 mb-4">
+        {/* Header */}
+        <View className="flex-row items-center mb-4">
+          <View className="bg-primary/20 rounded-full w-12 h-12 items-center justify-center mr-3">
+            <Text className="text-primary text-xl">👤</Text>
+          </View>
 
-        {user.username && (
-          <Text className="text-gray-500 mt-1">@{user.username}</Text>
-        )}
+          <View>
+            <Text className="text-text-primary font-bold text-lg">
+              {user.full_name ?? "Unnamed User"}
+            </Text>
 
-        {user.phone && (
-          <Text className="text-gray-600 mt-1">📞 {user.phone}</Text>
-        )}
+            {user.username && (
+              <Text className="text-text-secondary text-sm">
+                @{user.username}
+              </Text>
+            )}
+          </View>
+        </View>
 
-        <Text className="text-xs text-gray-400 mt-2">User ID: {user.id}</Text>
+        {/* Details */}
+        <View className="ml-15 gap-1">
+          {user.phone && (
+            <Text className="text-text-secondary text-sm">📞 {user.phone}</Text>
+          )}
 
-        <Text className="text-xs text-gray-400">Group: {user.group}</Text>
+          <Text className="text-xs text-gray-400 mt-1">ID: {user.id}</Text>
+
+          <Text className="text-xs text-green-400 font-bold mt-1">
+            Group: {user.group}
+          </Text>
+        </View>
       </View>
 
       {/* USER MANAGEMENT */}
-      <View className="bg-white rounded-xl border p-4 mt-4">
-        <Text className="text-lg font-semibold mb-3">User Management</Text>
-
+      <View className="rounded-3xl p-5 bg-black/5 mb-6">
         {/* STATUS */}
-        <View className="flex-row justify-between items-center mb-3">
-          <Text className="text-gray-700">Status</Text>
+        <View className="flex-row justify-between items-center mb-4">
+          <Text className="text-lg font-bold mb-4">User Management</Text>
 
           <Pressable
             disabled={isPending}
@@ -97,11 +113,8 @@ export default function AdminUserDetailsScreen() {
                 updates: { is_active: !isActive },
               })
             }
-            style={({ pressed }) => ({
-              opacity: pressed ? 0.6 : 1,
-            })}
             className={`px-4 py-2 rounded-full ${
-              isActive ? "bg-green-500" : "bg-red-500"
+              isActive ? "bg-green-600" : "bg-red-500"
             }`}
           >
             <Text className="text-white font-semibold">
@@ -111,9 +124,8 @@ export default function AdminUserDetailsScreen() {
         </View>
 
         {/* GROUP */}
-        <View>
-          <Text className="text-gray-700 mb-2">Group</Text>
-
+        <View className="flex-row justify-between items-center">
+          <Text className="text-text-primary mb-2">Group</Text>
           <View className="flex-row gap-3">
             {["USER", "DELIVERY"].map((grp) => (
               <Pressable
@@ -125,18 +137,17 @@ export default function AdminUserDetailsScreen() {
                     updates: { group: grp },
                   })
                 }
-                style={({ pressed }) => ({
-                  opacity: pressed ? 0.6 : 1,
-                })}
                 className={`px-4 py-2 rounded-full border ${
                   user.group === grp
                     ? "bg-indigo-500 border-indigo-500"
-                    : "border-gray-300"
+                    : "border-gray-300 bg-white"
                 }`}
               >
                 <Text
                   className={
-                    user.group === grp ? "text-white" : "text-gray-700"
+                    user.group === grp
+                      ? "text-white font-semibold"
+                      : "text-gray-700"
                   }
                 >
                   {grp}
@@ -148,34 +159,50 @@ export default function AdminUserDetailsScreen() {
       </View>
 
       {/* ORDERS */}
-      <Text className="text-lg font-semibold mt-6 mb-2">Orders</Text>
+      <Text className="text-lg font-bold mb-3">Orders</Text>
 
       <FlatList
         data={orders}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={{ gap: 12, paddingBottom: 120 }}
         ListEmptyComponent={
-          <Text className="text-gray-500 mt-6">No orders found</Text>
+          <Text className="text-gray-500 mt-6 text-center">
+            No orders found
+          </Text>
         }
         renderItem={({ item }) => (
-          <View className="bg-white rounded-xl border p-4">
-            <View className="flex-row justify-between">
-              <Text className="font-semibold">Order #{item.id}</Text>
-              <Text className="text-sm text-gray-500">{item.status}</Text>
-            </View>
+          <Link href={`/${segments[0]}/orders/${item.id}`} asChild>
+            <Pressable>
+              <View className="rounded-3xl p-5 bg-black/5">
+                <View className="flex-row justify-between items-center">
+                  <Text className="font-semibold text-text-primary">
+                    Order #{item.id}
+                  </Text>
 
-            <Text className="mt-1 text-gray-600">Total: ₹{item.total}</Text>
+                  <Text className="text-xs px-3 py-1 rounded-full bg-gray-200 text-gray-700">
+                    {item.status}
+                  </Text>
+                </View>
 
-            {item.subscription && (
-              <Text className="text-xs text-indigo-500 mt-1">
-                Subscription: {item.subscription.plan_type}
-              </Text>
-            )}
+                <Text className="mt-2 text-text-secondary">
+                  Total: ₹{item.total}
+                </Text>
 
-            <Text className="text-xs text-gray-400 mt-1">
-              {new Date(item.created_at).toLocaleDateString()}
-            </Text>
-          </View>
+                {item.subscription && (
+                  <Text className="text-xs text-indigo-500 mt-1">
+                    Subscription: {item.subscription.plan_type}
+                  </Text>
+                )}
+
+                <Text className="text-xs text-gray-400 mt-1">
+                  {dayjs(item.created_at).fromNow()}{" "}
+                  <Text className="opacity-60">
+                    ({dayjs(item.created_at).format("DD MMM YYYY")})
+                  </Text>
+                </Text>
+              </View>
+            </Pressable>
+          </Link>
         )}
       />
     </View>

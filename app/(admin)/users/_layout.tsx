@@ -4,8 +4,11 @@ import React from "react";
 export default function Orderlayout() {
   return (
     <Stack>
-      {/* <Stack.Screen name="index" options={{ title: "Orders" }} /> */}
-      <Stack.Screen name="users" options={{ headerShown: true }} />
+      {/* Register the index child route and allow the dynamic [id] route to be resolved automatically */}
+      <Stack.Screen
+        name="index"
+        options={{ title: "Users", headerShown: true }}
+      />
     </Stack>
   );
 }
