@@ -8,8 +8,6 @@ export default function OfflineBanner() {
   const { isConnected } = useNetwork();
   const queryClient = useQueryClient();
 
-  if (isConnected) return null;
-
   return (
     <View style={{ flex: 1 }}>
       {/* Gradient Background */}

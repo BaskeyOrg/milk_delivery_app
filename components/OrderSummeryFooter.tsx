@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { Text, View } from "react-native";
 
 export type SubscriptionPlan = "weekly" | "monthly" | null;
-export type DeliveryTime = "morning" | "evening" | null;
+export type DeliveryTime = "morning" | null;
 
 export type OrderBillFooterProps = {
   itemsTotal: number;
@@ -27,12 +27,12 @@ const OrderSummeryFooter = ({
 
   const skipAmount = useMemo(
     () => itemsTotal * skippedDaysCount,
-    [itemsTotal, skippedDaysCount]
+    [itemsTotal, skippedDaysCount],
   );
 
   const subscriptionItemsTotal = useMemo(
     () => itemsTotal * effectiveDays,
-    [itemsTotal, effectiveDays]
+    [itemsTotal, effectiveDays],
   );
 
   const totalBeforeDelivery = subscriptionPlan

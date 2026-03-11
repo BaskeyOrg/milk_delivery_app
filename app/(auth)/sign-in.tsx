@@ -156,7 +156,7 @@ export default function SignInScreen() {
                   placeholder="Password"
                   secureTextEntry
                   placeholderTextColor="#9CA3AF"
-                  className={`border rounded-full px-5 py-3 bg-white ${
+                  className={`border rounded-full px-5 py-3 bg-white text-black ${
                     showPasswordError ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -189,12 +189,22 @@ export default function SignInScreen() {
                   </Text>
                 )}
               </TouchableOpacity>
-            </View>
 
-            {/* SIGN UP */}
-            <Link href="/sign-up" className="mt-6 text-blue-600 font-medium">
-              Create an account
-            </Link>
+              <View className="flex-row justify-between mt-2">
+                {/* FORGOT PASSWORD */}
+                <Link
+                  href="/forgot-password"
+                  className="text-blue-600 font-medium "
+                >
+                  Forgot password?
+                </Link>
+
+                {/* SIGN UP */}
+                <Link href="/sign-up" className="text-blue-600 font-medium">
+                  Create an account
+                </Link>
+              </View>
+            </View>
 
             {/* FOOTER */}
             <Text className="text-center text-gray-500 text-xs mt-6 px-2">

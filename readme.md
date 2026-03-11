@@ -8,27 +8,6 @@ Working@99
 https://expo.dev/notifications
 ExponentPushToken[n4auBVG_3JTGwVgcDesrOv]
 
-postgresql://postgres:[Working@99]@db.bwreaukzhkzplfrinlbi.supabase.co:5432/postgres
-
-npx supabase db dump --db-url "postgresql://postgres:[Working@99]@db.bwreaukzhkzplfrinlbi.supabase.co:5432/postgres
-" -f schema.sql
-
-pg_dump \
-  --clean \
-  --if-exists \
-  --no-owner \
-  --no-privileges \
-  --format=custom \
-  --dbname="postgresql://postgres:[Working@99]@db.bwreaukzhkzplfrinlbi.supabase.co:5432/postgres" \
-  --file=supabase_full_backup.dump
-pg_dump \
-  --clean \
-  --if-exists \
-  --no-owner \
-  --no-privileges \
-  --dbname="postgresql://postgres:[Working@99]@db.bwreaukzhkzplfrinlbi.supabase.co:5432/postgres" \
-  > supabase_backup.sql
-
 -- WARNING: This schema is for context only and is not meant to be run.
 -- Table order and constraints may not be valid for execution.
 

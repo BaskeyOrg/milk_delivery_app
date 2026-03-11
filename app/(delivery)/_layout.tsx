@@ -33,19 +33,34 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
+        headerShown: false,
         tabBarActiveTintColor: "#1DB954",
         tabBarInactiveTintColor: "#B3B3B3",
+
         tabBarStyle: {
           position: "absolute",
-          borderColor: "transparent",
           borderTopWidth: 0,
-          height: 50 + insets.bottom,
-          paddingTop: 4,
-          marginHorizontal: 100,
-          marginBottom: 24 + insets.bottom,
+
+          height: 50, // ✅ increased height
+
+          marginHorizontal: 80,
           borderRadius: 24,
           overflow: "hidden",
           elevation: 0,
+
+          bottom: insets.bottom + 10,
+
+          paddingBottom: 6, // ✅ fixed
+
+          shadowColor: "#000",
+          shadowOpacity: 0.25,
+          shadowRadius: 10,
+          shadowOffset: { width: 0, height: 4 },
+        },
+
+        tabBarItemStyle: {
+          justifyContent: "center",
+          alignItems: "center",
         },
         tabBarBackground: () => (
           <BlurView
@@ -59,7 +74,6 @@ export default function TabLayout() {
           fontWeight: "600",
           marginTop: -3,
         },
-        headerShown: false,
       }}
     >
       <Tabs.Screen name="index" options={{ href: null, headerShown: false }} />
